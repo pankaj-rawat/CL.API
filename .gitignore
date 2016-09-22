@@ -3,3 +3,8 @@
 ################################################################################
 
 /.vs/CL.API/v14
+/log
+/node_modules
+/WebEssentials2015-Settings.json
+/nodePub.pubxml
+/nodePub.pubxml.user
