@@ -1,4 +1,5 @@
-﻿import https = require('https');
+﻿//import https = require('https');
+import http = require('http');
 import express = require('express');
 import fs = require('fs');
 import bodyParser = require('body-parser');
@@ -30,4 +31,5 @@ process.on('unhandledRejection', (reason,p) => {
 process.on('uncaughtException', (reason, p) => {
     Logger.log.error(reason);
 });
-module.exports = https.createServer(httpsServerOption, app);
+//module.exports = https.createServer(httpsServerOption, app);
+module.exports = http.createServer(app);
