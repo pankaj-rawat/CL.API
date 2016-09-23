@@ -42,6 +42,7 @@ userController.post('/signup', function (req, res) {
         idCity: req.body.idCity,
         password: hashedP,
         phoneLandLine: req.body.phoneLandline,
+        extension:req.body.extension,
         phoneCell: req.body.phoneCell,
         subscriptionOptIn: req.body.subscriptionOptIn
     }

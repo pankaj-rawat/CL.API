@@ -4,20 +4,20 @@ import * as DB from "../DB";
 import {Logger}  from "../Logger";
 
 class UserRepository implements irepo.IUserRepository {
-    repoName: string = 'UserRepository';
     find(id: number): Promise<model.UserModel> {
+        let repoName: string = "UserRepository";   
         return new Promise(function (resolve, reject) {
             if (id != null) {
                 try {
                     DB.get().getConnection(function (err, connection) {
                         if (err != null) {
-                            Logger.log.info('Error occured in ' + this.repoName + ' - find - id:' + id + '  Error:' + err);
+                            Logger.log.info('Error occured in ' + repoName + ' - find - id:' + id + '  Error:' + err);
                             reject(err);
                         }
                         else {
                             let query = connection.query('SELECT * FROM user WHERE id = ?', id);
                             query.on('error', function (err) {
-                                Logger.log.info('Error occured in ' + this.repoName + ' - find - id:' + id + '  Error:' + err);
+                                Logger.log.info('Error occured in ' + repoName + ' - find - id:' + id + '  Error:' + err);
                                 reject(err);
                             });
 
@@ -57,18 +57,19 @@ class UserRepository implements irepo.IUserRepository {
         });
     }
     create(user: model.UserModel): Promise<model.UserModel> {
+        let repoName: string="UserRepository";   
         return new Promise(function (resolve, reject) {
-            DB.get().getConnection(function (err, connection) {
+            DB.get().getConnection(function (err, connection){
                 if (err != null) {
-                    Logger.log.info('Error occured in ' + this.repoName + ' - Signup - user:' + user.email + '  Error:' + err);
+                    Logger.log.info('Error occured in ' + repoName + ' - Signup - user:' + user.email + '  Error:' + err);
                     reject(err);
                 }
                 else {
-                    let query = connection.query('CALL sp_user_insert(?,?,?,?,?,?)',
-                        [user.email, user.password, user.phoneLandLine, user.phoneCell, user.idCity, user.subscriptionOptIn]);
+                    let query = connection.query('CALL sp_user_insert(?,?,?,?,?,?,?)',
+                        [user.email, user.password, user.phoneLandLine,user.extension, user.phoneCell, user.idCity, user.subscriptionOptIn]);
 
                     query.on('error', function (err) {
-                        Logger.log.info('Error occured in ' + this.repoName + ' - Create -' + user.email + '  Error:' + err);
+                        Logger.log.info('Error occured in ' + repoName + ' - Create -' + user.email + '  Error:' + err);
                         reject(err);
                     });
                     query.on('result', function (row) {

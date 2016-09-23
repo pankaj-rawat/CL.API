@@ -5,7 +5,7 @@
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
     <Name>CL.API</Name>
     <RootNamespace>CL.API</RootNamespace>
-    <Environment>NODE_ENV=production</Environment>
+    <Environment>NODE_ENV=development</Environment>
     <NameOfLastUsedPublishProfile>nodePub</NameOfLastUsedPublishProfile>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
@@ -74,14 +74,18 @@
     <TypeScriptCompile Include="Index.ts" />
     <TypeScriptCompile Include="interfaces\IAuthRepository.ts" />
     <TypeScriptCompile Include="interfaces\IBusinessRepository.ts" />
+    <TypeScriptCompile Include="interfaces\ICategoryTagRepository.ts" />
     <TypeScriptCompile Include="interfaces\ICityStateCountryRepository.ts" />
+    <TypeScriptCompile Include="interfaces\IRegistrationPlanRepository.ts" />
     <TypeScriptCompile Include="interfaces\IUserRepository.ts" />
     <TypeScriptCompile Include="Logger.ts" />
     <TypeScriptCompile Include="APIResponse.ts" />
     <TypeScriptCompile Include="middlewares\RequestValidator.ts" />
     <TypeScriptCompile Include="models\AuthModel.ts" />
     <TypeScriptCompile Include="models\BusinessModel.ts" />
+    <TypeScriptCompile Include="models\CategoryTagModel.ts" />
     <TypeScriptCompile Include="models\CityStateCountryModel.ts" />
+    <TypeScriptCompile Include="models\RegistrationPlanModel.ts" />
     <TypeScriptCompile Include="models\UserModel.ts" />
     <TypeScriptCompile Include="repositories\AuthRepository.ts" />
     <TypeScriptCompile Include="repositories\CityStateCountryRepository.ts" />

@@ -1,19 +1,22 @@
-﻿export interface BusinessModel {
+﻿import model = require("./CategoryTagModel");
+export interface BusinessModel {
     id: number,
     idUser?:number,
     name: string,
     contactName?: string,
+    contactTitle?:string,
     idStatus: number,
     streetAddress: string,
+    postalCode: number,
     idCity: number,
     city: string,
     idState: number,
     state: string,
-    postalCode: number,
-    countryCode: string,
-    wenURL?: string,
-    latitude: number,
-    longitude: number,
+    idCountry: number,
+    country:string,
+    webURL?: string,
+    latitude?: number,
+    longitude?: number,
     geo?: string,
     createdOn: Date,
     lastUpdateOn: Date,
@@ -21,26 +24,18 @@
     commenceDate?: Date,
     businessImages?: Array<BusinessImageModel>,
     businessOperationHours: Array<BusinessOperationHourModel>
-    categories: Array<CategoryModel>
+    categories: Array<model.CategoryModel>
     contactNumbers: Array<BusinessPhoneModel>;
 }
 
 export interface BusinessPhoneModel {
-    Phone: number,
+    idBusiness:number,
+    phone: number,
     type: string,
-    extension:number
+    extension?:number
 }
 
-export interface CategoryModel {
-    id: number,
-    Value: string
-    tags:Array<TagModel>
-}
 
-export interface TagModel {
-    id: number,
-    value:string
-}
 
 export interface BusinessImageModel {
     id?: number,
