@@ -8,7 +8,7 @@ class UserRepository implements irepo.IUserRepository {
         let repoName: string = "UserRepository";   
         return new Promise(function (resolve, reject) {
             if (id != null) {
-                try {
+                 try {
                     DB.get().getConnection(function (err, connection) {
                         if (err != null) {
                             Logger.log.info('Error occured in ' + repoName + ' - find - id:' + id + '  Error:' + err);

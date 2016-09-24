@@ -11,3 +11,4 @@ export interface ITagRepository {
     update(tag: model.TagModel): Promise<model.TagModel>;
     remove(id:number): Promise<number>;
 }
+

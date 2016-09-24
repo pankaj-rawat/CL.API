@@ -88,6 +88,8 @@
     <TypeScriptCompile Include="models\RegistrationPlanModel.ts" />
     <TypeScriptCompile Include="models\UserModel.ts" />
     <TypeScriptCompile Include="repositories\AuthRepository.ts" />
+    <TypeScriptCompile Include="repositories\BusinessRepository.ts" />
+    <TypeScriptCompile Include="repositories\CategoryTagRepository.ts" />
     <TypeScriptCompile Include="repositories\CityStateCountryRepository.ts" />
     <TypeScriptCompile Include="repositories\UserRepository.ts" />
     <TypeScriptCompile Include="RouteBuilder.ts" />
