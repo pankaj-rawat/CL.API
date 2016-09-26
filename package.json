@@ -26,6 +26,6 @@
     "run": "node Index.js",
     "watch": "mocha --recursive -R min --watch",
     "test": "mocha",
-    "start": "tsc  && node index.js"
+    "start": "tsc  && node Index.js"
   }
 }
