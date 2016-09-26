@@ -129,14 +129,14 @@ class UserRepository implements irepo.IUserRepository {
                 try {
                     DB.get().getConnection(function (err, connection) {
                         if (err != null) {
-                            Logger.log.error(err);
+                            Logger.log.error(err.message);
                             reject(err);
                         }
                         else {
                             let roles:Array<number>=new Array<number>();
                             let query = connection.query("Select idrole from userrole where iduser=?", id);
                             query.on('error', function (err) {
-                                Logger.log.error(err);
+                                Logger.log.error(err.message);
                                 reject(err);
                             });
                             query.on('result', function (row) {

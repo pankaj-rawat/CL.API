@@ -1,10 +1,10 @@
 ﻿import {CountryRepository} from "../repositories/CityStateCountryRepository";
 import {APIResponse} from "../APIResponse";
+import express=require("express");
 
-var express = require('express');
 var countryController = express.Router();
 
-countryController.get('/:id', function (req, res) {
+countryController.get('/:id', function (req:express.Request, res:express.Response) {
     let cscrepo = new CountryRepository();
     let clRes: APIResponse; 
     try {

@@ -2,31 +2,40 @@
 import config = require('config');
 import async = require('async');
 
-var state = {
-    pool: null,
-    mode: null,
+interface State {
+    pool: mysql.IPool,
+    mode: string
 }
+let dbstate: State;
+export var connect = function (mode: string, done: (err: string) => void) {
+    let errMessage: string;
+   
+    try {
+        let poolConfig: mysql.IPoolConfig = {
+            host: process.env.DBHOST || config.get<string>('dbConfig.host'),
+            user: process.env.DBUSER || config.get<string>('dbConfig.user'),
+            password: process.env.DBPWD || config.get<string>('dbConfig.password'),
+            database: process.env.DB || config.get<string>('dbConfig.database')
+        };
 
-export var connect = function (mode, done) {
-    let poolConfig: mysql.IPoolConfig = {
-        host: process.env.DBHOST || config.get<string>('dbConfig.host'),
-        user: process.env.DBUSER || config.get<string>('dbConfig.user'),
-        password: process.env.DBPWD || config.get<string>('dbConfig.password'),
-        database: process.env.DB || config.get<string>('dbConfig.database')
-    };
-
-    if (config.has('dbConfig.port')) {
-        if (config.get<number>('dbConfig.port') > 0) {
-            poolConfig.port = process.env.HOSTPORT || config.get<number>('dbConfig.port');
+        if (config.has('dbConfig.port')) {
+            if (config.get<number>('dbConfig.port') > 0) {
+                poolConfig.port = process.env.HOSTPORT || config.get<number>('dbConfig.port');
+            }
+        }
+        dbstate = {
+            pool: mysql.createPool(poolConfig),
+            mode: mode
         }
     }
-    state.pool = mysql.createPool(poolConfig);
-    state.mode = mode;
-    done()
+    catch (ex) {
+        errMessage = ex.message;
+    }
+    done(errMessage);
 }
 
 export var get = function () {
-    return state.pool
+    return dbstate.pool
 }
 
 //exports.fixtures = function (data) {

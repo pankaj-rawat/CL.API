@@ -1,10 +1,10 @@
 ﻿import {CityRepository} from  "../repositories/CityStateCountryRepository";
 import APIResponse=require('../APIResponse');
+import express=require('express');
 
-var express = require('express');
 var cityController = express.Router();
 
-cityController.get('/:id', function (req, res) {
+cityController.get('/:id', function (req:express.Request, res:express.Response) {
     let clRes: APIResponse.APIResponse;   
     let cscrepo = new CityRepository();   
     try {
@@ -27,7 +27,7 @@ cityController.get('/:id', function (req, res) {
 
 
 
-cityController.get('/', function (req, res) {
+cityController.get('/', function (req:express.Request, res:express.Response) {
     let clRes: APIResponse.APIResponse;   
     let cscrepo = new CityRepository();
     try {

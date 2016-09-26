@@ -8,3 +8,8 @@
 /WebEssentials2015-Settings.json
 /nodePub.pubxml
 /nodePub.pubxml.user
+/scripts
+*.js
+*.js.map
+/obj/Debug/CL.API.njsproj.FileListAbsolute.txt
+/bin/Microsoft.NodejsTools.WebRole.dll

@@ -9,7 +9,7 @@ export class BusinessRepository implements irepo.IBusinessRepository {
             try {
                 db.get().getConnection(function (err, connection) {
                     if (err != null) {
-                        logger.log.error(err);
+                        logger.log.error(err.message);
                         reject(err);
                     }
                     else {

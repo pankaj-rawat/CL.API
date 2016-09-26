@@ -11,7 +11,7 @@ export class RouteBuilder {
         Logger.log.info('routes folder:' + routeDir);
         // create route for authentication, 
 
-        fs.readdirSync(routeDir).forEach(function (file) {
+        fs.readdirSync(routeDir).forEach(function (file:string) {
             //exclude .ts and .map in dev env.
             if (!fs.lstatSync(routeDir + '/' + file).isDirectory()
                 && getFileExtension(file) === 'js'
@@ -29,11 +29,11 @@ export class RouteBuilder {
         });
 
 
-        function getBaseFileName(file): string {
+        function getBaseFileName(file:string): string {
             let basename = file.split('.')[0];
             return basename;
         }
-        function getFileExtension(file): string {
+        function getFileExtension(file:string): string {
             let temp = file.split('.');
             return temp[temp.length - 1];
         }

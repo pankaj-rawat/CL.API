@@ -25,10 +25,10 @@ app.use(bodyParser.json());
 app.all('/api/*', validateRequest.Validate);
 //load router
 router.build(app);
-process.on('unhandledRejection', (reason,p) => {
-    Logger.log.error(reason);
+process.on('unhandledRejection', (reason:string,p) => {
+    Logger.log.error(reason);    
 });
-process.on('uncaughtException', (reason, p) => {
+process.on('uncaughtException', (reason:string, p) => {
     Logger.log.error(reason);
 });
 //module.exports = https.createServer(httpsServerOption, app);

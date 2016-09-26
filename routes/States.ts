@@ -1,10 +1,10 @@
 ﻿import {APIResponse} from "../APIResponse";
 import {StateRepository} from  "../repositories/CityStateCountryRepository";
+import express = require('express');
 
-var express = require('express');
 var stateController = express.Router();
 
-stateController.get('/:id', function (req, res):void {
+stateController.get('/:id', function (req:express.Request, res:express.Response):void {
     let clRes: APIResponse;   
     let stateRepo = new StateRepository();
     let id = req.params.id;

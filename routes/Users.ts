@@ -2,11 +2,11 @@
 import {APIResponse} from "../APIResponse";
 import model = require('../models/UserModel');
 import bcrypt = require('bcryptjs');
+import express = require('express');
 
-var express = require('express');
 var userController = express.Router();
 
-userController.get('/:id', function (req, res) {
+userController.get('/:id', function (req:express.Request, res:express.Response) {
     let userP: Promise<model.UserModel>;
     let userRepo = new UserRepository();
     let clres: APIResponse;

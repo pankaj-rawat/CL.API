@@ -4,10 +4,10 @@ import {AuthRepository} from "../repositories/AuthRepository";
 import config = require('config');
 import *  as model from "../models/AuthModel";
 import {Role} from "../Definitions";
-
+import express = require('express');
 export class RequestValidator {
 
-    Validate(req, res, next) {
+    Validate(req:express.Request, res:express.Response, next:Function) {
         // When performing a cross domain request, you will recieve
         // a preflighted request first. This is to check if the app
         // is safe. 
@@ -43,7 +43,8 @@ export class RequestValidator {
                 // The key would be the logged in user's username
                 authRepo.validateUser(key, function (userRoles) {
                     if (userRoles) {
-                        if (ld.includes(userRoles, Role.Admin)) {
+                        if (ld.includes(userRoles, Role.RegisteredUser)) {
+                            //TODO: need to implement role based. For the time being hardcoded for Role.RegisteredUser
                             next(); // To move to next middleware
                         }
                         else {
