@@ -1,8 +1,8 @@
 ﻿export interface CategoryModel {
     id?: number,
     value: string,
-    tags?:Array<TagModel>,
-    active?:boolean
+    active?: boolean,
+    tags?:Array<TagModel>
 }
 
 export interface TagModel {

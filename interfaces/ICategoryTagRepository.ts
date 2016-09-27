@@ -6,8 +6,7 @@ export interface ICategoryRepository{
 
 export interface ITagRepository {
     find(id: number): Promise<model.TagModel>;
-    findByCategory(categoryId: number): Promise<Array<model.TagModel>>;
-    getAll(): Promise<Array<model.TagModel>>;
+    getTagsByCategory(categoryId: number): Promise<Array<model.TagModel>>;
     create(tag: model.TagModel): Promise<model.TagModel>;
     update(tag: model.TagModel): Promise<model.TagModel>;
     remove(id:number): Promise<number>;

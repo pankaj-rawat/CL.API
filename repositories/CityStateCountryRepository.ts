@@ -43,6 +43,9 @@ class CityRepository implements irepo.ICityRepository {
                                     reject(err);
                                 });
                         }
+                        else {
+                            reject(new Error("City not found."));
+                        }
                         connection.release();
                     }
                     catch (err) {
@@ -108,16 +111,21 @@ class StateRepository implements irepo.IStateRepository {
                         };
                 });
                 query.on('end', function (result) {
-                    let countryRepo = new CountryRepository();
-                    countryRepo.find(state.id)
-                        .then(function (result: model.CountryModel) {
-                            state.country = result;
-                            resolve(state);
-                        })
-                        .catch(function (error) {
-                            Logger.log.error("Error while fetching Country for state:" + state.id + " - " + error);
-                            reject(err.message);
-                        });
+                    if (state != null) {
+                        let countryRepo = new CountryRepository();
+                        countryRepo.find(state.id)
+                            .then(function (result: model.CountryModel) {
+                                state.country = result;
+                                resolve(state);
+                            })
+                            .catch(function (error) {
+                                Logger.log.error("Error while fetching Country for state:" + state.id + " - " + error);
+                                reject(err.message);
+                            });
+                    }
+                    else {
+                        reject(new Error("State not found."));
+                    }
                     connection.release();
                 });
             });

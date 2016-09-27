@@ -7,6 +7,7 @@ class UserRepository implements irepo.IUserRepository {
     find(id: number): Promise<model.UserModel> {
         let repoName: string = "UserRepository";   
         return new Promise(function (resolve, reject) {
+            let user: model.UserModel;
             if (id != null) {
                  try {
                     DB.get().getConnection(function (err, connection) {
@@ -25,8 +26,8 @@ class UserRepository implements irepo.IUserRepository {
                             //    Logger.log.info('Error occured in UserRepository - find - id:' + id + '  Error:' + err);
                             //});
 
-                            query.on('result', function (row, result: model.UserModel) {
-                                result = {
+                            query.on('result', function (row, index) {
+                                user = {
                                     id: row.Id,
                                     email: row.email,
                                     phoneLandLine: row.phoneLandLine,
@@ -42,7 +43,7 @@ class UserRepository implements irepo.IUserRepository {
                             });
 
                             query.on('end', function (result: model.UserModel) {
-                                resolve(result);
+                                resolve(user);
                             });
                         }
                     });
