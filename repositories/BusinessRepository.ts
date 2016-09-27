@@ -1,20 +1,41 @@
 ﻿import irepo = require("../interfaces/IBusinessRepository");
 import model = require("../models/BusinessModel");
-import * as db from "../DB";
+import * as DB from "../DB";
 import {Logger as logger} from "../Logger";
 
 export class BusinessRepository implements irepo.IBusinessRepository {
     register(business: model.BusinessModel): Promise<model.BusinessModel> {
         return new Promise(function (resolve, reject) {
             try {
-                db.get().getConnection(function (err, connection) {
+                DB.get().getConnection(function (err, connection) {
                     if (err != null) {
                         logger.log.error(err.message);
                         reject(err);
                     }
                     else {
-                        let query = connection.query("Call xxxxx(?????????)",
-                            [business]);
+                        connection.beginTransaction(function (err) {
+                            if (err) {
+                                reject(err);
+                            }
+                            else {
+                                connection.query("Call sp_business_insert(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                                    [business.name, business.contactName, business.contactTitle, business.idStatus, business.streetAddress,
+                                        business.postalCode, business.idCity, business.idState, business.idCountry, business.webURL, business.latitude,
+                                        business.longitude, business.description, business.commenceDate], function (err, result) {
+                                            if (err) {
+                                                connection.rollback(function () {
+                                                    reject(err);
+                                                });
+                                            }
+                                            else {
+                                                let businessId: number = result.insertId;
+                                                //connection.query('', , function (err, result) {
+
+                                                //});
+                                            }
+                                        });
+                            }
+                        });
                     }
                 });
             }

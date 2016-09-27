@@ -23,8 +23,8 @@ export interface BusinessModel {
     description?: string,
     commenceDate?: Date,
     businessImages?: Array<BusinessImageModel>,
-    businessOperationHours: Array<BusinessOperationHourModel>
-    categories: Array<model.CategoryModel>
+    businessOperationHours?: Array<BusinessOperationHourModel>
+    categories?: Array<model.CategoryModel>
     contactNumbers: Array<BusinessPhoneModel>;
 }
 
@@ -34,8 +34,6 @@ export interface BusinessPhoneModel {
     type: string,
     extension?:number
 }
-
-
 
 export interface BusinessImageModel {
     id?: number,
