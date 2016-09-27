@@ -25,11 +25,12 @@ stateController.get('/:id', function (req:express.Request, res:express.Response)
     }    
 });
 
-stateController.get('/', function (req, res):void {
+stateController.get('/country/:id', function (req, res):void {
     let stateRepo = new StateRepository();
     let clRes: APIResponse;   
+    let id = req.params.id;
     try {
-        stateRepo.getAll()
+        stateRepo.getStatesByCountry(id)
             .then(function (result) {
                 clRes = { data: result, isValid: true };
                 res.send(clRes);

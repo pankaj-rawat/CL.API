@@ -10,107 +10,83 @@ class CityRepository implements irepo.ICityRepository {
             DB.get().getConnection(function (err, connection) {
                 let query = connection.query('SELECT * FROM city WHERE id = ?', id);
                 query.on('error', function (err) {
-                    Logger.log.info('Error occured in CityRepository - find - id:' + id + '  Error:' + err);
+                    Logger.log.error('Error occured in CityRepository - find - id:' + id + '  Error:' + err);
                     reject(err);
                 });
-
-                query.on('fields', function (fields) {
-                    Logger.log.info(fields);
-                });
-
                 query.on('result', function (row, result) {
                     try {
                         city =
                             {
                                 id: row.id,
                                 name: row.name,
-                                state: undefined
+                                idState: row.idState
                             };
                     }
                     catch (err) {
-                        Logger.log.info('Error occured in CityRepository - find - id:' + id + '  Error:' + err);
+                        Logger.log.error('Error occured in CityRepository - find - id:' + id + '  Error:' + err);
                         reject(err);
                     }
                 });
 
                 query.on('end', function (result) {
                     connection.release();
-                    let state: model.StateModel;
                     //populate state for the city
                     try {
                         if (city != null) {
                             let stateRepo = new StateRepository();
                             stateRepo.find(city.id)
-                                .then(function (result) {
-                                    city.state = state;
+                                .then(function (result: model.StateModel) {
+                                    city.state = result;
+                                    resolve(city);
                                 })
                                 .catch(function (err) {
+                                    reject(err);
                                 });
                         }
                         connection.release();
-                        resolve(city);
                     }
                     catch (err) {
-                        Logger.log.info('Error occured in CityRepository - find - id:' + id + '  Error:' + Error);
+                        Logger.log.error('Error occured in CityRepository - find - id:' + id + '  Error:' + Error);
                         reject(city);
                     }
                 });
             });
         });
-
-
     }
 
-    getAll(): Promise<Array<model.CityModel>> {
-        let cities: Array<model.CityModel> = new Array<model.CityModel>();
-        return new Promise<Array<model.CityModel>>((resolve, reject) => {
+    getCitiesByState(stateId: number): Promise<Array<model.CityModel>> {
+        return new Promise(function (resolve, reject) {
+            let cities: Array<model.CityModel> = new Array<model.CityModel>();
             DB.get().getConnection(function (err, connection) {
-                let query = connection.query('SELECT * FROM city');
-
+                let query = connection.query('SELECT * FROM city WHERE idState = ?', stateId);
                 query.on('error', function (err) {
-                    Logger.log.error("Error while fetching cities. Error:" + err);
+                    Logger.log.error('Error occured in CityRepository - getCitiesByState - stateid:' + stateId + '  Error:' + err);
                     reject(err);
                 });
-
-                query.on('fields', function (fields) {
-                    console.log(fields);
-                });
-
                 query.on('result', function (row, result) {
-                    let state: model.StateModel;
-                    let city: model.CityModel =
-                        {
-                            id: row.id,
-                            name: row.name,
-                            state: undefined
-                        };
-                    //populate state for the city
-                    if (row.id != null) {
-                        let stateRepo = new StateRepository();
-                        stateRepo.find(row.id)
-                            .then(function (result) {
-                                city.state = result
-                            })
-                            .catch(function (err) {
-                                Logger.log.error("Error while fetching state for city:" + row.id + "Error:" + err);
-                            });
+                    try {
+                        let city: model.CityModel =
+                            {
+                                id: row.id,
+                                name: row.name,
+                                idState: row.idState
+                            };
                         cities.push(city);
                     }
+                    catch (err) {
+                        Logger.log.error('Error occured in CityRepository - find - id:' + stateId + '  Error:' + err);
+                        reject(err);
+                    }
                 });
-                query.on('end', function (result) {
-                    //alternate way
-                    //if (result.rows.length > 0) {
-                    //    for (let i = 0, len = result.rows.length; i < len; i++) {
-                    //        let row = rows[i];
-                    //    }
-                    //}
-                    connection.release();
+                query.on('end', function () {
                     resolve(cities);
+                    connection.release();
                 });
             });
         });
     }
-};
+}
+
 
 class StateRepository implements irepo.IStateRepository {
     find(id: number): Promise<model.StateModel> {
@@ -122,75 +98,58 @@ class StateRepository implements irepo.IStateRepository {
                     reject(err);
                 });
 
-                query.on('fields', function (fields) {
-                    console.log(fields);
-                });
-
                 query.on('result', function (row, result) {
                     state =
                         {
                             id: row.id,
                             abbr: row.abbr,
                             name: row.name,
-                            country: undefined
+                            idCountry: row.IdCountry
                         };
-                    let ctr: model.CountryModel;
+                });
+                query.on('end', function (result) {
                     let countryRepo = new CountryRepository();
                     countryRepo.find(state.id)
-                        .then(function (result) {
+                        .then(function (result: model.CountryModel) {
                             state.country = result;
+                            resolve(state);
                         })
                         .catch(function (error) {
                             Logger.log.error("Error while fetching Country for state:" + state.id + " - " + error);
+                            reject(err.message);
                         });
-                });
-                query.on('end', function (result) {
                     connection.release();
-                    resolve(state);
                 });
             });
         });
-
-
     }
-    getAll(): Promise<Array<model.StateModel>> {
+
+    getStatesByCountry(countryId: number): Promise<Array<model.StateModel>> {
         let states: Array<model.StateModel> = new Array<model.StateModel>();
         return new Promise<Array<model.StateModel>>((resolve, reject) => {
             DB.get().getConnection(function (err, connection) {
-                let query = connection.query('SELECT * FROM state');
+                let query = connection.query('SELECT * FROM state WHERE isCountry=?', countryId);
+
                 query.on('error', function (err) {
                     Logger.log.info('Error occured in StateRepository - getAll Error:' + err);
                     reject(err);
                 });
 
-                query.on('fields', function (fields) {
-                    console.log(fields);
-                });
-
                 query.on('result', function (row, result) {
-                    let countryRepo = new CountryRepository();
                     let state: model.StateModel =
                         {
                             id: row.id,
                             abbr: row.abbr,
                             name: row.name,
-                            country: undefined
+                            idCountry: row.idCountry
                         };
-
-                    countryRepo.find(row.idCountry)
-                        .then((result) => {
-                            state.country = result;
-                        })
-                        .catch((err) => {
-                            Logger.log.info('Error occured while fetching country for state:' + row.name + ' idCountry:' + row.idCountry + ' Error:' + err);
-                        });
                     states.push(state);
                 });
                 query.on('end', function (result) {
-                    connection.release();
                     resolve(states);
+                    connection.release();
                 });
-            });           
+            });
         });
     }
 };
@@ -209,12 +168,7 @@ class CountryRepository implements irepo.ICountryRepository {
                     query.on('error', function (err) {
                         reject(err);
                     });
-
-                    query.on('fields', function (fields) {
-                        Logger.log.info(fields);
-                    });
-
-                    query.on('result', function (row, result) {
+                    query.on('result', function (row, index) {
                         country =
                             {
                                 id: row.id,
@@ -240,10 +194,6 @@ class CountryRepository implements irepo.ICountryRepository {
                 query.on('error', function (err) {
                     Logger.log.info('Error occured in CountryRepository - getAll Error:' + err);
                     reject(err);
-                });
-
-                query.on('fields', function (fields) {
-                    console.log(fields);
                 });
 
                 query.on('result', function (row, result) {

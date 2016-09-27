@@ -1,17 +1,20 @@
 ﻿export interface CityModel {
     id: number;
     name: string;
-    state: StateModel;
-}
-export interface CountryModel {
-    id: number;
-    name: string;
-    abbr: string;
+    idState: number;
+    state?: StateModel;
 }
 
 export interface StateModel {
     id: number;
     name: string;
-    country: CountryModel;
+    abbr: string;
+    idCountry: number;
+    country?: CountryModel;
+}
+
+export interface CountryModel {
+    id: number;
+    name: string;
     abbr: string;
 }

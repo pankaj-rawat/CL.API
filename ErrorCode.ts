@@ -1,0 +1,5 @@
+﻿export enum ErrorCode {
+    PARAMETER_MISSING = 1,
+    DB_CONNECTION_FAIL = 2,
+    DB_QUERY_EXECUTION_ERROR=3
+}
