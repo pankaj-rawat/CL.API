@@ -1,4 +1,4 @@
-﻿import irepo = require('../interfaces/IuserRepository');
+﻿import irepo = require('../interfaces/IUserRepository');
 import model = require('../models/UserModel');
 import * as DB from "../DB";
 import {Logger}  from "../Logger";

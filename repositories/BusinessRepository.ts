@@ -1,6 +1,6 @@
 ﻿import irepo = require("../interfaces/IBusinessRepository");
 import model = require("../models/BusinessModel");
-import * as db from "../Db";
+import * as db from "../DB";
 import {Logger as logger} from "../Logger";
 
 export class BusinessRepository implements irepo.IBusinessRepository {
