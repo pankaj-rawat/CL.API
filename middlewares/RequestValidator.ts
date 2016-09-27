@@ -30,7 +30,7 @@ export class RequestValidator {
         }
         else if (token || key) {
             try {
-                let decoded = jwt.decode(token, String(config.get("token.key")));
+                let decoded = jwt.decode(token, String(process.env.TOKEN_KEY || config.get("token.key")));
                 if (decoded.exp <= Date.now()) {
                     res.status(httpStatus_BADREQUEST);
                     res.json({

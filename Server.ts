@@ -18,6 +18,12 @@ let httpsServerOption = {
     key : key
 };
 
+//enable CORS
+app.use(function (req:express.Request, res:express.Response, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
 
 // configure app to use bodyParser()
 app.use(bodyParser.urlencoded({ extended: true }));
