@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "CL.API",
   "main": "Index.js",
-  "postinstall": "typings install && tsc",
+  "postinstall": "typings install && tsc *.ts",
   "author": {
     "name": "edh"
   },
