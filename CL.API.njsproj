@@ -92,6 +92,7 @@
     <TypeScriptCompile Include="repositories\BusinessRepository.ts" />
     <TypeScriptCompile Include="repositories\CategoryTagRepository.ts" />
     <TypeScriptCompile Include="repositories\CityStateCountryRepository.ts" />
+    <TypeScriptCompile Include="repositories\RegistrationPlanRepository.ts" />
     <TypeScriptCompile Include="repositories\UserRepository.ts" />
     <TypeScriptCompile Include="RouteBuilder.ts" />
     <TypeScriptCompile Include="routes\Auth.ts" />
@@ -100,6 +101,7 @@
     <TypeScriptCompile Include="routes\Countries.ts" />
     <TypeScriptCompile Include="routes\States.ts" />
     <TypeScriptCompile Include="routes\Tags.ts" />
+    <TypeScriptCompile Include="routes\RegistrationPlans.ts" />
     <TypeScriptCompile Include="routes\Users.ts" />
     <TypeScriptCompile Include="Scripts\typings\async\async.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\bcryptjs\bcryptjs.d.ts" />
