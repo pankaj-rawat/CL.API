@@ -136,7 +136,7 @@ class StateRepository implements irepo.IStateRepository {
         let states: Array<model.StateModel> = new Array<model.StateModel>();
         return new Promise<Array<model.StateModel>>((resolve, reject) => {
             DB.get().getConnection(function (err, connection) {
-                let query = connection.query('SELECT * FROM state WHERE isCountry=?', countryId);
+                let query = connection.query('SELECT * FROM state WHERE idCountry=?', countryId);
 
                 query.on('error', function (err) {
                     Logger.log.info('Error occured in StateRepository - getAll Error:' + err);
