@@ -76,7 +76,7 @@ export class CategoryRepository implements irepo.ICategoryRepository {
                     });
                     query.on('result', function (row, index: number) {
                         let category:model.CategoryModel={
-                            id: row.Id,
+                            id: row.id,
                             value: row.value,
                             active: row.active
                         };
