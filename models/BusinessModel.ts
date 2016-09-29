@@ -26,6 +26,16 @@ export interface BusinessModel {
     businessOperationHours?: Array<BusinessOperationHourModel>
     categories?: Array<model.CategoryModel>
     contactNumbers: Array<BusinessPhoneModel>;
+    registrationPlan: BusinessRegistrationPlan
+}
+
+export interface BusinessRegistrationPlan {
+    id: number,
+    idBusiness:number,
+    idRegistrationPlan: number,
+    createdOn: Date,
+    expirydate: Date,
+    active:boolean,
 }
 
 export interface BusinessPhoneModel {
