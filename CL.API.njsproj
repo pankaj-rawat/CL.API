@@ -96,6 +96,7 @@
     <TypeScriptCompile Include="repositories\UserRepository.ts" />
     <TypeScriptCompile Include="RouteBuilder.ts" />
     <TypeScriptCompile Include="routes\Auth.ts" />
+    <TypeScriptCompile Include="routes\Business.ts" />
     <TypeScriptCompile Include="routes\Categories.ts" />
     <TypeScriptCompile Include="routes\Cities.ts" />
     <TypeScriptCompile Include="routes\Countries.ts" />

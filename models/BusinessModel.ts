@@ -1,61 +1,62 @@
 ﻿import model = require("./CategoryTagModel");
 export interface BusinessModel {
-    id: number,
-    idUser?:number,
+    id?: number,
+    idUser?: number,
     name: string,
     contactName?: string,
-    contactTitle?:string,
-    idStatus: number,
+    contactTitle?: string,
+    idStatus?: number,
     streetAddress: string,
     postalCode: number,
     idCity: number,
-    city: string,
+    city?: string,
     idState: number,
-    state: string,
+    state?: string,
     idCountry: number,
-    country:string,
+    country?: string,
     webURL?: string,
     latitude?: number,
     longitude?: number,
     geo?: string,
-    createdOn: Date,
-    lastUpdateOn: Date,
+    createdOn?: Date,
+    lastUpdateOn?: Date,
     description?: string,
     commenceDate?: Date,
-    businessImages?: Array<BusinessImageModel>,
-    businessOperationHours?: Array<BusinessOperationHourModel>
+    images?: Array<BusinessImageModel>,
+    operationHours?: Array<BusinessOperationHourModel>
     categories?: Array<model.CategoryModel>
-    contactNumbers: Array<BusinessPhoneModel>;
+    tags?: Array<model.TagModel>,
+    contactNumbers?: Array<BusinessPhoneModel>;
     registrationPlan: BusinessRegistrationPlan
 }
 
 export interface BusinessRegistrationPlan {
-    id: number,
-    idBusiness:number,
+    id?: number,
+    idBusiness?: number,
     idRegistrationPlan: number,
-    createdOn: Date,
-    expirydate: Date,
-    active:boolean,
+    createdOn?: Date,
+    expirydate?: Date,
+    active?: boolean,
 }
 
 export interface BusinessPhoneModel {
-    idBusiness:number,
+    idBusiness?: number,
     phone: number,
     type: string,
-    extension?:number
+    extension?: number
 }
 
 export interface BusinessImageModel {
     id?: number,
-    name: string,
-    uploadedOn: Date,
-    idBusinessId: number,
-    isProfileImage:boolean
+    imgURL: string,
+    uploadedOn?: Date,
+    idBusinessId?: number,
+    isProfileImage: boolean
 }
 
 export interface BusinessOperationHourModel {
     id?: number,
-    idBusiness:number,
+    idBusiness: number,
     day: number,
     timeOpen: string,
     timeClose: string
@@ -69,5 +70,5 @@ export interface BusinessOfferModel {
     createdOn: Date,
     lastUpdatedOn: Date,
     expiryDate: Date,
-    termsCondition?: string   
+    termsCondition?: string
 }
