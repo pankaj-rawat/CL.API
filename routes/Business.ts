@@ -37,7 +37,6 @@ businessController.post('', function (req: express.Request, res: express.Respons
         images: getImageList(req),
         operationHours: getOperationHourList(req),
         tags:getTagList(req)
-
     }
    
     let apiResponse: APIResponse;

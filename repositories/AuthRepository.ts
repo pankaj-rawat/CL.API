@@ -23,7 +23,12 @@ export class AuthRepository implements irepo.IAuthRepository {
                 let validatePromise: Promise<model.AuthUsermodel> = validate(username, password);
                 validatePromise.then(function (result: model.AuthUsermodel) {
                     if (result != null) {
-                        auth = genToken(result);
+                        let expiryDate:Date = expiresIn(Number(process.env.DAYSTOEXPIRE || config.get("token.daysToExpire")));
+                        auth = {
+                            expires: expiryDate,
+                            token: genToken(result, expiryDate),
+                            user: result
+                        };
                     }
                     resolve(auth);
                 });
@@ -95,23 +100,20 @@ function validate(username: string, password: string): Promise<model.AuthUsermod
     });
 }
 // private method
-function genToken(user: model.AuthUsermodel): model.AuthModel {
-    let expires = expiresIn(Number(process.env.DAYSTOEXPIRE || config.get("token.daysToExpire")));
+function genToken(user: model.AuthUsermodel, expires: Date): string {
+    
     Logger.log.info(expires.toString());
     Logger.log.info(expires.toUTCString());
 
     let token = jwt.encode({
         exp: expires
     }, String(process.env.TOKEN_KEY || config.get("token.key")));
-
-    return {
-        expires: expires,
-        token: token,
-        user: user
-    };
+    return token;
 }
-function expiresIn(numDays:number):Date {
+
+function expiresIn(numDays: number): Date {
     let dateObj = new Date();
     dateObj.setDate(dateObj.getDate() + numDays);
+
     return dateObj;
 }
