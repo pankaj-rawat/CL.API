@@ -128,8 +128,9 @@ class UserRepository implements irepo.IUserRepository {
         return new Promise(function (resolve, reject) {
             if (id != null) {
                 try {
-                    DB.get().getConnection(function (err, connection) {
+                    DB.getC().getConnection(function (err, connection) {
                         if (err != null) {
+                            connection.release();
                             Logger.log.error(err.message);
                             reject(err);
                         }
@@ -137,6 +138,7 @@ class UserRepository implements irepo.IUserRepository {
                             let roles:Array<number>=new Array<number>();
                             let query = connection.query("Select idrole from userrole where iduser=?", id);
                             query.on('error', function (err) {
+                                connection.release();
                                 Logger.log.error(err.message);
                                 reject(err);
                             });
@@ -144,6 +146,7 @@ class UserRepository implements irepo.IUserRepository {
                                 roles.push(row.idrole);
                             });
                             query.on('end', function (result) {
+                                connection.release();
                                 resolve(roles);
                             });
                         }

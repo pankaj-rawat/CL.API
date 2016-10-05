@@ -54,18 +54,20 @@ export class AuthRepository implements irepo.IAuthRepository {
 
 function validate(username: string, password: string): Promise<model.AuthUsermodel> {
     return new Promise(function (resolve, reject) {
-        DB.get().getConnection(function (err, connection) {
+        DB.getC().getConnection(function (err, connection) {
             let pwd: string;
             let userId: number;
             let user: model.AuthUsermodel;
             let userRoles: Array<number> = new Array<number>();
             if (err != null) {
+                connection.release();
                 Logger.log.info("Error occur while validating password. Error:" + err.message);
                 reject(err);
             }
             else {
                 let query = connection.query("CALL sp_user_select_pwd(?)", [username]);
                 query.on('error', function (err) {
+                    connection.release();
                     Logger.log.info("Error occur while validating password. Error:" + err.message);
                     reject(err);
                 });
@@ -78,6 +80,7 @@ function validate(username: string, password: string): Promise<model.AuthUsermod
                     }
                 });
                 query.on('end', function (result) {
+                    connection.release();
                     if (pwd != null) {
                         if (bcrypt.compareSync(password, pwd)) {
                             user = {

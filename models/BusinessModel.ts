@@ -22,21 +22,15 @@ export interface BusinessModel {
     lastUpdateOn?: Date,
     description?: string,
     commenceDate?: Date,
+    idRegistrationPlan: number,
+    registrationPlanOptDate?: Date,
+    registrationPlanExpiry?: Date,
+    registrationPlanName?:string,
     images?: Array<BusinessImageModel>,
     operationHours?: Array<BusinessOperationHourModel>
     categories?: Array<model.CategoryModel>
     tags?: Array<model.TagModel>,
-    contactNumbers?: Array<BusinessPhoneModel>;
-    registrationPlan: BusinessRegistrationPlan
-}
-
-export interface BusinessRegistrationPlan {
-    id?: number,
-    idBusiness?: number,
-    idRegistrationPlan: number,
-    createdOn?: Date,
-    expirydate?: Date,
-    active?: boolean,
+    contactNumbers?: Array<BusinessPhoneModel>
 }
 
 export interface BusinessPhoneModel {
