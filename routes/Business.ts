@@ -20,6 +20,7 @@ businessController.post('', function (req: express.Request, res: express.Respons
         commenceDate: req.body.commenceDate,
         contactName: req.body.contactName,
         contactTitle: req.body.contactTitle,
+        idStatus:req.body.idStatus,
         description: req.body.description,
         idCountry: req.body.idCountry,
         idState: req.body.idState,
@@ -33,10 +34,10 @@ businessController.post('', function (req: express.Request, res: express.Respons
         },
         streetAddress: req.body.streetAddress,
         webURL: req.body.webURL,
-        contactNumbers: getContactNumberList(req),
-        images: getImageList(req),
-        operationHours: getOperationHourList(req),
-        tags:getTagList(req)
+        contactNumbers: getContactNumberList(JSON.parse(req.body.contactNumbers)),
+        images: getImageList(JSON.parse(req.body.images)),
+        operationHours: getOperationHourList(JSON.parse(req.body.operationHours)),
+        tags: getTagList(req.body.tags)
     }
    
     let apiResponse: APIResponse;
@@ -58,45 +59,35 @@ businessController.post('', function (req: express.Request, res: express.Respons
 
 });
 
-function getContactNumberList(req: express.Request): Array<model.BusinessPhoneModel> {
-    let contactNumbers: Array<model.BusinessPhoneModel> = new Array<model.BusinessPhoneModel>();
-    contactNumbers.push({
-        phone: 111,
-        //extension: 1,
-        type: "M"
-    });
-
-    contactNumbers.push({
-        phone: 222,
-        extension: 2,
-        type: "M"
-    });
+function getContactNumberList(phones:Array<model.BusinessPhoneModel>): Array<model.BusinessPhoneModel> {
+    let contactNumbers: Array<model.BusinessPhoneModel> = new Array<model.BusinessPhoneModel>(); 
+    //Do any massage if required  else removes these methods call in future.
+    contactNumbers = phones;
     return contactNumbers;
 }
 
-function getImageList(req: express.Request): Array<model.BusinessImageModel> {
-    let images: Array<model.BusinessImageModel> = new Array<model.BusinessImageModel>();
-    images.push({
-        isProfileImage: false,
-        imgURL: "image1"
-    });
-
-    images.push({
-        isProfileImage: false,
-        imgURL: "image2"
-    });
-    return images;
+function getImageList(images: Array<model.BusinessImageModel>): Array<model.BusinessImageModel> {
+        //Do any massage if required  else removes these methods call in future.
+       return images;
 }
 
-function getOperationHourList(req: express.Request): Array<model.BusinessOperationHourModel> {
-    let operationHours: Array<model.BusinessOperationHourModel> = new Array<model.BusinessOperationHourModel>();
-    //populate list
-    return operationHours;
+function getOperationHourList(operationHours: Array<model.BusinessOperationHourModel>): Array<model.BusinessOperationHourModel> {
+        //Do any massage if required  else removes these methods call in future.
+      return operationHours;
 }
 
-function getTagList(req: express.Request): Array<CategoryTagModel.TagModel> {
+function getTagList(tagstring:string): Array<CategoryTagModel.TagModel> {
     let tags: Array<CategoryTagModel.TagModel> = new Array<CategoryTagModel.TagModel>();
-    //populate list
+    let tempTags: Array<string> = tagstring.split(',');
+    for (let val of tempTags) {
+        //let tag: CategoryTagModel.TagModel = {
+        //    id: Number(val)
+        tags.push({
+            id: Number(val)
+        });
+        //}       
+    }
+
     return tags;
 }
 module.exports = businessController;

@@ -19,7 +19,7 @@ export class BusinessRepository implements irepo.IBusinessRepository {
                         let tags: string = getTagsString(business.tags);
                         let operationhours: string = getOperationHourString(business.operationHours);
                         connection.query("Call sp_business_insert(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
-                            , ['name', business.contactName, business.contactTitle, business.idStatus, business.streetAddress,
+                            , [business.name, business.contactName, business.contactTitle, business.idStatus, business.streetAddress,
                                 business.postalCode, business.idCity, business.idState, business.idCountry, business.webURL, business.latitude,
                                 business.longitude, business.description, business.commenceDate, images, phones, tags, operationhours,
                                 business.registrationPlan.idRegistrationPlan]
@@ -28,7 +28,7 @@ export class BusinessRepository implements irepo.IBusinessRepository {
                                     reject(err);
                                 }
                                 else {                                   
-                                    resolve(result);
+                                    resolve(result); //TODO::::::::
                                     let businessId: number = result.id;
                                     //this.find(businessId)
                                     //    .then(function (result) {
@@ -91,29 +91,72 @@ export class BusinessRepository implements irepo.IBusinessRepository {
 
 function getPhonesString(phones: Array<model.BusinessPhoneModel>): string {
     //expected string ->  phone;extension;type,phone1;extension1;type1
-    let result: string = "";
+    let result: string = undefined;
     let ext: string = "";
     for (let phone of phones) {
-        if (phone.extension) {
-            ext = phone.extension.toString();
+        if (phone) {
+            if (phone.extension) {
+                ext = phone.extension.toString();
+            }
+            if (result == null) {
+                result = phone.phone + ";" + ext + ";" + phone.type;
+            }
+            else {
+                result = result + "," + phone.phone + ";" + ext + ";" + phone.type;
+            }
+            
         }
-        result = result + "," + phone.phone + ";" + ext + ";" + phone.type
     }
-    result=result.substring(1);
-    return result ;
+     return result ;
 }
 
-function getImagesString(phones: Array<model.BusinessImageModel>): string {
+function getImagesString(images: Array<model.BusinessImageModel>): string {
     //expected string -> isProfilePic;imageURL,isProfilePic1;imageURL1
-    return 'ss';
+    let result: string = undefined;
+      for (let image of images) {
+          if (image) {
+             if (result == null) {
+                 result = image.isProfileImage + ";" + image.imgURL; 
+            }
+            else {
+                 result = result + "," + image.isProfileImage + ";" + image.imgURL; 
+            }
+
+        }
+    }
+      return result;
 }
 
-function getOperationHourString(phones: Array<model.BusinessOperationHourModel>): string {
+function getOperationHourString(operationHours: Array<model.BusinessOperationHourModel>): string {
     //expected string -> day;timeopen;timeclose, day1;timeopen1;timeclose1
-    return 'ss';
+    let result: string = undefined;
+    for (let operationHour of operationHours) {
+        if (operationHour) {           
+            if (result == null) {
+                result = operationHour.day + ";" + operationHour.timeOpen + ";" + operationHour.timeClose;
+            }
+            else {
+                result = result + "," + operationHour.day + ";" + operationHour.timeOpen + ";" + operationHour.timeClose;
+            }
+
+        }
+    }
+    return result;
 }
 
-function getTagsString(phones: Array<CategoryTagModel.CategoryModel>): string {
+function getTagsString(tags:Array<CategoryTagModel.TagModel>): string {
     //expected string -> tag,tag1,tag2
-    return 'ss';
+    let result: string = undefined;
+    for (let tag of tags) {
+        if (tag) {
+            if (result == null) {
+                result = tag.id.toString();
+            }
+            else {
+                result = result + "," +tag.id.toString();
+            }
+
+        }
+    }
+    return result;
 }
