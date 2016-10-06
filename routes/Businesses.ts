@@ -77,6 +77,25 @@ businessController.post('', function (req: express.Request, res: express.Respons
 
 });
 
+businessController.get('/:id', function (req: express.Request, res: express.Response) {
+    let businessRepo: BusinessRepository = new BusinessRepository();
+    let apiResponse: APIResponse;
+    businessRepo.find(req.params.id)
+        .then(function (result) {
+            apiResponse = {
+                data: result
+                ,isValid:true
+            };
+            res.send(apiResponse);
+        })
+        .catch(function (err) {
+            apiResponse = {
+                error: { message: err.message, number: err.number }
+                ,isValid:false
+            };
+            res.send(apiResponse);
+        })
+});
 function getContactNumberList(phones: Array<model.BusinessPhoneModel>): Array<model.BusinessPhoneModel> {
     let contactNumbers: Array<model.BusinessPhoneModel> = new Array<model.BusinessPhoneModel>();
     //Do any massage if required  else removes these methods call in future.

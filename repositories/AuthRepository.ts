@@ -54,7 +54,7 @@ export class AuthRepository implements irepo.IAuthRepository {
 
 function validate(username: string, password: string): Promise<model.AuthUsermodel> {
     return new Promise(function (resolve, reject) {
-        DB.getC().getConnection(function (err, connection) {
+        DB.get().getConnection(function (err, connection) {
             let pwd: string;
             let userId: number;
             let user: model.AuthUsermodel;

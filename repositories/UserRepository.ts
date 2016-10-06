@@ -128,7 +128,7 @@ class UserRepository implements irepo.IUserRepository {
         return new Promise(function (resolve, reject) {
             if (id != null) {
                 try {
-                    DB.getC().getConnection(function (err, connection) {
+                    DB.get().getConnection(function (err, connection) {
                         if (err != null) {
                             connection.release();
                             Logger.log.error(err.message);

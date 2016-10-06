@@ -37,19 +37,15 @@ export class BusinessRepository implements irepo.IBusinessRepository {
                     query.on('end', function () {
                         connection.release();
                         if (!encounteredError) {
-                            if (businessId > 0) {
-                                getBusiness(businessId)
-                                    .then(function (result) {
-                                        resolve(result);
-                                    })
-                                    .catch(function (err) {
-
-                                        reject(err);
-                                    });
-                            }
-                            else {
-                                resolve(businessId);
-                            }
+                            getBusiness(businessId)
+                                .then(function (result) {
+                                    resolve(result);
+                                })
+                                .catch(function (err) {
+                                    logger.log.error(err.stack);
+                                    business.id = businessId;
+                                    resolve(business);
+                                });
                         }
                     });
                 }
@@ -63,19 +59,13 @@ export class BusinessRepository implements irepo.IBusinessRepository {
 
     find(id: number): Promise<model.BusinessModel> {
         return new Promise(function (resolve, reject) {
-            try {
-                let business: model.BusinessModel;
-                if (business) {
-                    resolve(business);
-                }
-                else {
-                    reject(new Error("no business found"));
-                }
-            }
-            catch (err) {
-                logger.log.error(err);
-                reject(err.message);
-            }
+            getBusiness(id)
+                .then(function (result) {
+                    resolve(result);
+                })
+                .catch(function (err) {
+                   reject(err);
+                });
         });
     };
     update(business: model.BusinessModel): Promise<model.BusinessModel> {
@@ -111,38 +101,39 @@ function getBusiness(id: number): Promise<model.BusinessModel> {
                 let query = connection.query('Call sp_business_select(?)', id);
                 query.on('error', function (err) {
                     encounteredError = true;
-                    connection.release();//TODO need to do something to say that business is registered
                     reject(err);
                 });
                 query.on('result', function (row, index) {
-                    business = {
-                        id: row.id,
-                        name: row.name,
-                        contactName: row.contactName,
-                        contactTitle: row.contactTitle,
-                        idStatus: row.idStatus,
-                        streetAddress: row.streetAddress,
-                        postalCode: row.postalCode,
-                        idCity: row.idCity,
-                        idState: row.idState,
-                        idCountry: row.idCountry,
-                        webURL: row.webURL,
-                        latitude: row.latitude,
-                        longitude: row.longitude,
-                        geo: row.geo,
-                        createdOn: row.createdOn,
-                        lastUpdateOn: row.lastUpdatedOn,
-                        description: row.description,
-                        commenceDate: row.commenceDate,
-                        idUser: row.idUser,
-                        city: row.city,
-                        state: row.state,
-                        country: row.country,
-                        idRegistrationPlan: row.idRegistrationPlan,
-                        registrationPlanExpiry: row.registrationPlanExpiry,
-                        registrationPlanOptDate: row.registrationPlanOptDate,
-                        registrationPlanName: row.rpName
-                    };
+                    if (index == 0) {
+                        business = {
+                            id: row.id,
+                            name: row.name,
+                            contactName: row.contactName,
+                            contactTitle: row.contactTitle,
+                            idStatus: row.idStatus,
+                            streetAddress: row.streetAddress,
+                            postalCode: row.postalCode,
+                            idCity: row.idCity,
+                            idState: row.idState,
+                            idCountry: row.idCountry,
+                            webURL: row.webURL,
+                            latitude: row.latitude,
+                            longitude: row.longitude,
+                            geo: row.geo,
+                            createdOn: row.createdOn,
+                            lastUpdateOn: row.lastUpdatedOn,
+                            description: row.description,
+                            commenceDate: row.commenceDate,
+                            idUser: row.idUser,
+                            city: row.city,
+                            state: row.state,
+                            country: row.country,
+                            idRegistrationPlan: row.idRegistrationPlan,
+                            registrationPlanExpiry: row.registrationPlanExpiry,
+                            registrationPlanOptDate: row.registrationPlanOptDate,
+                            registrationPlanName: row.rpName
+                        };
+                    }
                 });
                 query.on('end', function () {
                     connection.release();

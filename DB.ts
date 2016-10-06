@@ -36,23 +36,6 @@ export var connect = function (mode: string, done: (err: string) => void) {
 export var get = function () {
     return dbstate.pool;
 }
-export var getC = function () {
-    let poolConfig: mysql.IPoolConfig = {
-        host: process.env.DBHOST || config.get<string>('dbConfig.host'),
-        user: process.env.DBUSER || config.get<string>('dbConfig.user'),
-        password: process.env.DBPWD || config.get<string>('dbConfig.password'),
-        database: process.env.DB || config.get<string>('dbConfig.database')
-    };
-
-    if (config.has('dbConfig.port')) {
-        if (config.get<number>('dbConfig.port') > 0) {
-            poolConfig.port = process.env.HOSTPORT || config.get<number>('dbConfig.port');
-        }
-    }
-    return mysql.createPool(poolConfig);
-}
-
-
 
 //exports.fixtures = function (data) {
 //    var pool = state.pool
