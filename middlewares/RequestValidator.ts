@@ -90,6 +90,7 @@ export class RequestValidator {
                     || (req.url.indexOf('api/countries') >= 0)
                     || (req.url.indexOf('api/categories') >= 0)
                     || (req.url.indexOf('api/tags') >= 0)
+                    || (req.url.indexOf('api/businesses') >= 0)
                     || (req.url.indexOf('api/registrationplans') >= 0)
                     || (req.url.indexOf('api/users/signup') >= 0))
                 {
@@ -125,6 +126,14 @@ export class RequestValidator {
                         }
 
                     });
+                } else {
+                    res.status(httpStatus_UNAUTHORIZED);
+                    Logger.log.info('Response:  ' + httpStatus_UNAUTHORIZED);
+                    res.json({
+                        "status": httpStatus_UNAUTHORIZED,
+                        "message": "Not authorized."
+                    });
+                    return;
                 }
 
             } catch (err) {
