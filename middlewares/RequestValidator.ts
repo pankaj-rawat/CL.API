@@ -34,7 +34,7 @@ export class RequestValidator {
 
                 //verify that client is known to us.
                 let decoded = jwt.decode(clientToken, String(process.env.TOKEN_KEY || config.get("token.key")));
-                 if (new Date(decoded.exp).getTime() >=(new Date()).getTime()) {
+                 if (new Date(decoded.exp).getTime() <=(new Date()).getTime()) {
                     //res.status(httpStatus_BADREQUEST);
                     //Logger.log.info('Response:  ' +httpStatus_BADREQUEST);
                     //res.json({
