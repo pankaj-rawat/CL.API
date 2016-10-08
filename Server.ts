@@ -14,14 +14,14 @@ let key = fs.readFileSync('ssl_cert/key.pem');
 let cert = fs.readFileSync('ssl_cert/cert.pem');
 
 let httpsServerOption = {
-    cert : cert,
-    key : key
+    cert: cert,
+    key: key
 };
 
 //enable CORS
-app.use(function (req:express.Request, res:express.Response, next) {
+app.use(function (req: express.Request, res: express.Response, next) {
     res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, x-client-token,x-client-key,x-access-token,x-key");
     next();
 });
 
@@ -31,10 +31,10 @@ app.use(bodyParser.json());
 app.all('/api/*', validateRequest.Validate);
 //load router
 router.build(app);
-process.on('unhandledRejection', (reason:string,p) => {
-    Logger.log.error(reason);    
+process.on('unhandledRejection', (reason: string, p) => {
+    Logger.log.error(reason);
 });
-process.on('uncaughtException', (reason:string, p) => {
+process.on('uncaughtException', (reason: string, p) => {
     Logger.log.error(reason);
 });
 //module.exports = https.createServer(httpsServerOption, app);

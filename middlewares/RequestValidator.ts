@@ -14,7 +14,7 @@ export class RequestValidator {
         // a preflighted request first. This is to check if the app
         // is safe. 
         // We skip the token outh for [OPTIONS] requests.
-        //if(req.method == 'OPTIONS') next();
+        if(req.method == 'OPTIONS') next();
 
         const httpStatus_BADREQUEST = 400;
         const httpStatus_FORBIDDEN = 403;
