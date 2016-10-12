@@ -6,4 +6,5 @@
         number: number,
         message?:string
     }
+    error1?: any;
 }
