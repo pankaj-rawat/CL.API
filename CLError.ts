@@ -66,7 +66,8 @@ export class CustomError extends Error {
     errorCode: number;
     constructor(name, statusCode, errorCode, message?:string)
     {
-        super(message);     
+        super(message);  
+        Error.captureStackTrace(this, this.constructor);   
         this.name = name || 'CustomError';
         this.message = message || 'Custom error without message';
         this.statusCode = statusCode || 400;
@@ -77,11 +78,51 @@ export class CustomError extends Error {
 export class Forbidden extends Error {
     public statusCode: number;
     errorCode: number;
-    constructor(errorcode?:number,message?: string) {
+    constructor(errorCode?:number,message?: string) {
         super(message);
+        Error.captureStackTrace(this, this.constructor);
         this.name = this.constructor.name;
         this.message = message || 'Forbidden';
         this.statusCode = 403;
-        this.errorCode = errorcode || 403;
+        this.errorCode = errorCode || 403;
+    }
+};
+
+export class DBError extends Error {
+     statusCode: number;
+    errorCode: number;
+    constructor(errorCode?: number, message?: string) {
+        super(message);
+        Error.captureStackTrace(this, this.constructor);
+        this.name = this.constructor.name;
+        this.message = message || 'DBError';
+        this.statusCode = 500;
+        this.errorCode = errorCode || 500;
+    }
+};
+
+export class BadRequest extends Error {
+    statusCode: number;
+    errorCode: number;
+    constructor(errorCode?: number, message?: string) {
+        super(message);
+        Error.captureStackTrace(this, this.constructor);
+        this.name = 'BadRequest';
+        this.message = message || 'Bad Request';
+        this.statusCode = 400;
+        this.errorCode = errorCode || 400;
+    }
+};
+
+export class Unauthorized extends Error {
+    statusCode: number;
+    errorCode: number;
+    constructor(errorCode?: number, message?: string) {
+        super(message);
+        Error.captureStackTrace(this, this.constructor);
+        this.name = this.constructor.name;
+        this.message = message || 'Unauthorized Request';
+        this.statusCode = 401;
+        this.errorCode = errorCode || 401;
     }
 };

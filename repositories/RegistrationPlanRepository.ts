@@ -56,7 +56,7 @@ export class RegistrationPlanRepository implements IRegistrationPlanRepository {
                 });
             }
             else {
-                reject(ErrorCode.PARAMETER_MISSING);
+                reject(ErrorCode.REQUIRED_PARAM_MISSING);
             }
         });
     }

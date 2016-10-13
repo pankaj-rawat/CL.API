@@ -54,7 +54,7 @@ export class RequestValidator {
                     }
                     catch (error) {
                         Logger.log.error(error.message);
-                        clRes = { error: { message: "Auto refresh fail.", number: error.code }, isValid: false }
+                        clRes = { error: { message: "Auto refresh fail.", errorCode: error.code }, isValid: false }
                         res.send(clRes);
                     }
                 });

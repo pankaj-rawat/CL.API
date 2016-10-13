@@ -22,7 +22,7 @@ registrationPlanController.get('', function (req: express.Request, res: express.
                 isValid: false,
                 error: {
                     message: err.message,
-                    number: 1// TODO:need to fix it.
+                    errorCode: 1// TODO:need to fix it.
                 }
             };
             res.send(apiResponse);
@@ -46,7 +46,7 @@ registrationPlanController.get('/:id', function (req: express.Request, res: expr
                 isValid: false,
                 error: {
                     message: err.message,
-                    number: 1// TODO:need to fix it.
+                    errorCode: 1// TODO:need to fix it.
                 }
             };
             res.send(apiResponse);

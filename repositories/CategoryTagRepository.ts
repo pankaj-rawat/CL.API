@@ -55,7 +55,7 @@ export class CategoryRepository implements irepo.ICategoryRepository {
             }
             else {
                 Logger.log.error("Category id not supplied");
-                reject(ErrorCode.PARAMETER_MISSING);
+                reject(ErrorCode.REQUIRED_PARAM_MISSING);
             }
         });
     }
@@ -122,7 +122,7 @@ export class TagRepository implements irepo.ITagRepository {
                 });
             }
             else {
-                reject(ErrorCode.PARAMETER_MISSING);
+                reject(ErrorCode.REQUIRED_PARAM_MISSING);
             }
         });
     }
@@ -156,7 +156,7 @@ export class TagRepository implements irepo.ITagRepository {
                 });
             }
             else {
-                reject(ErrorCode.PARAMETER_MISSING);
+                reject(ErrorCode.REQUIRED_PARAM_MISSING);
             }
 
         });
@@ -187,7 +187,7 @@ export class TagRepository implements irepo.ITagRepository {
                 });
             }
             else {
-                reject(ErrorCode.PARAMETER_MISSING);
+                reject(ErrorCode.REQUIRED_PARAM_MISSING);
             }
         });
     }
@@ -196,7 +196,7 @@ export class TagRepository implements irepo.ITagRepository {
             if (tag != null) {
             }
             else {
-                reject(ErrorCode.PARAMETER_MISSING);
+                reject(ErrorCode.REQUIRED_PARAM_MISSING);
             }
         });
     }
@@ -205,7 +205,7 @@ export class TagRepository implements irepo.ITagRepository {
             if (id != null) {
             }
             else {
-                reject(ErrorCode.PARAMETER_MISSING);
+                reject(ErrorCode.REQUIRED_PARAM_MISSING);
             }
         });
     }
