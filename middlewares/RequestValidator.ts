@@ -1,6 +1,7 @@
 ﻿import ld = require('lodash');
 import jwt = require('jwt-simple');
 import {AuthRepository} from "../repositories/AuthRepository";
+import {UserRepository} from "../repositories/UserRepository";
 import config = require('config');
 import *  as model from "../models/AuthModel";
 import {Role} from "../Definitions";
@@ -93,19 +94,17 @@ export class RequestValidator {
         }
 
         //verify that some user must logged in to procede further
-        let authRepo = new AuthRepository();
+        let userRepo = new UserRepository();
         // The key would be the logged in user's username
-        authRepo.validateUser(key, function (err, userRoles) {
-            if (err) {
-                return next(err);
-            }
-            if (!ld.includes(userRoles, Role.RegisteredUser)) {              
-                return next(new CLError.Forbidden(ErrorCode.USER_NOT_AUTHORIZED, ' User not authorized.'));
-            }
-
-            //TODO: need to implement role based. For the time being hardcoded for Role.RegisteredUser
-            next(); // To move to next middleware
+        userRepo.getUserRoles(key)
+            .then(function (userRoles) {
+                if (!ld.includes(userRoles, Role.RegisteredUser)) {
+                    return next(new CLError.Forbidden(ErrorCode.USER_NOT_AUTHORIZED, ' User not authorized.'));
+                }
+                next();
+            })
+            .catch(function(err){
+            return next(err);
         });
-
     };
 }

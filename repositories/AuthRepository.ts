@@ -38,16 +38,16 @@ export class AuthRepository implements irepo.IAuthRepository {
         });
     }
 
-    validateUser(userId: number, res: (error:Object,userRoles: Array<number>) => void): void {
-        let userRepo: UserRepository = new UserRepository();
-        userRepo.getUserRoles(userId)
-            .then(function (result: Array<number>) {
-                res(null,result);
-            })
-            .catch(function (err) {
-                res(err,null);
-            });
-    }
+    //validateUser(userId: number, res: (error:Object,userRoles: Array<number>) => void): void {
+    //    let userRepo: UserRepository = new UserRepository();
+    //    userRepo.getUserRoles(userId)
+    //        .then(function (result: Array<number>) {
+    //            res(null,result);
+    //        })
+    //        .catch(function (err) {
+    //            res(err,null);
+    //        });
+    //}
 
     connect(clientId: number, clientName: string, clientKey: string): Promise<model.AuthModel> {
         let auth: model.AuthModel;
