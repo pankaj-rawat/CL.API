@@ -1,5 +1,4 @@
 ﻿import irepo = require("../interfaces/IAuthRepository");
-import {UserRepository} from  "./UserRepository";
 import jwt = require('jwt-simple');
 import config = require('config');
 import * as DB from "../DB";
