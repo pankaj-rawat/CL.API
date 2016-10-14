@@ -1,11 +1,11 @@
 ﻿//contain setting only relevent to prod to override default.json values.
 {
   "dbConfig": {
-    "host": "",
+    "host": "us-cdbr-iron-east-04.cleardb.net",
     "port": 0,
-    "user": "",
-    "password": "",
-    "database": ""
+    "user": "b41fcc039dc0b4",
+    "password": "ffbf2864",
+    "database": "heroku_bd248f5d5a6eb6f"
   },
   "server": {
     "port": 1337

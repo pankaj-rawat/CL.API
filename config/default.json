@@ -1,6 +1,6 @@
 ﻿{
   "dbConfig": {
-    "host": "127.0.0.1111",
+    "host": "127.0.0.1",
     "port": 3306,
     "user": "root",
     "password": "mysqlroot",
@@ -10,7 +10,7 @@
     "port": 1337
   },
   "token": {
-    "minutesToExpire-user": 1,
+    "minutesToExpire-user": 10,
     "minutesToExpire-client": 30,
     "key": "sss.sss.sss.ssh"
   },

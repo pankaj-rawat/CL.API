@@ -2,16 +2,24 @@
 import * as model from "../models/CityStateCountryModel";
 import * as DB from "../DB";
 import {Logger}  from "../Logger";
+import * as CLError from "../CLError";
+import {ErrorCode} from "../ErrorCode";
 
 class CityRepository implements irepo.ICityRepository {
     find(id: number): Promise<model.CityModel> {
+        Logger.log.error('CityRepository - find - id:' + id);
         let city: model.CityModel;
         return new Promise(function (resolve, reject): void {
             DB.get().getConnection(function (err, connection) {
+                if (err != null) {
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Error occured while obtaining database connection. ' + err.message));
+                }
+
+                let encounteredError: boolean = false;
                 let query = connection.query('SELECT * FROM city WHERE id = ?', id);
                 query.on('error', function (err) {
-                    Logger.log.error('Error occured in CityRepository - find - id:' + id + '  Error:' + err);
-                    reject(err);
+                    encounteredError = true;
+                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while getting cities. ' + err.message));
                 });
                 query.on('result', function (row, result) {
                     try {
@@ -22,16 +30,16 @@ class CityRepository implements irepo.ICityRepository {
                                 idState: row.idState
                             };
                     }
-                    catch (err) {
-                        Logger.log.error('Error occured in CityRepository - find - id:' + id + '  Error:' + err);
-                        reject(err);
+                    catch (ex) {
+                        encounteredError = true;
+                        return reject(new CLError.DBError(ErrorCode.DB_DATA_PARSE_ERROR, 'Error occured while parsing data. ' + ex.message));
                     }
                 });
 
                 query.on('end', function (result) {
                     connection.release();
                     //populate state for the city
-                    try {
+                    if (!encounteredError) {
                         if (city != null) {
                             let stateRepo = new StateRepository();
                             stateRepo.find(city.id)
@@ -44,13 +52,8 @@ class CityRepository implements irepo.ICityRepository {
                                 });
                         }
                         else {
-                            reject(new Error("City not found."));
+                            reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND, 'City not found.'));
                         }
-                        connection.release();
-                    }
-                    catch (err) {
-                        Logger.log.error('Error occured in CityRepository - find - id:' + id + '  Error:' + Error);
-                        reject(city);
                     }
                 });
             });

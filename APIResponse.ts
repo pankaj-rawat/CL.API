@@ -4,6 +4,7 @@
     message?: string;
     error?: {
         errorCode?: number,
+        statusCode?:number,
         message?:string
     }
 }

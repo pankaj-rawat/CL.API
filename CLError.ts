@@ -5,15 +5,7 @@ export class CLError extends Error {
     statusCode: number;
     errorCode: number;
 
-       BadRequest(message, errorCode) {
-        Error.captureStackTrace(this, this.constructor);
-        this.name = 'BadRequest';
-        this.message = message || 'Bad Request';
-        this.statusCode = 400;
-        this.errorCode = errorCode || 400;
-    };
-
-   
+  
     InternalServerError(message, errorCode) {
 
         Error.captureStackTrace(this, this.constructor);
@@ -33,17 +25,6 @@ export class CLError extends Error {
         this.statusCode = 408;
         this.errorCode = errorCode || 408;
     };
-
-    Unauthorized(message, errorCode) {
-
-        Error.captureStackTrace(this, this.constructor);
-
-        this.name = this.constructor.name;
-        this.message = message || 'Unauthorized Request';
-        this.statusCode = 401;
-        this.errorCode = errorCode || 401;
-    };
-
     UnprocessableEntity(message, errorCode) {
         Error.captureStackTrace(this, this.constructor);
         this.name = this.constructor.name;
@@ -89,11 +70,12 @@ export class Forbidden extends Error {
 };
 
 export class DBError extends Error {
-     statusCode: number;
-    errorCode: number;
+     public statusCode: number;
+     public errorCode: number;
+     public message: string;
     constructor(errorCode?: number, message?: string) {
         super(message);
-        Error.captureStackTrace(this, this.constructor);
+        Error.captureStackTrace(this, this.constructor); //is it making any difference?
         this.name = this.constructor.name;
         this.message = message || 'DBError';
         this.statusCode = 500;
@@ -124,5 +106,18 @@ export class Unauthorized extends Error {
         this.message = message || 'Unauthorized Request';
         this.statusCode = 401;
         this.errorCode = errorCode || 401;
+    }
+};
+
+export class NotFound extends Error {
+    statusCode: number;
+    errorCode: number;
+    constructor(errorCode?: number, message?: string) {
+        super(message);
+        Error.captureStackTrace(this, this.constructor);
+        this.name = this.constructor.name;
+        this.message = message || 'The requested resource couldn\'t be found';
+        this.statusCode = 404;
+        this.errorCode = errorCode || 404;
     }
 };
