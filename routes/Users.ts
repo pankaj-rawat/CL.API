@@ -1,10 +1,29 @@
 ﻿import {UserRepository} from  "../repositories/UserRepository";
+import {AuthRepository} from  "../repositories/AuthRepository";
 import {APIResponse} from "../APIResponse";
 import model = require('../models/UserModel');
+import * as amodel from "../models/AuthModel";
 import bcrypt = require('bcryptjs');
 import express = require('express');
+import {Logger}  from "../Logger";
 
 var userController = express.Router();
+
+userController.post('/login', function (req, res, next) {
+    Logger.log.info('login in process: ' + req);
+    let clRes: APIResponse;
+    let authrepo = new AuthRepository();
+    let username = req.body.username;
+    let password = req.body.password;
+    let response: Promise<amodel.AuthModel> = authrepo.login(username, password);
+    response.then(function (result: amodel.AuthModel) {
+        clRes = { data: result, isValid: true };
+        res.send(clRes);
+    });
+    response.catch(function (error) {
+        next(error);
+    });
+});
 
 userController.get('/:id', function (req:express.Request, res:express.Response) {
     let userP: Promise<model.UserModel>;

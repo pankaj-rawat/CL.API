@@ -63,7 +63,7 @@ export class RequestValidator {
         }
 
           //check for public URL not required users to log in.
-        if ((req.url.indexOf('api/login') >= 0)
+        if ((req.url.indexOf('api/users/login') >= 0)
             || (req.url.indexOf('api/search') >= 0)
             || (req.url.indexOf('api/cities') >= 0)
             || (req.url.indexOf('api/states') >= 0)
