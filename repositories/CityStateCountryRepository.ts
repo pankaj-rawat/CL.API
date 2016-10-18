@@ -58,6 +58,50 @@ class CityRepository implements irepo.ICityRepository {
         });
     }
 
+    getAll(): Promise<Array<model.CityModel>> {
+        return new Promise(function (resolve, reject) {
+            let cities: Array<model.CityModel> = new Array<model.CityModel>();
+            DB.get().getConnection(function (err, connection) {
+                if (err) {
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
+                }
+
+                let encounteredError: boolean = false;
+                let query = connection.query('SELECT * FROM city');
+                query.on('error', function (err) {
+                    encounteredError = true;
+                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while getting cities. ' + err.message));
+                });
+                query.on('result', function (row, index) {
+                    try {
+                        if (index == 0) {
+                            let city: model.CityModel =
+                                {
+                                    id: row.id,
+                                    name: row.name,
+                                    idState: row.idState
+                                };
+                            cities.push(city);
+                        }
+                    }
+                    catch (err) {
+                        return reject(new CLError.DBError(ErrorCode.DB_DATA_PARSE_ERROR, "Error occured while parsing data. " + err.message));
+                    }
+                });
+                query.on('end', function () {
+                    connection.release();
+                    if (!encounteredError) {
+                        if (cities.length > 0) {
+                            resolve(cities);
+                        }
+                        else {
+                            reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND, "No city found."));
+                        }
+                    }
+                });
+            });
+        });
+    }
     getCitiesByState(stateId: number): Promise<Array<model.CityModel>> {
         return new Promise(function (resolve, reject) {
             let cities: Array<model.CityModel> = new Array<model.CityModel>();
@@ -151,7 +195,7 @@ class StateRepository implements irepo.IStateRepository {
         });
     }
 
-    getAll(): Promise<Array<model.StateModel>> {
+    getAll(offset:number,limit:number): Promise<Array<model.StateModel>> {
         let states: Array<model.StateModel> = new Array<model.StateModel>();
         return new Promise<Array<model.StateModel>>((resolve, reject) => {
             DB.get().getConnection(function (err, connection) {
@@ -159,7 +203,7 @@ class StateRepository implements irepo.IStateRepository {
                     return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
                 }
                 let encounteredError: boolean = false;
-                let query = connection.query('SELECT * FROM state');
+                let query = connection.query('Call sp_state_select(?,?)',[offset,limit]);
                 query.on('error', function (err) {
                     encounteredError = true;
                     return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while reading states." + err.message));
