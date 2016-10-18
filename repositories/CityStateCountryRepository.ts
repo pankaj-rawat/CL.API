@@ -7,7 +7,7 @@ import {ErrorCode} from "../ErrorCode";
 
 class CityRepository implements irepo.ICityRepository {
     find(id: number): Promise<model.CityModel> {
-        Logger.log.error('CityRepository - find - id:' + id);
+        Logger.log.info('CityRepository - find - id:' + id);
         let city: model.CityModel;
         return new Promise(function (resolve, reject): void {
             DB.get().getConnection(function (err, connection) {
@@ -171,7 +171,7 @@ class CountryRepository implements irepo.ICountryRepository {
             let country: model.CountryModel;
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
-                    Logger.log.info('Error occured in CountryRepository - find - id:' + id + '  Error:' + err);
+                    Logger.log.error('Error occured in CountryRepository - find - id:' + id + '  Error:' + err);
                     reject(err);
                 }
                 else {
@@ -200,21 +200,24 @@ class CountryRepository implements irepo.ICountryRepository {
     getAll(): Promise<Array<model.CountryModel>> {
         let countries: Array<model.CountryModel> = new Array<model.CountryModel>();
         return new Promise<Array<model.CountryModel>>((resolve, reject) => {
+            Logger.log.info('CountryRepository - getAll');
             DB.get().getConnection(function (err, connection) {
+
                 let query = connection.query('SELECT * FROM country');
                 query.on('error', function (err) {
-                    Logger.log.info('Error occured in CountryRepository - getAll Error:' + err);
                     reject(err);
                 });
 
-                query.on('result', function (row, result) {
-                    let country: model.CountryModel =
-                        {
-                            id: row.id,
-                            abbr: row.abbr,
-                            name: row.name
-                        };
-                    countries.push(country);
+                query.on('result', function (row, index) {
+                    if (index == 0) {
+                        let country: model.CountryModel =
+                            {
+                                id: row.id,
+                                abbr: row.abbr,
+                                name: row.name
+                            };
+                        countries.push(country);
+                    }
                 });
 
                 query.on('end', function (result) {
