@@ -10,11 +10,14 @@
     "port": 1337
   },
   "token": {
-    "minutesToExpire-user": 10,
+    "FminutesToExpire-user": 10,
     "minutesToExpire-client": 30,
     "key": "sss.sss.sss.ssh"
   },
   "log": {
     "path": "/log"
+  },
+  "paging": {
+    "limit": 5
   }
 }

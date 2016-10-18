@@ -22,7 +22,7 @@ class UserRepository implements irepo.IUserRepository {
 
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
-                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Error occured while obtaining database connection. ' + err.message));
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
                 }
 
                 let encounteredError: boolean = false;
@@ -80,7 +80,7 @@ class UserRepository implements irepo.IUserRepository {
         return new Promise(function (resolve, reject) {
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
-                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Error occured while obtaining database connection. ' + err.message));
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
                 }
 
                 let encounteredError: boolean = false;
@@ -153,7 +153,7 @@ class UserRepository implements irepo.IUserRepository {
         return new Promise(function (resolve, reject) {
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
-                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Error occured while obtaining database connection. ' + err.message));
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
                 }
 
                 let encounteredError: boolean = false;

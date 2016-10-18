@@ -12,7 +12,7 @@ class CityRepository implements irepo.ICityRepository {
         return new Promise(function (resolve, reject): void {
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
-                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Error occured while obtaining database connection. ' + err.message));
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
                 }
 
                 let encounteredError: boolean = false;
@@ -40,20 +40,18 @@ class CityRepository implements irepo.ICityRepository {
                     connection.release();
                     //populate state for the city
                     if (!encounteredError) {
-                        if (city != null) {
-                            let stateRepo = new StateRepository();
-                            stateRepo.find(city.id)
-                                .then(function (result: model.StateModel) {
-                                    city.state = result;
-                                    resolve(city);
-                                })
-                                .catch(function (err) {
-                                    reject(err);
-                                });
+                        if (city == null) {
+                            return reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND, 'City not found.'));
                         }
-                        else {
-                            reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND, 'City not found.'));
-                        }
+                        let stateRepo = new StateRepository();
+                        stateRepo.find(city.id)
+                            .then(function (result: model.StateModel) {
+                                city.state = result;
+                                resolve(city);
+                            })
+                            .catch(function (err) {
+                                reject(err);
+                            });
                     }
                 });
             });
@@ -64,29 +62,42 @@ class CityRepository implements irepo.ICityRepository {
         return new Promise(function (resolve, reject) {
             let cities: Array<model.CityModel> = new Array<model.CityModel>();
             DB.get().getConnection(function (err, connection) {
+                if (err) {
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
+                }
+
+                let encounteredError: boolean = false;
                 let query = connection.query('SELECT * FROM city WHERE idState = ?', stateId);
                 query.on('error', function (err) {
-                    Logger.log.error('Error occured in CityRepository - getCitiesByState - stateid:' + stateId + '  Error:' + err);
-                    reject(err);
+                    encounteredError = true;
+                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while getting cities. ' + err.message));
                 });
-                query.on('result', function (row, result) {
+                query.on('result', function (row, index) {
                     try {
-                        let city: model.CityModel =
-                            {
-                                id: row.id,
-                                name: row.name,
-                                idState: row.idState
-                            };
-                        cities.push(city);
+                        if (index == 0) {
+                            let city: model.CityModel =
+                                {
+                                    id: row.id,
+                                    name: row.name,
+                                    idState: row.idState
+                                };
+                            cities.push(city);
+                        }
                     }
                     catch (err) {
-                        Logger.log.error('Error occured in CityRepository - find - id:' + stateId + '  Error:' + err);
-                        reject(err);
+                        return reject(new CLError.DBError(ErrorCode.DB_DATA_PARSE_ERROR, "Error occured while parsing data. " + err.message));
                     }
                 });
                 query.on('end', function () {
-                    resolve(cities);
                     connection.release();
+                    if (!encounteredError) {
+                        if (cities.length > 0) {
+                            resolve(cities);
+                        }
+                        else {
+                            reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND, "No city found."));
+                        }
+                    }
                 });
             });
         });
@@ -99,12 +110,17 @@ class StateRepository implements irepo.IStateRepository {
         let state: model.StateModel;
         return new Promise<model.StateModel>((resolve, reject) => {
             DB.get().getConnection(function (err, connection) {
+                if (err) {
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
+                }
+
+                let encounteredError: boolean = false;
                 let query = connection.query('SELECT * FROM state where id=?', id);
                 query.on('error', function (err) {
                     reject(err);
                 });
 
-                query.on('result', function (row, result) {
+                query.on('result', function (row, index) {
                     state =
                         {
                             id: row.id,
@@ -130,6 +146,46 @@ class StateRepository implements irepo.IStateRepository {
                         reject(new Error("State not found."));
                     }
                     connection.release();
+                });
+            });
+        });
+    }
+
+    getAll(): Promise<Array<model.StateModel>> {
+        let states: Array<model.StateModel> = new Array<model.StateModel>();
+        return new Promise<Array<model.StateModel>>((resolve, reject) => {
+            DB.get().getConnection(function (err, connection) {
+                if (err) {
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
+                }
+                let encounteredError: boolean = false;
+                let query = connection.query('SELECT * FROM state');
+                query.on('error', function (err) {
+                    encounteredError = true;
+                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while reading states." + err.message));
+                });
+                query.on('result', function (row, index) {
+                    if (index == 0) {
+                        let state: model.StateModel =
+                            {
+                                id: row.id,
+                                abbr: row.abbr,
+                                name: row.name,
+                                idCountry: row.idCountry
+                            };
+                        states.push(state);
+                    }
+                });
+                query.on('end', function (result) {
+                    connection.release();
+                    if (!encounteredError) {
+                        if (states.length > 0) {
+                            resolve(states);
+                        }
+                        else {
+                            reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND,"No state found."));
+                        }
+                    }
                 });
             });
         });

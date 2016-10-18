@@ -62,7 +62,7 @@ export class AuthRepository implements irepo.IAuthRepository {
             }
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
-                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Error occured while obtaining database connection. ' + err.message));
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
                 }
 
                 let encounteredError: boolean = false;
@@ -129,7 +129,7 @@ function authenticateUser(username: string, password: string): Promise<model.Aut
     return new Promise(function (resolve, reject) {
         DB.get().getConnection(function (err, connection) {
             if (err != null) {
-                return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Error occured while obtaining database connection. ' + err.message));
+                return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
             }
             let pwd: string;
             let userId: number;

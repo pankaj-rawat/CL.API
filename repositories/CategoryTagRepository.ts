@@ -3,60 +3,55 @@ import model = require("../models/CategoryTagModel");
 import * as DB from "../DB";
 import {Logger} from "../Logger";
 import {ErrorCode} from "../ErrorCode";
+import * as CLError from '../CLError';
 
 export class CategoryRepository implements irepo.ICategoryRepository {
     find(id: number): Promise<model.CategoryModel> {
         return new Promise(function (resolve, reject) {
-            if (id != null) {
-                let category: model.CategoryModel;
-                try {
-                    DB.get().getConnection(function (err, connection) {
-                        if (err) {
-                            Logger.log.error(err.message);
-                            reject(ErrorCode.DB_CONNECTION_FAIL);
+            if (id == null) {
+                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, "Parameter missing."));
+            }
+
+            let category: model.CategoryModel;
+            DB.get().getConnection(function (err, connection) {
+                if (err) {
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
+                }
+                let encounteredError: boolean = false;
+                let query = connection.query('SELECT * FROM category WHERE id=?', id);
+                query.on('error', function (err) {
+                    encounteredError = true;
+                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while getting category." + err.message));
+                });
+                query.on('result', function (row, index: number) {
+                    if (index == 0) {
+                        category = {
+                            id: row.id,
+                            value: row.value,
+                            active: row.active
+                        };
+                    }
+                });
+                query.on('end', function () {
+                    connection.release();
+                    if (!encounteredError) {
+                        if (category != null) {
+                            let tagRepo = new TagRepository();
+                            tagRepo.getTagsByCategory(category.id)
+                                .then(function (result: Array<model.TagModel>) {
+                                    category.tags = result;
+                                    resolve(category);
+                                })
+                                .catch(function (err) {
+                                    reject(err);
+                                });
                         }
                         else {
-                            let query = connection.query('SELECT * FROM category WHERE id=?', id);
-                            query.on('error', function (err) {
-                                Logger.log.error(err.message);
-                                reject(ErrorCode.DB_QUERY_EXECUTION_ERROR);
-                            });
-                            query.on('result', function (row, index: number) {
-                                category = {
-                                    id: row.id,
-                                    value: row.value,
-                                    active: row.active
-                                };
-                            });
-                            query.on('end', function () {
-                                if (category != null) {
-                                    let tagRepo = new TagRepository();
-                                    tagRepo.getTagsByCategory(category.id)
-                                        .then(function (result: Array<model.TagModel>) {
-                                            category.tags = result;
-                                            resolve(category);
-                                        })
-                                        .catch(function (err) {
-                                            Logger.log.error(err.message);
-                                            reject(err);
-                                        });
-                                }
-                                else {
-                                    reject(new Error("category not found."));
-                                }
-                                connection.release();
-                            });
+                            reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND, "Category not found for id " + id));
                         }
-                    });
-                }
-                catch (err) {
-                    reject(err);
-                }
-            }
-            else {
-                Logger.log.error("Category id not supplied");
-                reject(ErrorCode.REQUIRED_PARAM_MISSING);
-            }
+                    }
+                });
+            });
         });
     }
 
@@ -65,28 +60,35 @@ export class CategoryRepository implements irepo.ICategoryRepository {
             let categories: Array<model.CategoryModel> = new Array<model.CategoryModel>();
             DB.get().getConnection(function (err, connection) {
                 if (err) {
-                    Logger.log.error(err.message);
-                    reject(ErrorCode.DB_CONNECTION_FAIL);
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
                 }
-                else {
-                    let query = connection.query('SELECT * FROM category');
-                    query.on('error', function (err) {
-                        Logger.log.error(err.message);
-                        reject(ErrorCode.DB_QUERY_EXECUTION_ERROR);
-                    });
-                    query.on('result', function (row, index: number) {
-                        let category:model.CategoryModel={
+                let encounteredError: boolean = false;
+                let query = connection.query('SELECT * FROM category');
+                query.on('error', function (err) {
+                    encounteredError = true;
+                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while reading categories. " + err.message));
+                });
+                query.on('result', function (row, index: number) {
+                    if (index == 0) {
+                        let category: model.CategoryModel = {
                             id: row.id,
                             value: row.value,
                             active: row.active
                         };
                         categories.push(category);
-                    });
-                    query.on('end', function () {
-                        resolve(categories);
-                        connection.release();
-                    });
-                }
+                    }
+                });
+                query.on('end', function () {
+                    connection.release();
+                    if (!encounteredError) {
+                        if (categories.length > 0) {
+                            resolve(categories);
+                        }
+                        else {
+                            reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND, 'No catgory found.'));
+                        }
+                    }
+                });
             });
         });
     }
@@ -95,100 +97,113 @@ export class CategoryRepository implements irepo.ICategoryRepository {
 export class TagRepository implements irepo.ITagRepository {
     find(id: number): Promise<model.TagModel> {
         return new Promise(function (resolve, reject) {
-            if (id != null) {
-                let tag: model.TagModel;
-                DB.get().getConnection(function (err, connection) {
-                    if (err) {
-                        reject(err);
-                    }
-                    else {
-                        let query = connection.query('select * from tag where id=?', id);
-                        query.on('error', function (err) {
-                            reject(err);
-                        });
-                        query.on('result', function (row) {
-                            tag = {
-                                active:row.active,
-                                id:row.id,
-                                idCategory:row.IdCategory,
-                                value:row.value
-                            };
-                        });
-                        query.on('end', function () {
-                            resolve(tag);
-                            connection.release();
-                        })
+            if (id == null) {
+                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'Parameter missing.'));
+            }
+            let tag: model.TagModel;
+            DB.get().getConnection(function (err, connection) {
+                if (err) {
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, "Database connection failed." + err.message));
+                }
+                let encounteredError: boolean = false;
+                let query = connection.query('select * from tag where id=?', id);
+                query.on('error', function (err) {
+                    encounteredError = true;
+                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while reading tag. " + err.message));
+                });
+                query.on('result', function (row, index) {
+                    if (index == 0) {
+                        tag = {
+                            active: row.active,
+                            id: row.id,
+                            idCategory: row.IdCategory,
+                            value: row.value
+                        };
                     }
                 });
-            }
-            else {
-                reject(ErrorCode.REQUIRED_PARAM_MISSING);
-            }
+                query.on('end', function () {
+                    connection.release();
+                    if (!encounteredError) {
+                        if (tag) {
+                            resolve(tag);
+                        }
+                        else {
+                            reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND, "Tag not found for id " + id));
+                        }
+                    }
+                })
+            });
         });
     }
     getTagsByCategory(categoryId: number): Promise<Array<model.TagModel>> {
         return new Promise(function (resolve, reject) {
-            if (categoryId != null) {
-                let tags: Array<model.TagModel> = new Array<model.TagModel>();
-                DB.get().getConnection(function (err, connection) {
-                    if (err) {
-                        reject(err);
-                    }
-                    else {
-                        let query = connection.query('select * from tag where idCategory=?', categoryId);
-                        query.on('error', function (err) {
-                            reject(err);
-                        });
-                        query.on('result', function (row) {
-                            let tag:model.TagModel = {
-                                active: row.active,
-                                id: row.id,
-                                idCategory: row.IdCategory,
-                                value: row.value
-                            };
-                            tags.push(tag);
-                        });
-                        query.on('end', function () {
-                            resolve(tags);
-                            connection.release();
-                        })
+            if (categoryId == null) {
+                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING,"Parameter missing."));
+            }
+            let tags: Array<model.TagModel> = new Array<model.TagModel>();
+            DB.get().getConnection(function (err, connection) {
+                if (err) {
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, "Database connection failed." + err.message));
+                }
+
+                let encounteredError: boolean = false;
+                let query = connection.query('select * from tag where idCategory=?', categoryId);
+                query.on('error', function (err) {
+                    encounteredError = true;
+                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, " Error occured while reading tags. " + err.message));
+                });
+                query.on('result', function (row, index) {
+                    if (index == 0) {
+                        let tag: model.TagModel = {
+                            active: row.active,
+                            id: row.id,
+                            idCategory: row.IdCategory,
+                            value: row.value
+                        };
+                        tags.push(tag);
                     }
                 });
-            }
-            else {
-                reject(ErrorCode.REQUIRED_PARAM_MISSING);
-            }
+                query.on('end', function () {
+                    connection.release();
+                    if (!encounteredError) {
+                        if (tags.length > 0) {
+                            resolve(tags);
+                        }
+                        else {
+                            reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND, "Tags not founds."));
+                        }
+                    }
+                })
+            });
 
         });
     }
     create(tag: model.TagModel): Promise<model.TagModel> {
         return new Promise(function (resolve, reject) {
-            if (tag != null) {
-                DB.get().getConnection(function (err, connection) {
+            if (tag == null) {
+                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING));
+            }
+            DB.get().getConnection(function (err, connection) {
+                if (err) {
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, "Database connection failed." + err.message));
+                }
+                //let post = {
+                //    value: tag.value,
+                //    idcategory: tag.idCategory,
+                //    active:tag.active
+                //}
+                let query = connection.query('INSERT INTO tag SET value=?, idcategory=?,active=?', [tag.value, tag.idCategory, tag.active], function (err, result) {
                     if (err) {
-                        reject(err);
+                        connection.release();
+                        reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, " Error occured while saving tag." + err.message));
                     }
                     else {
-                        //let post = {
-                        //    value: tag.value,
-                        //    idcategory: tag.idCategory,
-                        //    active:tag.active
-                        //}
-                        let query = connection.query('INSERT INTO tag SET value=?, idcategory=?,active=?',[tag.value,tag.idCategory,tag.active], function (err, result) {
-                            if (err) {
-                                reject(err);
-                            }
-                            else {
-                                tag.id = result.insertId;
-                                resolve(tag);
-                            }
-                        });                        
+                        connection.release();
+                        tag.id = result.insertId;
+                        resolve(tag);
                     }
                 });
-            }
-            else {
-                reject(ErrorCode.REQUIRED_PARAM_MISSING);
-            }
+            });
         });
     }
     update(tag: model.TagModel): Promise<model.TagModel> {

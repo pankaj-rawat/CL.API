@@ -3,15 +3,15 @@ import model = require("../models/BusinessModel");
 import * as CategoryTagModel from "../models/CategoryTagModel";
 import * as DB from "../DB";
 import {Logger as logger} from "../Logger";
+import {ErrorCode} from '../ErrorCode';
+import * as CLError from '../CLError';
 
 export class BusinessRepository implements irepo.IBusinessRepository {
     register(business: model.BusinessModel): Promise<model.BusinessModel> {
         return new Promise(function (resolve, reject) {
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
-                    connection.release();
-                    logger.log.error(err.message);
-                    reject(err);
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
                 }
                 else {
                     let encounteredError: boolean = false;
@@ -27,7 +27,7 @@ export class BusinessRepository implements irepo.IBusinessRepository {
                             business.idRegistrationPlan, business.idUser]);
                     query.on('error', function (err) {
                         encounteredError = true;
-                        reject(err);
+                        return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR,"Error occured while saving business."));
                     });
                     query.on('result', function (row, index) {
                         if (index == 0) {
@@ -42,9 +42,7 @@ export class BusinessRepository implements irepo.IBusinessRepository {
                                     resolve(result);
                                 })
                                 .catch(function (err) {
-                                    logger.log.error(err.stack);
-                                    business.id = businessId;
-                                    resolve(business);
+                                    reject(err);
                                 });
                         }
                     });
@@ -87,21 +85,19 @@ export class BusinessRepository implements irepo.IBusinessRepository {
     };
 }
 
-
 function getBusiness(id: number): Promise<model.BusinessModel> {
     return new Promise(function (resolve, reject) {
         let business: model.BusinessModel;
         DB.get().getConnection(function (err, connection) {
             if (err) {
-                connection.release();
-                reject(err);
+                return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
             }
             else {
                 let encounteredError: boolean = false;
                 let query = connection.query('Call sp_business_select(?)', id);
                 query.on('error', function (err) {
                     encounteredError = true;
-                    reject(err);
+                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while reading business. ' + err.message));
                 });
                 query.on('result', function (row, index) {
                     if (index == 0) {
@@ -138,7 +134,12 @@ function getBusiness(id: number): Promise<model.BusinessModel> {
                 query.on('end', function () {
                     connection.release();
                     if (!encounteredError) {
-                        resolve(business);
+                        if (business) {
+                            resolve(business);
+                        }
+                        else {
+                            return reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND,"Business for Id " + id + " not found"));
+                        }
                     }
                 });
             }
