@@ -195,7 +195,7 @@ class StateRepository implements irepo.IStateRepository {
         });
     }
 
-    getAll(offset:number,limit:number): Promise<Array<model.StateModel>> {
+    getAll(offset:number,limit:number,idCountry:number): Promise<Array<model.StateModel>> {
         let states: Array<model.StateModel> = new Array<model.StateModel>();
         return new Promise<Array<model.StateModel>>((resolve, reject) => {
             DB.get().getConnection(function (err, connection) {
@@ -203,7 +203,7 @@ class StateRepository implements irepo.IStateRepository {
                     return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
                 }
                 let encounteredError: boolean = false;
-                let query = connection.query('Call sp_state_select(?,?)',[offset,limit]);
+                let query = connection.query('Call sp_select_state(?,?,?)', [offset, limit, idCountry]);
                 query.on('error', function (err) {
                     encounteredError = true;
                     return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while reading states." + err.message));

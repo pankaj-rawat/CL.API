@@ -26,8 +26,9 @@ stateController.get('', function (req: express.Request, res: express.Response, n
     var query = url.parse(req.url, true).query;
     let offset: number = query.offset || 0;
     let limit: number = query.limit || process.env.PAGING_LIMIT || config.get("paging.limit");
+    let idCountry: number = query.idCountry;
 
-    stateRepo.getAll(offset, limit)
+    stateRepo.getAll(offset, limit, idCountry)
         .then(function (result) {
             clRes = { data: result, isValid: true };
             res.header('X-Pagination-Count','10' );
