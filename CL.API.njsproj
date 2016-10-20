@@ -90,6 +90,7 @@
     <TypeScriptCompile Include="models\CityStateCountryModel.ts" />
     <TypeScriptCompile Include="models\RegistrationPlanModel.ts" />
     <TypeScriptCompile Include="models\UserModel.ts" />
+    <TypeScriptCompile Include="RepoResponse.ts" />
     <TypeScriptCompile Include="repositories\AuthRepository.ts" />
     <TypeScriptCompile Include="repositories\BusinessRepository.ts" />
     <TypeScriptCompile Include="repositories\CategoryTagRepository.ts" />

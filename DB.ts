@@ -15,7 +15,8 @@ export var connect = function (mode: string, done: (err:CLError.DBError) => void
             host: process.env.DBHOST || config.get<string>('dbConfig.host'),
             user: process.env.DBUSER || config.get<string>('dbConfig.user'),
             password: process.env.DBPWD || config.get<string>('dbConfig.password'),
-            database: process.env.DB || config.get<string>('dbConfig.database')
+            database: process.env.DB || config.get<string>('dbConfig.database'),
+            multipleStatements: true
         };
 
         if (config.has('dbConfig.port')) {
