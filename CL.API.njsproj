@@ -134,6 +134,7 @@
     <TypeScriptCompile Include="test\example.ts">
       <TestFramework>Mocha</TestFramework>
     </TypeScriptCompile>
+    <TypeScriptCompile Include="Util.ts" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="config\" />

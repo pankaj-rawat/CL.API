@@ -202,7 +202,7 @@ class StateRepository implements irepo.IStateRepository {
     getAll(offset: number, limit: number, idCountry: number): Promise<RepoResponse> {
         let states: Array<model.StateModel> = new Array<model.StateModel>();
         return new Promise<RepoResponse>((resolve, reject) => {
-            if (limit < 1 || offset < 0) {
+            if (offset < 0) {
                 return reject(new CLError.BadRequest(ErrorCode.INVALID_PARAM_VALUE, "Invalid value supplied for offset\limit params."));
             }
             DB.get().getConnection(function (err, connection) {
