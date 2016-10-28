@@ -42,15 +42,13 @@ export class RequestValidator {
             //Autorefresh client
             let clRes: APIResponse;
             let authrepo = new AuthRepository();
-            authrepo.connect(decoded.id, undefined, decoded.client)
+               authrepo.connect(decoded.id, undefined, decoded.client)
                 .then(function (result: model.AuthModel) {
-                    res.setHeader('Client-Token', result.token);
-                    return next();
+                    res.setHeader('Client-Token', result.token);                   
                 })
                 .catch(function (error) {
-                    next(error);
+                    return  next(error);
                 });
-            return;
         }
 
           //check for public URL not required users to log in.

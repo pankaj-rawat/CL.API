@@ -210,9 +210,9 @@ function getUser(id: number): Promise < model.UserModel > {
                 try {
                     if (index == 0) {
                         user = {
-                            id: row.Id,
+                            id: row.id,
                             email: row.email,
-                            phoneLandLine: row.phoneLandLine,
+                            phoneLandLine: row.phoneLandline,
                             phoneCell: row.phoneCell,
                             idStatus: row.idStatus,
                             idCity: row.idCity,

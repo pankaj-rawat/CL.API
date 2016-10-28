@@ -24,6 +24,7 @@ userController.post('/login', function (req, res, next) {
                     clRes = { data: user, isValid: true };
                     res.setHeader('Access-Token', accessToken);
                     res.send(clRes);
+                    Logger.log.info('login process complete.');
                 })
                 .catch(function (err) {
                     next(err);

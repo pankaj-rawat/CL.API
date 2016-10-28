@@ -11,34 +11,6 @@ import {ErrorCode} from "../ErrorCode";
 
 export class AuthRepository implements irepo.IAuthRepository {
 
-    //login(username: string, password: string): Promise<model.AuthModel> {
-    //    let auth: model.AuthModel;
-    //    return new Promise(function (resolve, reject) {
-    //        if (password == null || password.trim() == '') {
-    //            return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'Password not supplied'));
-    //        }
-    //        if (username == null || username.trim() == '') {
-    //            return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'User id not supplied'));
-    //        }
-
-    //        authenticateUser(username, password)
-    //            .then(function (result: model.AuthUsermodel) {
-    //                let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_USER || config.get("token.minutesToExpire-user")));
-    //                auth = {
-    //                    expires: expiryDate,
-    //                    token: genToken(result.id, expiryDate),
-    //                    user: result
-    //                };
-    //                resolve(auth);
-    //            })
-    //            .catch(function (error) {
-    //                reject(error);
-    //            });
-    //    });
-    //}
-
-
-
     //validateUser(userId: number, res: (error:Object,userRoles: Array<number>) => void): void {
     //    let userRepo: UserRepository = new UserRepository();
     //    userRepo.getUserRoles(userId)
@@ -187,62 +159,6 @@ export class AuthRepository implements irepo.IAuthRepository {
         return genToken(userid, expiryDate);
     }
 }
-
-function authenticateUser(username: string, password: string): Promise<model.AuthUsermodel> {
-    return new Promise(function (resolve, reject) {
-        DB.get().getConnection(function (err, connection) {
-            if (err != null) {
-                return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
-            }
-            let pwd: string;
-            let userId: number;
-            let user: model.AuthUsermodel;
-            let userRoles: Array<number> = new Array<number>();
-            let encounteredError: boolean = false;
-
-            let query = connection.query("CALL sp_user_select_pwd(?)", [username]);
-            query.on('error', function (err) {
-                encounteredError = true;
-                return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Error occur while validating password. ' + err.message));
-            });
-
-            query.on('result', function (row, index) {
-                try {
-                    if (index == 0) {
-                        pwd = row.password;
-                        userId = row.id;
-                        userRoles.push(row.role);
-                    }
-                }
-                catch (ex) {
-                    encounteredError = true;
-                    return reject(new CLError.DBError(ErrorCode.DB_DATA_PARSE_ERROR, 'Error occured while parsing data. ' + ex.message));
-                }
-            });
-            query.on('end', function (result) {
-                connection.release();
-                if (!encounteredError) {
-                    if (userId == null) //means supplied user not exist in system
-                    {
-                        return reject(new CLError.Unauthorized(ErrorCode.USER_NOT_FOUND, 'Authentication failed. User not found.'));
-                    }
-                    if (bcrypt.compareSync(password, pwd)) { //this is taking time
-                        user = {
-                            //roles: userRoles,
-                            userName: username,
-                            id: userId
-                        };
-                    }
-                    else {
-                        return reject(new CLError.Unauthorized(ErrorCode.USER_NOT_AUTHENTICATED, 'Authentication failed.'));
-                    }
-                    resolve(user);
-                }
-            });
-        });
-    });
-}
-
 
 // private method
 function genToken(userid: number, expires: Date): string {
