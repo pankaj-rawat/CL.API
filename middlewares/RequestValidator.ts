@@ -93,7 +93,7 @@ export class RequestValidator {
             return next(new CLError.Unauthorized(ErrorCode.INVALID_USER_TOKEN, "Authentication failed. Token not valid."));
         }
 
-        //verify that some user must logged in to procede further
+        //verify that user must logged in to procede further
         let userRepo = new UserRepository();
         // The key would be the logged in user's username
         userRepo.getUserRoles(key)

@@ -7,11 +7,6 @@ import {ErrorCode} from "../ErrorCode";
 
 class UserRepository implements irepo.IUserRepository {
 
-    //login(username: string, password: string): Promise<amodel.AuthModel> {
-    //    let authrepo = new AuthRepository();        
-    //    return authrepo.login(username, password);
-    //}
-
     find(id: number): Promise<model.UserModel> {
         let repoName: string = "UserRepository";
         return new Promise(function (resolve, reject) {
