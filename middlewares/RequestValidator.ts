@@ -17,14 +17,11 @@ export class RequestValidator {
         // When performing a cross domain request, you will recieve
         // a preflighted request first. This is to check if the app
         // is safe. 
-        // We skip the token outh for [OPTIONS] requests.
+        // We skip the token auth for [OPTIONS] requests.
+        Logger.log.info('Request recieved: '+ req.originalUrl);
         if (req.method == 'OPTIONS') return next();
         if ((req.url.indexOf('api/connect') >= 0)) return next(); // public route
 
-        const httpStatus_BADREQUEST = 400;
-        const httpStatus_FORBIDDEN = 403;
-        const httpStatus_UNAUTHORIZED = 401;
-        const httpStatus_INTERNALSERVERERROR = 500;
         const unsecuredRoutes: string[] = ['api/connect'];//public route... need to use this for list
 
         let clientToken = (req.body && req.body.client_token) || (req.query && req.query.client_token) || req.headers['x-client-token'];
@@ -42,19 +39,13 @@ export class RequestValidator {
         }
 
         if (new Date(decoded.exp).getTime() <= (new Date()).getTime()) {
-            //res.status(httpStatus_BADREQUEST);
-            //Logger.log.info('Response:  ' +httpStatus_BADREQUEST);
-            //res.json({
-            //    "status": httpStatus_BADREQUEST,
-            //    "message": "clientToken Expired"
-            //});
-            //Autorefresh client for time being
+            //Autorefresh client
             let clRes: APIResponse;
             let authrepo = new AuthRepository();
             authrepo.connect(decoded.id, undefined, decoded.client)
                 .then(function (result: model.AuthModel) {
-                    clRes = { data: result, isValid: false };
-                    res.send(clRes);
+                    res.setHeader('Client-Token', result.token);
+                    return next();
                 })
                 .catch(function (error) {
                     next(error);
@@ -88,7 +79,7 @@ export class RequestValidator {
         if (new Date(userDecoded.exp).getTime() <= (new Date()).getTime()) {
             return next(new CLError.Unauthorized(ErrorCode.USER_TOKEN_EXPIRED, 'Token expired.'));
         }
-
+        
         if (userDecoded.id != key) {
             return next(new CLError.Unauthorized(ErrorCode.INVALID_USER_TOKEN, "Authentication failed. Token not valid."));
         }
@@ -101,6 +92,11 @@ export class RequestValidator {
                 if (!ld.includes(userRoles, Role.RegisteredUser)) {
                     return next(new CLError.Forbidden(ErrorCode.USER_NOT_AUTHORIZED, ' User not authorized.'));
                 }
+                //add refreshed acess token on response header with new expiration time
+                let authrepo = new AuthRepository();   
+
+                // verify whther we can refresh the token or not for the case like- pwd might got changed after last login or force logout.
+                res.setHeader("Access-Token", authrepo.refreshAccessToken(userDecoded.id));
                 next();
             })
             .catch(function(err){

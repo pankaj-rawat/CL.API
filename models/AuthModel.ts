@@ -6,6 +6,6 @@
 
 export interface AuthUsermodel {
     id:number,
-    userName: string,
-    roles: Array<number>
+    userName: string
+    //,roles: Array<number>
 }

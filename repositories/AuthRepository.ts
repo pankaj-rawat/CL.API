@@ -11,31 +11,33 @@ import {ErrorCode} from "../ErrorCode";
 
 export class AuthRepository implements irepo.IAuthRepository {
 
-    login(username: string, password: string): Promise<model.AuthModel> {
-        let auth: model.AuthModel;
-        return new Promise(function (resolve, reject) {
-            if (password == null || password.trim() == '') {
-                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'Password not supplied'));
-            }
-            if (username == null || username.trim() == '') {
-                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'User id not supplied'));
-            }
+    //login(username: string, password: string): Promise<model.AuthModel> {
+    //    let auth: model.AuthModel;
+    //    return new Promise(function (resolve, reject) {
+    //        if (password == null || password.trim() == '') {
+    //            return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'Password not supplied'));
+    //        }
+    //        if (username == null || username.trim() == '') {
+    //            return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'User id not supplied'));
+    //        }
 
-            authenticateUser(username, password)
-                .then(function (result: model.AuthUsermodel) {
-                    let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_USER || config.get("token.minutesToExpire-user")));
-                    auth = {
-                        expires: expiryDate,
-                        token: genToken(result.id,expiryDate),
-                        user: result
-                    };
-                    resolve(auth);
-                })
-                .catch(function (error) {
-                    reject(error);
-                });
-        });
-    }
+    //        authenticateUser(username, password)
+    //            .then(function (result: model.AuthUsermodel) {
+    //                let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_USER || config.get("token.minutesToExpire-user")));
+    //                auth = {
+    //                    expires: expiryDate,
+    //                    token: genToken(result.id, expiryDate),
+    //                    user: result
+    //                };
+    //                resolve(auth);
+    //            })
+    //            .catch(function (error) {
+    //                reject(error);
+    //            });
+    //    });
+    //}
+
+
 
     //validateUser(userId: number, res: (error:Object,userRoles: Array<number>) => void): void {
     //    let userRepo: UserRepository = new UserRepository();
@@ -47,6 +49,61 @@ export class AuthRepository implements irepo.IAuthRepository {
     //            res(err,null);
     //        });
     //}
+
+    authenticateUser(username: string, password: string): Promise<string> {
+        return new Promise(function (resolve, reject) {
+            if (password == null || password.trim() == '') {
+                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'Password not supplied'));
+            }
+            if (username == null || username.trim() == '') {
+                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'User id not supplied'));
+            }
+
+            DB.get().getConnection(function (err, connection) {
+                if (err != null) {
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
+                }
+                let pwd: string;
+                let userId: number;
+                let encounteredError: boolean = false;
+
+                let query = connection.query("CALL sp_user_select_pwd(?)", [username]);
+                query.on('error', function (err) {
+                    encounteredError = true;
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Error occur while validating password. ' + err.message));
+                });
+
+                query.on('result', function (row, index) {
+                    try {
+                        if (index == 0) {
+                            pwd = row.password;
+                            userId = row.id;
+                        }
+                    }
+                    catch (ex) {
+                        encounteredError = true;
+                        return reject(new CLError.DBError(ErrorCode.DB_DATA_PARSE_ERROR, 'Error occured while parsing data. ' + ex.message));
+                    }
+                });
+                query.on('end', function (result) {
+                    connection.release();
+                    if (!encounteredError) {
+                        if (userId == null) //means supplied user not exist in system
+                        {
+                            return reject(new CLError.Unauthorized(ErrorCode.USER_NOT_FOUND, 'Authentication failed. User not found.'));
+                        }
+                        if (bcrypt.compareSync(password, pwd)) { //this is taking time
+                            let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_USER || config.get("token.minutesToExpire-user")));
+                            resolve(genToken(userId, expiryDate));
+                        }
+                        else {
+                            return reject(new CLError.Unauthorized(ErrorCode.USER_NOT_AUTHENTICATED, 'Authentication failed.'));
+                        }
+                    }
+                });
+            });
+        });
+    }
 
     connect(clientId: number, clientName: string, clientKey: string): Promise<model.AuthModel> {
         let auth: model.AuthModel;
@@ -94,10 +151,11 @@ export class AuthRepository implements irepo.IAuthRepository {
                 query.on('end', function () {
                     connection.release();
                     if (!encounteredError) {
-                        //TODO: need to save apiKey in encrypted form as we are doing in user password.
-                        if (id==null || id == 0) {
+                        if (id == null || id == 0) {
                             return reject(new CLError.Unauthorized(ErrorCode.CLIENT_NOT_FOUND, "Authentication failed. API client not found."));
                         }
+
+                        //TODO: need to save apiKey in encrypted form as we are doing in user password.
                         if (ck != clientKey) {
                             return reject(new CLError.Unauthorized(ErrorCode.INVALID_CLIENT_KEY, "Authentication failed. Client key is not valid."));
                         }
@@ -106,12 +164,12 @@ export class AuthRepository implements irepo.IAuthRepository {
                         }
 
                         //>0 means called for auto refresh
-                        if (clientId > 0)  {
+                        if (clientId > 0) {
                             if (!allowRefresh) {
                                 return reject(new CLError.Unauthorized(ErrorCode.CLIENT_AUTO_AUTH_DISABLED, "Auto authentication failed. Client is not allowed for autorefresh."));
                             }
                         }
-                        
+
                         let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_CLIENT || config.get("token.minutesToExpire-client")));
                         authModel = {
                             expires: expiryDate
@@ -122,6 +180,11 @@ export class AuthRepository implements irepo.IAuthRepository {
                 });
             });
         });
+    }
+
+    refreshAccessToken(userid: number): string {
+        let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_USER || config.get("token.minutesToExpire-user")));
+        return genToken(userid, expiryDate);
     }
 }
 
@@ -161,11 +224,11 @@ function authenticateUser(username: string, password: string): Promise<model.Aut
                 if (!encounteredError) {
                     if (userId == null) //means supplied user not exist in system
                     {
-                        return reject(new CLError.Unauthorized(ErrorCode.USER_NOT_FOUND,'Authentication failed. User not found.'));
+                        return reject(new CLError.Unauthorized(ErrorCode.USER_NOT_FOUND, 'Authentication failed. User not found.'));
                     }
                     if (bcrypt.compareSync(password, pwd)) { //this is taking time
                         user = {
-                            roles: userRoles,
+                            //roles: userRoles,
                             userName: username,
                             id: userId
                         };
@@ -180,15 +243,15 @@ function authenticateUser(username: string, password: string): Promise<model.Aut
     });
 }
 
+
 // private method
-function genToken(userid:number, expires: Date): string {
+function genToken(userid: number, expires: Date): string {
     let token = jwt.encode({
         exp: expires
-        ,id:userid
+        , id: userid
     }, String(process.env.TOKEN_KEY || config.get("token.key")));
     return token;
 }
-
 // private method
 function genClientToken(clientid: number, clientKey: string, expires: Date): string {
     let token = jwt.encode({

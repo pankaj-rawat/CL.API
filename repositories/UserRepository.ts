@@ -7,67 +7,50 @@ import {ErrorCode} from "../ErrorCode";
 
 class UserRepository implements irepo.IUserRepository {
 
-    find(id: number): Promise<model.UserModel> {
-        let repoName: string = "UserRepository";
+    login(username: string, userLocation: string): Promise<model.UserModel> {
         return new Promise(function (resolve, reject) {
-            let user: model.UserModel;
-            if (id == null) {
-                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'User id not supplied.'));
+            if (userLocation == null) {
+                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING,'Missing user location.'));
             }
-
-            DB.get().getConnection(function (err, connection) {
+            DB.get().getConnection(function (err,connection) {
                 if (err != null) {
                     return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
                 }
-
                 let encounteredError: boolean = false;
-                let query = connection.query('SELECT * FROM user WHERE id = ?', id);
+                let userId: number;
+                let query = connection.query('Call sp_update_user_online_status(?,?,?)', [username, userLocation, 1]);
                 query.on('error', function (err) {
                     encounteredError = true;
-                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while getting user. ' + err.message));
+                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while recording user login. ' + err.message));
                 });
-
-                //query.on('fields', function (fields) {
-                //    Logger.log.info('Error occured in UserRepository - find - id:' + id + '  Error:' + err);
-                //});
-
                 query.on('result', function (row, index) {
-                    try {
-                        if (index == 0) {
-                            user = {
-                                id: row.Id,
-                                email: row.email,
-                                phoneLandLine: row.phoneLandLine,
-                                phoneCell: row.phoneCell,
-                                idStatus: row.idStatus,
-                                idCity: row.idCity,
-                                createdOn: row.createdOn,
-                                lastupdatedOn: row.lastupdatedOn,
-                                subscriptionOptIn: row.subscriptionOptIn,
-                                subscriptionOptInDate: row.subscriptionOptInDate,
-                                subscriptionOptOutDate: row.subscriptionOptOutDate
-                            };
-                        }
-                    }
-                    catch (ex) {
-                        encounteredError = true;
-                        return reject(new CLError.DBError(ErrorCode.DB_DATA_PARSE_ERROR, 'Error occured while parsing data. ' + ex.message));
+                    if (index == 1) {
+                        userId = row.idUser;
                     }
                 });
-
-                query.on('end', function (result: model.UserModel) {
-                    connection.release();
+                query.on('end', function () {
                     if (!encounteredError) {
-                        if (user) {
-                            resolve(user);
+                        if (userId != null) {
+                            getUser(userId)
+                                .then(function (result) {
+                                    resolve(result);
+                                })
+                                .catch(function (err) {
+                                    return reject(err);
+                                });
+
                         }
                         else {
-                            reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND,'User not found.'));
+                            return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while getting recorded user detail. UserID:' + userId));
                         }
                     }
                 });
             });
         });
+    }
+
+    find(id: number): Promise<model.UserModel> {
+        return getUser(id);
     }
 
     create(user: model.UserModel): Promise<model.UserModel> {
@@ -198,5 +181,68 @@ class UserRepository implements irepo.IUserRepository {
         });
     }
 };
+
+function getUser(id: number): Promise < model.UserModel > {
+    let repoName: string = "UserRepository";
+    return new Promise(function (resolve, reject) {
+        let user: model.UserModel;
+        if (id == null) {
+            return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'User id not supplied.'));
+        }
+
+        DB.get().getConnection(function (err, connection) {
+            if (err != null) {
+                return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
+            }
+
+            let encounteredError: boolean = false;
+            let query = connection.query('SELECT * FROM user WHERE id = ?', id);
+            query.on('error', function (err) {
+                encounteredError = true;
+                return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while getting user. ' + err.message));
+            });
+
+            //query.on('fields', function (fields) {
+            //    Logger.log.info('Error occured in UserRepository - find - id:' + id + '  Error:' + err);
+            //});
+
+            query.on('result', function (row, index) {
+                try {
+                    if (index == 0) {
+                        user = {
+                            id: row.Id,
+                            email: row.email,
+                            phoneLandLine: row.phoneLandLine,
+                            phoneCell: row.phoneCell,
+                            idStatus: row.idStatus,
+                            idCity: row.idCity,
+                            createdOn: row.createdOn,
+                            lastupdatedOn: row.lastupdatedOn,
+                            subscriptionOptIn: row.subscriptionOptIn,
+                            subscriptionOptInDate: row.subscriptionOptInDate,
+                            subscriptionOptOutDate: row.subscriptionOptOutDate
+                        };
+                    }
+                }
+                catch (ex) {
+                    encounteredError = true;
+                    return reject(new CLError.DBError(ErrorCode.DB_DATA_PARSE_ERROR, 'Error occured while parsing data. ' + ex.message));
+                }
+            });
+
+            query.on('end', function (result: model.UserModel) {
+                connection.release();
+                if (!encounteredError) {
+                    if (user) {
+                        resolve(user);
+                    }
+                    else {
+                        reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND, 'User not found.'));
+                    }
+                }
+            });
+        });
+    });
+}
 
 export {UserRepository};

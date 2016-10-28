@@ -10,22 +10,31 @@ import {Logger}  from "../Logger";
 var userController = express.Router();
 
 userController.post('/login', function (req, res, next) {
-    Logger.log.info('login in process: ' + req);
+    Logger.log.info('login is in process.');
     let clRes: APIResponse;
     let authrepo = new AuthRepository();
     let username = req.body.username;
     let password = req.body.password;
-    let response: Promise<amodel.AuthModel> = authrepo.login(username, password);
-    response.then(function (result: amodel.AuthModel) {
-        clRes = { data: result, isValid: true };
-        res.send(clRes);
-    });
-    response.catch(function (error) {
-        next(error);
-    });
+    let userLocation = req.body.userLocation;
+    authrepo.authenticateUser(username, password)
+        .then(function (accessToken: string) {
+            let userRepo = new UserRepository();
+            userRepo.login(username, userLocation)
+                .then(function (user: model.UserModel) {
+                    clRes = { data: user, isValid: true };
+                    res.setHeader('Access-Token', accessToken);
+                    res.send(clRes);
+                })
+                .catch(function (err) {
+                    next(err);
+                });
+        })
+        .catch(function (error) {
+            next(error);
+        });
 });
 
-userController.get('/:id', function (req:express.Request, res:express.Response) {
+userController.get('/:id', function (req: express.Request, res: express.Response) {
     let userP: Promise<model.UserModel>;
     let userRepo = new UserRepository();
     let clres: APIResponse;
@@ -54,21 +63,21 @@ userController.post('/signup', function (req, res) {
     let clres: APIResponse;
 
     let salt = bcrypt.genSaltSync(10);
-    let hashedP:string = bcrypt.hashSync(req.body.password, salt);
+    let hashedP: string = bcrypt.hashSync(req.body.password, salt);
 
     user = {
         email: req.body.email,
         idCity: req.body.idCity,
         password: hashedP,
         phoneLandLine: req.body.phoneLandline,
-        extension:req.body.extension,
+        extension: req.body.extension,
         phoneCell: req.body.phoneCell,
         subscriptionOptIn: req.body.subscriptionOptIn
     }
     userP = usrepo.create(user);
     userP.then(function (user: model.UserModel) {
         user.password = undefined;// clear pwd before sending back the result
-        clres = {            
+        clres = {
             data: user,
             isValid: true
         };
