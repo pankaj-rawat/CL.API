@@ -94,6 +94,7 @@ export class RequestValidator {
                 let authrepo = new AuthRepository();   
 
                 // verify whther we can refresh the token or not for the case like- pwd might got changed after last login or force logout.
+                let clientLocation = req.headers['x-location']||'unknown';
                 res.setHeader("Access-Token", authrepo.refreshAccessToken(userDecoded.id));
                 next();
             })
