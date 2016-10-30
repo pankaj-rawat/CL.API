@@ -11,7 +11,8 @@
     "port": 1337
   },
   "token": {
-    "daysToExpire": 1,
+    "minutesToExpire-user": 10,
+    "minutesToExpire-client": 30,
     "key": "sss.sss.sss.ssh"
   },
   "log": {
