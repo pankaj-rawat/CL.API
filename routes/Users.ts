@@ -15,14 +15,15 @@ userController.post('/login', function (req, res, next) {
     let authrepo = new AuthRepository();
     let username = req.body.username;
     let password = req.body.password;
-    let userLocation = req.body.userLocation;
+    let userLocation = req.headers['x-location'] || (req.query && req.query.location);
     authrepo.authenticateUser(username, password)
-        .then(function (accessToken: string) {
+        .then(function (auth:amodel.AuthModel) {
             let userRepo = new UserRepository();
             userRepo.login(username, userLocation)
                 .then(function (user: model.UserModel) {
                     clRes = { data: user, isValid: true };
-                    res.setHeader('Access-Token', accessToken);
+                    res.setHeader('Access-Token', auth.token);
+                    res.setHeader('Access-Token-Expiry', auth.expires.toJSON());
                     res.send(clRes);
                     Logger.log.info('login process complete.');
                 })
@@ -32,6 +33,22 @@ userController.post('/login', function (req, res, next) {
         })
         .catch(function (error) {
             next(error);
+        });
+});
+
+userController.post('/logout', function (req, res, next) {
+    let clRes: APIResponse;    
+    let userId = Number.parseInt(req.headers['x-key'] || (req.query && req.query.key));
+    let userLocation = req.headers['x-location'] || (req.query && req.query.location);
+    let userRepo = new UserRepository();
+    userRepo.logout(userId, userLocation)
+        .then(function (isSuccess:boolean) {
+            clRes = { data: isSuccess, isValid: true };
+            res.send(clRes);
+            Logger.log.info('logout process complete.');
+        })
+        .catch(function (err) {
+            next(err);
         });
 });
 

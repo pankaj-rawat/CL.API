@@ -10,15 +10,15 @@ class UserRepository implements irepo.IUserRepository {
     login(username: string, userLocation: string): Promise<model.UserModel> {
         return new Promise(function (resolve, reject) {
             if (userLocation == null) {
-                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING,'Missing user location.'));
+                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'Missing user location.'));
             }
-            DB.get().getConnection(function (err,connection) {
+            DB.get().getConnection(function (err, connection) {
                 if (err != null) {
                     return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
                 }
                 let encounteredError: boolean = false;
                 let userId: number;
-                let query = connection.query('Call sp_update_user_online_status(?,?,?)', [username, userLocation, 1]);
+                let query = connection.query('Call sp_insert_user_online(?,?)', [username, userLocation]);
                 query.on('error', function (err) {
                     encounteredError = true;
                     return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while recording user login. ' + err.message));
@@ -29,6 +29,7 @@ class UserRepository implements irepo.IUserRepository {
                     }
                 });
                 query.on('end', function () {
+                    connection.release();
                     if (!encounteredError) {
                         if (userId != null) {
                             getUser(userId)
@@ -41,7 +42,42 @@ class UserRepository implements irepo.IUserRepository {
 
                         }
                         else {
-                            return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while getting recorded user detail. UserID:' + userId));
+                            return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while getting recorded user detail. UserID:' + username));
+                        }
+                    }
+                });
+            });
+        });
+    }
+
+    logout(userId:number, userLocation: string): Promise<boolean> {
+        return new Promise(function (resolve, reject) {
+            if (userLocation == null) {
+                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'Missing user location.'));
+            }
+            DB.get().getConnection(function (err, connection) {
+                if (err != null) {
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
+                }
+                let encounteredError: boolean = false;
+                let query = connection.query('Call sp_delete_user_online(?,?)', [userId, userLocation]);
+                let pass: number;
+                query.on('error', function (err) {
+                    encounteredError = true;
+                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while recording user login. ' + err.message));
+                });
+                query.on('result', function (row, index) {
+                    if (index == 0) {
+                        pass = row.Pass;
+                    }
+                });
+                query.on('end', function () {
+                    if (!encounteredError) {
+                        if (pass == 1) {
+                            resolve(true);
+                        }
+                        else {
+                            return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while signing out.'));
                         }
                     }
                 });
@@ -87,7 +123,7 @@ class UserRepository implements irepo.IUserRepository {
                     connection.release();
                     if (!encounteredError) {
                         resolve(user);
-                    }                    
+                    }
                 });
             });
         });
@@ -150,7 +186,7 @@ class UserRepository implements irepo.IUserRepository {
                     connection.release();
                     if (!encounteredError) {
                         if (!roles) {
-                            return reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND,'Roles not defined for user.'));
+                            return reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND, 'Roles not defined for user.'));
                         }
                         resolve(roles);
                     }
@@ -159,30 +195,14 @@ class UserRepository implements irepo.IUserRepository {
         });
     }
 
-    getAllByCity(cityId: number): Promise<model.UserModel[]> {
-        return new Promise(function (resolve, reject) {
-        });
-    }
-
-    getAllByState(stateId: number): Promise<model.UserModel[]> {
-        return new Promise(function (resolve, reject) {
-            //    var users = [];
-            //    var user: Model.User = { salutation: "Mr.", name: "Raw", age: 10 };
-            //    users.push(user);
-            //    var user: Model.User = { salutation: "Mrs.", name: "Raw11", age: 39 };
-            //    users.push(user);
-            //    return users;
-        });
-    }
-
-    resetPasswordRequest(username: string): Promise<boolean> {
+    resetPassword(username: string): Promise<boolean> {
         return new Promise<boolean>(function (resolve, reject) {
 
         });
     }
 };
 
-function getUser(id: number): Promise < model.UserModel > {
+function getUser(id: number): Promise<model.UserModel> {
     let repoName: string = "UserRepository";
     return new Promise(function (resolve, reject) {
         let user: model.UserModel;

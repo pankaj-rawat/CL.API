@@ -11,18 +11,7 @@ import {ErrorCode} from "../ErrorCode";
 
 export class AuthRepository implements irepo.IAuthRepository {
 
-    //validateUser(userId: number, res: (error:Object,userRoles: Array<number>) => void): void {
-    //    let userRepo: UserRepository = new UserRepository();
-    //    userRepo.getUserRoles(userId)
-    //        .then(function (result: Array<number>) {
-    //            res(null,result);
-    //        })
-    //        .catch(function (err) {
-    //            res(err,null);
-    //        });
-    //}
-
-    authenticateUser(username: string, password: string): Promise<string> {
+    authenticateUser(username: string, password: string): Promise<model.AuthModel> {
         return new Promise(function (resolve, reject) {
             if (password == null || password.trim() == '') {
                 return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'Password not supplied'));
@@ -66,7 +55,11 @@ export class AuthRepository implements irepo.IAuthRepository {
                         }
                         if (bcrypt.compareSync(password, pwd)) { //this is taking time
                             let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_USER || config.get("token.minutesToExpire-user")));
-                            resolve(genToken(userId, expiryDate));
+                            let auth: model.AuthModel = {
+                                expires: expiryDate,
+                                token: genToken(userId, expiryDate)
+                            };
+                            resolve(auth);
                         }
                         else {
                             return reject(new CLError.Unauthorized(ErrorCode.USER_NOT_AUTHENTICATED, 'Authentication failed.'));
@@ -154,9 +147,43 @@ export class AuthRepository implements irepo.IAuthRepository {
         });
     }
 
-    refreshAccessToken(userid: number): string {
-        let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_USER || config.get("token.minutesToExpire-user")));
-        return genToken(userid, expiryDate);
+    refreshAccessToken(userid: number, location: string): Promise<model.AuthModel> {
+        return new Promise(function (resolve, reject) {
+            let isUserLoggedIn: boolean = false;
+            let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_USER || config.get("token.minutesToExpire-user")));
+            DB.get().getConnection(function (err, connection) {
+                if (err != null) {
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
+                }
+                let encounteredError: boolean = false;
+                let query = connection.query('Call sp_select_user_online(?,?)', [userid, location]);
+                query.on('error', function (err) {
+                    encounteredError = true;
+                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error while checking user logged-in or not.'));
+                });
+                query.on('result', function (row, index) {
+                    if (index == 0) {
+                        isUserLoggedIn = row.IsExists;
+                    }
+                });
+                query.on('end', function () {
+                    connection.release();
+                    if (!encounteredError) {
+                        if (isUserLoggedIn) {
+                            let auth: model.AuthModel = {
+                                expires: expiryDate,
+                                token: genToken(userid, expiryDate)
+                            };
+                            resolve(auth);
+                        }
+                        else {
+                            reject(new CLError.Unauthorized(ErrorCode.USER_TOKEN_EXPIRED,'Token expired. Can not auto-refresh.'));
+                        }
+                    }
+                });
+            });
+
+        });
     }
 }
 

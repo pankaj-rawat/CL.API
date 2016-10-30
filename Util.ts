@@ -3,7 +3,7 @@ import express = require("express");
 
 export class Util {
 
-    getPageLinks(uri:string, offset: number, limit: number, totalCount: number): Links {
+    getPageLinks(uri: string, offset: number, limit: number, totalCount: number): Links {
         let links: Links = {
             self: uri
         };
@@ -53,6 +53,10 @@ export class Util {
             uri = uri + separator + key + "=" + value;
         }
         return uri + hash;
+    }
+
+    getHeaderContentRange(offset: number, limit: number, recordCount: number): string {
+        return offset.toString() + "-" + ((offset - 0) + (limit - 1)).toString() + "/" + recordCount; //subtracting with 0 just to convert into number again.;
     }
 };
 

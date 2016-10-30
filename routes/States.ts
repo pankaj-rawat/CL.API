@@ -37,8 +37,8 @@ stateController.get('', function (req: express.Request, res: express.Response, n
             let util: Util = new Util();
             clRes = { data: result.data, isValid: true };
             var pageLink = util.getPageLinks(util.getURLstring(req), offset, limit, result.recordCount);
-            res.links(pageLink);
-            res.setHeader('Content-Range', offset.toString() + "-" + ((offset - 0) + (limit - 1)).toString() + "/" + result.recordCount); //subtracting with 0 just to convert into number again.
+            res.links(pageLink);            
+            res.setHeader('Content-Range', util.getHeaderContentRange(offset,limit,result.recordCount));
             res.send(clRes);
         })
         .catch(function (err) {
