@@ -1,20 +1,22 @@
 ﻿import mysql = require('mysql');
 import config = require('config');
+import * as CLError from "./CLError";
 
 interface State {
     pool: mysql.IPool,
     mode: string
 }
 let dbstate: State;
-export var connect = function (mode: string, done: (err: string) => void) {
+export var connect = function (mode: string, done: (err:CLError.DBError) => void) {
     let errMessage: string;
-   
+    let dbError: CLError.DBError;
     try {
         let poolConfig: mysql.IPoolConfig = {
             host: process.env.DBHOST || config.get<string>('dbConfig.host'),
             user: process.env.DBUSER || config.get<string>('dbConfig.user'),
             password: process.env.DBPWD || config.get<string>('dbConfig.password'),
-            database: process.env.DB || config.get<string>('dbConfig.database')
+            database: process.env.DB || config.get<string>('dbConfig.database'),
+            multipleStatements: true
         };
 
         if (config.has('dbConfig.port')) {
@@ -28,9 +30,10 @@ export var connect = function (mode: string, done: (err: string) => void) {
         }
     }
     catch (ex) {
-        errMessage = ex.message;
+        dbError = ex;
+        dbError.message = 'Invalid database configuration.';
     }
-    done(errMessage);
+    done(dbError);
 }
 
 export var get = function () {

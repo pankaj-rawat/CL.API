@@ -3,7 +3,8 @@
     isValid: boolean;
     message?: string;
     error?: {
-        number: number,
+        errorCode?: number,
+        statusCode?:number,
         message?:string
     }
 }

@@ -12,7 +12,8 @@ port = process.env.PORT || config.get('server.port'); //set our port
 
 DB.connect(environment, function (err) {
     if (err) {
-        Logger.log.info('Unable to connect to MySQL. Error:' + err);
+        Logger.log.error(err.message);
+        Logger.log.error(err.stack);
         process.exit(1)
     } else {
         server.listen(port, function () {

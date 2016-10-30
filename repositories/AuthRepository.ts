@@ -1,5 +1,4 @@
 ﻿import irepo = require("../interfaces/IAuthRepository");
-import {UserRepository} from  "./UserRepository";
 import jwt = require('jwt-simple');
 import config = require('config');
 import * as DB from "../DB";
@@ -7,259 +6,197 @@ import {Logger}  from "../Logger";
 import * as model  from "../models/AuthModel";
 import bcrypt = require('bcryptjs');
 import {Role} from "../Definitions";
+import * as CLError from "../CLError";
+import {ErrorCode} from "../ErrorCode";
 
 export class AuthRepository implements irepo.IAuthRepository {
 
-    login(username: string, password: string): Promise<model.AuthModel> {
-        let auth: model.AuthModel;
+    authenticateUser(username: string, password: string): Promise<model.AuthModel> {
         return new Promise(function (resolve, reject) {
-            if (password.trim() == '') //no need to go to DB
-            {
-                //no need to check, just return empty model
-                Logger.log.info('blank password supplied');
-                reject(auth);
+            if (password == null || password.trim() == '') {
+                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'Password not supplied'));
             }
-            else {
-                let validatePromise: Promise<model.AuthUsermodel> = authenticateUser(username, password);
-                validatePromise.then(function (result: model.AuthUsermodel) {
-                    if (result != null) {
-                        let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_USER || config.get("token.minutesToExpire-user")));
-                        auth = {
-                            expires: expiryDate,
-                            token: genToken(expiryDate),
-                            user: result
-                        };
-                    }
-                    resolve(auth);
-                });
-                validatePromise.catch(function (error) {
-                    reject(error);
-                });
+            if (username == null || username.trim() == '') {
+                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'User id not supplied'));
             }
-        });
-    }
 
-    validateUser(userId: number, res: (userRoles: Array<number>) => void): void {
-        let userRepo: UserRepository = new UserRepository();
-        userRepo.getUserRoles(userId)
-            .then(function (result: Array<number>) {
-                res(result);
-            })
-            .catch(function (err) {
-                Logger.log.error(err);
-                res(null);
-            });
-    }
-
-    connect(clientId:number,clientName: string, clientKey: string): Promise<model.AuthModel> {
-        let auth: model.AuthModel;
-        return new Promise(function (resolve, reject) {
-            if (clientKey==null || clientKey.trim() == '') //no need to go to DB
-            {
-                //no need to check, just return empty model
-                Logger.log.info('blank key supplied');
-                reject(auth);
-            }
-            else {
-                let validatePromise: Promise<model.AuthModel> = authenticateClient(clientId,clientName, clientKey);
-                validatePromise.then(function (result: model.AuthModel) {
-                    resolve(result);
-                });
-                validatePromise.catch(function (error) {
-                    reject(error);
-                });
-            }
-        });
-    }
-
-}
-
-function authenticateUser(username: string, password: string): Promise<model.AuthUsermodel> {
-    return new Promise(function (resolve, reject) {
-        DB.get().getConnection(function (err, connection) {
-            let pwd: string;
-            let userId: number;
-            let user: model.AuthUsermodel;
-            let userRoles: Array<number> = new Array<number>();
-            if (err != null) {
-                connection.release();
-                Logger.log.info("Error occur while validating password. Error:" + err.message);
-                reject(err);
-            }
-            else {
+            DB.get().getConnection(function (err, connection) {
+                if (err != null) {
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
+                }
+                let pwd: string;
+                let userId: number;
                 let encounteredError: boolean = false;
+
                 let query = connection.query("CALL sp_user_select_pwd(?)", [username]);
                 query.on('error', function (err) {
-                    Logger.log.info("Error occur while validating password. Error:" + err.message);
                     encounteredError = true;
-                    reject(err);
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Error occur while validating password. ' + err.message));
                 });
 
-                query.on('result', function (row,index) {
-                    if (index==0) {
-                        pwd = row.password;
-                        userId = row.id;
-                        userRoles.push(row.role);
+                query.on('result', function (row, index) {
+                    try {
+                        if (index == 0) {
+                            pwd = row.password;
+                            userId = row.id;
+                        }
+                    }
+                    catch (ex) {
+                        encounteredError = true;
+                        return reject(new CLError.DBError(ErrorCode.DB_DATA_PARSE_ERROR, 'Error occured while parsing data. ' + ex.message));
                     }
                 });
                 query.on('end', function (result) {
                     connection.release();
                     if (!encounteredError) {
-                        if (pwd != null) {
-                            if (bcrypt.compareSync(password, pwd)) { //this is taking time
-                                user = {
-                                    roles: userRoles,
-                                    userName: username,
-                                    id: userId
-                                };
-                            }
-                            else {
-                                reject(new Error("authentication failed."));
-                            }
+                        if (userId == null) //means supplied user not exist in system
+                        {
+                            return reject(new CLError.Unauthorized(ErrorCode.USER_NOT_FOUND, 'Authentication failed. User not found.'));
+                        }
+                        if (bcrypt.compareSync(password, pwd)) { //this is taking time
+                            let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_USER || config.get("token.minutesToExpire-user")));
+                            let auth: model.AuthModel = {
+                                expires: expiryDate,
+                                token: genToken(userId, expiryDate)
+                            };
+                            resolve(auth);
                         }
                         else {
-                            reject(new Error("authentication failed."));
+                            return reject(new CLError.Unauthorized(ErrorCode.USER_NOT_AUTHENTICATED, 'Authentication failed.'));
                         }
-                        resolve(user);
                     }
                 });
-            }
+            });
         });
-    });
-}
+    }
 
-function authenticateClient(clientId:number, clientName: string, clientKey: string): Promise<model.AuthModel> {
-    return new Promise(function (resolve, reject) {
-        DB.get().getConnection(function (err, connection) {
-            if (err != null) {
-                connection.release();
-                Logger.log.info("Error occur while obtaining database connection. Error:" + err.message);
-                reject(err);
-                return;
+    connect(clientId: number, clientName: string, clientKey: string): Promise<model.AuthModel> {
+        let auth: model.AuthModel;
+        return new Promise(function (resolve, reject) {
+            if (clientKey == null || clientKey.trim() == '') {
+                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'Missing  client key.'));
             }
-            let authModel: model.AuthModel;
-            let encounteredError: boolean = false;
-            let query = connection.query("CALL sp_api_client_select(?,?)", [clientName, clientId]);
-            query.on('error', function (err) {
-                Logger.log.info("Error occured while authenticating client. Error:" + err.message);
-                encounteredError = true;
-                reject(err);
-            });
-
-            let blocked: boolean;
-            let id: number;
-            let ck: string;
-            let allowRefresh: boolean;
-            query.on('result', function (row, index) {
-                if (index == 0) {
-                    id = row.id;
-                    blocked = row.blocked;
-                    ck = row.clientKey;
-                    allowRefresh = row.allowRefresh;
+            //either clientKey or clientname must supplied
+            if ((clientId == null || clientId <= 0) && (clientName == null || clientName.trim() == '')) //no need to go to DB
+            {
+                //no need to check, just return error
+                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'Missing  client\'s id\name.'));
+            }
+            DB.get().getConnection(function (err, connection) {
+                if (err != null) {
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
                 }
-            });
-            query.on('end', function () {
-                connection.release();
-                if (!encounteredError) {
-                     //TODO: need to save apiKey in encrypted form as we are doing in user password.
-                    if (id > 0 && ck == clientKey) {                       
-                        //>0 means called for auto refresh
-                        if (clientId > 0 && !allowRefresh) {
-                            Logger.log.info("Authentication failed. Client is not allowed for autorefresh.");
-                            reject(new Error("Authentication failed. Client is not allowed for autorefresh."));
+
+                let encounteredError: boolean = false;
+                let query = connection.query("CALL sp_api_client_select(?,?)", [clientName, clientId]);
+                query.on('error', function (err) {
+                    encounteredError = true;
+                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while authenticating client. ' + err.message));
+                });
+
+                let authModel: model.AuthModel;
+                let blocked: boolean;
+                let id: number;
+                let ck: string;
+                let allowRefresh: boolean;
+                query.on('result', function (row, index) {
+                    try {
+                        if (index == 0) {
+                            id = row.id;
+                            blocked = row.blocked;
+                            ck = row.clientKey;
+                            allowRefresh = row.allowRefresh;
                         }
-                        else if (!blocked) {
-                            let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_CLIENT || config.get("token.minutesToExpire-client")));
-                            authModel = {
-                                expires: expiryDate
-                                , token: genClientToken(id,clientKey, expiryDate)
+                    }
+                    catch (ex) {
+                        encounteredError = true;
+                        return reject(new CLError.DBError(ErrorCode.DB_DATA_PARSE_ERROR, 'Error occured while parsing data. ' + ex.message));
+                    }
+                });
+                query.on('end', function () {
+                    connection.release();
+                    if (!encounteredError) {
+                        if (id == null || id == 0) {
+                            return reject(new CLError.Unauthorized(ErrorCode.CLIENT_NOT_FOUND, "Authentication failed. API client not found."));
+                        }
+
+                        //TODO: need to save apiKey in encrypted form as we are doing in user password.
+                        if (ck != clientKey) {
+                            return reject(new CLError.Unauthorized(ErrorCode.INVALID_CLIENT_KEY, "Authentication failed. Client key is not valid."));
+                        }
+                        if (blocked) {
+                            return reject(new CLError.Unauthorized(ErrorCode.CLIENT_BLOCKED, "Authentication failed. Client is blocked."));
+                        }
+
+                        //>0 means called for auto refresh
+                        if (clientId > 0) {
+                            if (!allowRefresh) {
+                                return reject(new CLError.Unauthorized(ErrorCode.CLIENT_AUTO_AUTH_DISABLED, "Auto authentication failed. Client is not allowed for autorefresh."));
+                            }
+                        }
+
+                        let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_CLIENT || config.get("token.minutesToExpire-client")));
+                        authModel = {
+                            expires: expiryDate
+                            , token: genClientToken(id, clientKey, expiryDate)
+                        };
+                        resolve(authModel);
+                    }
+                });
+            });
+        });
+    }
+
+    refreshAccessToken(userid: number, location: string): Promise<model.AuthModel> {
+        return new Promise(function (resolve, reject) {
+            let isUserLoggedIn: boolean = false;
+            let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_USER || config.get("token.minutesToExpire-user")));
+            DB.get().getConnection(function (err, connection) {
+                if (err != null) {
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
+                }
+                let encounteredError: boolean = false;
+                let query = connection.query('Call sp_select_user_online(?,?)', [userid, location]);
+                query.on('error', function (err) {
+                    encounteredError = true;
+                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error while checking user logged-in or not.'));
+                });
+                query.on('result', function (row, index) {
+                    if (index == 0) {
+                        isUserLoggedIn = row.IsExists;
+                    }
+                });
+                query.on('end', function () {
+                    connection.release();
+                    if (!encounteredError) {
+                        if (isUserLoggedIn) {
+                            let auth: model.AuthModel = {
+                                expires: expiryDate,
+                                token: genToken(userid, expiryDate)
                             };
-                            resolve(authModel);
+                            resolve(auth);
                         }
                         else {
-                            Logger.log.info("Authentication failed. Client is blocked.");
-                            reject(new Error("Authentication failed. Client is blocked."));
+                            reject(new CLError.Unauthorized(ErrorCode.USER_TOKEN_EXPIRED,'Token expired. Can not auto-refresh.'));
                         }
                     }
-                    else {
-                        Logger.log.info("Authentication failed.");
-                        reject(new Error("Authentication failed."));
-                    }
-                }
+                });
             });
+
         });
-    });
+    }
 }
 
-//function refreshClient(id: number, clientKey: string): Promise<model.AuthModel> {
-//    return new Promise(function (resolve, reject) {
-//        DB.get().getConnection(function (err, connection) {
-//            if (err != null) {
-//                connection.release();
-//                Logger.log.info("Error occur while obtaining database connection. Error:" + err.message);
-//                reject(err);
-//                return;
-//            }
-//            let authModel: model.AuthModel;
-//            let encounteredError: boolean = false;
-//            let query = connection.query("CALL sp_api_client_select(?,?)", [undefined, id]);
-//            query.on('error', function (err) {
-//                Logger.log.info("Error occured while authenticating client. Error:" + err.message);
-//                encounteredError = true;
-//                reject(err);
-//            });
-
-//            let blocked: boolean;
-//            let cid: number;
-//            let ck: string;
-//            let allowRefresh: boolean;
-//            query.on('result', function (row, index) {
-//                if (index == 0) {
-//                    cid = row.id;
-//                    blocked = row.blocked;
-//                    ck = row.clientKey;
-//                    allowRefresh = row.allowRefresh;
-//                }
-//            });
-//            query.on('end', function () {
-//                connection.release();
-//                if (!encounteredError) {
-//                    if (cid > 0 && ck == clientKey && !blocked && allowRefresh) {
-//                        //TODO: need to save apiKey in encrypted form as we are doing in user password.
-//                        if (!blocked) {
-//                            let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_CLIENT || config.get("token.minutesToExpire-client")));
-//                            authModel = {
-//                                expires: expiryDate
-//                                , token: genClientToken(cid,clientKey, expiryDate)
-//                            };
-//                            resolve(authModel);
-//                        }
-//                        else {
-//                            Logger.log.info("Authentication failed. Client is blocked or auto-refresh not allowed.");
-//                            reject(new Error("Authentication failed. Client is blocked or auto-refresh not allowed."));
-//                        }
-//                    }
-//                    else {
-//                        Logger.log.info("Authentication failed.");
-//                        reject(new Error("Authentication failed."));
-//                    }
-//                }
-//            });
-//        });
-//    });
-//}
-
-
 // private method
-function genToken(expires: Date): string {
+function genToken(userid: number, expires: Date): string {
     let token = jwt.encode({
         exp: expires
+        , id: userid
     }, String(process.env.TOKEN_KEY || config.get("token.key")));
     return token;
 }
-
 // private method
-function genClientToken(clientid:number,clientKey: string, expires: Date): string {
+function genClientToken(clientid: number, clientKey: string, expires: Date): string {
     let token = jwt.encode({
         client: clientKey,
         exp: expires,

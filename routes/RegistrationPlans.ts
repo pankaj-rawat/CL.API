@@ -5,7 +5,7 @@ import * as model from "../models/RegistrationPlanModel";
 import {APIResponse} from "../APIResponse";
 
 let registrationPlanController = express.Router();
-registrationPlanController.get('', function (req: express.Request, res: express.Response) {
+registrationPlanController.get('', function (req: express.Request, res: express.Response,next) {
     let registrationPlanRepo: RegistrationPlanRepository = new RegistrationPlanRepository();
     let apiResponse: APIResponse;
 
@@ -18,18 +18,11 @@ registrationPlanController.get('', function (req: express.Request, res: express.
             res.send(apiResponse);
         })
         .catch(function (err) {
-            apiResponse = {
-                isValid: false,
-                error: {
-                    message: err.message,
-                    number: 1// TODO:need to fix it.
-                }
-            };
-            res.send(apiResponse);
+            next(err);
         });
 });
 
-registrationPlanController.get('/:id', function (req: express.Request, res: express.Response) {
+registrationPlanController.get('/:id', function (req: express.Request, res: express.Response,next) {
     let id: number = req.params.id;
     let registrationPlanRepo: RegistrationPlanRepository = new RegistrationPlanRepository();
     let apiResponse: APIResponse;
@@ -42,14 +35,7 @@ registrationPlanController.get('/:id', function (req: express.Request, res: expr
             res.send(apiResponse);
         })
         .catch(function (err) {
-            apiResponse = {
-                isValid: false,
-                error: {
-                    message: err.message,
-                    number: 1// TODO:need to fix it.
-                }
-            };
-            res.send(apiResponse);
+            next(err);
         });
 });
 

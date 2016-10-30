@@ -6,6 +6,7 @@ import bodyParser = require('body-parser');
 import {Logger}  from "./Logger";
 import {RequestValidator} from './middlewares/RequestValidator';
 import {RouteBuilder} from './RouteBuilder';
+import {errorHandler} from './middlewares/ErrorHandler';
 
 var app = express();
 var router = new RouteBuilder();
@@ -21,7 +22,7 @@ let httpsServerOption = {
 //enable CORS
 app.use(function (req: express.Request, res: express.Response, next) {
     res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, x-client-token,x-client-key,x-access-token,x-key");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, x-client-token,x-client-key,x-access-token,x-key,x-location");
     next();
 });
 
@@ -31,6 +32,7 @@ app.use(bodyParser.json());
 app.all('/api/*', validateRequest.Validate);
 //load router
 router.build(app);
+app.use(errorHandler);
 process.on('unhandledRejection', (reason: string, p) => {
     Logger.log.error(reason);
 });

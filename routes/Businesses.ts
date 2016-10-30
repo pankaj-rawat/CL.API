@@ -22,7 +22,7 @@ businessController.post('', function (req: express.Request, res: express.Respons
                 isValid: false,
                 error: {
                     message: "Input data missing.",
-                    number: 1
+                    errorCode: 1
                 }
             };
             res.send(apiResponse);
@@ -62,7 +62,7 @@ businessController.post('', function (req: express.Request, res: express.Respons
             .catch(function (err) {
                 apiResponse = {
                     isValid: false,
-                    error: { message: err.message, number: err.number }
+                    error: { message: err.message, errorCode: err.number }
                 };
                 res.send(apiResponse);
             });
@@ -70,7 +70,7 @@ businessController.post('', function (req: express.Request, res: express.Respons
     catch (err) {
         apiResponse = {
             isValid: false,
-            error: { message: err.message, number: err.number }
+            error: { message: err.message, errorCode: err.number }
         };
         res.send(apiResponse);
     }
@@ -90,7 +90,7 @@ businessController.get('/:id', function (req: express.Request, res: express.Resp
         })
         .catch(function (err) {
             apiResponse = {
-                error: { message: err.message, number: err.number }
+                error: { message: err.message, errorCode: err.number }
                 ,isValid:false
             };
             res.send(apiResponse);
