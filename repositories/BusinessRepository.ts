@@ -9,6 +9,9 @@ import * as CLError from '../CLError';
 export class BusinessRepository implements irepo.IBusinessRepository {
     register(business: model.BusinessModel): Promise<model.BusinessModel> {
         return new Promise(function (resolve, reject) {
+            if (business.contactNumbers == null || business.images == null || business.operationHours == null || business.tags == null) {
+                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, "Input data missing."));
+            }
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
                     return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));

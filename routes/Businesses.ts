@@ -7,7 +7,7 @@ import {BusinessRepository} from "../repositories/BusinessRepository";
 
 let businessController = express.Router();
 
-businessController.post('', function (req: express.Request, res: express.Response) {
+businessController.post('', function (req: express.Request, res: express.Response, next: Function) {
     let contactNumbers: Array<model.BusinessPhoneModel> = new Array<model.BusinessPhoneModel>();
     let businessImages: Array<model.BusinessImageModel> = new Array<model.BusinessImageModel>();
     let businessOperationHours: Array<model.BusinessOperationHourModel> = new Array<model.BusinessOperationHourModel>();
@@ -16,19 +16,9 @@ businessController.post('', function (req: express.Request, res: express.Respons
     Logger.log.info("business registration requested from " + req.hostname);
     let businessRepo: BusinessRepository = new BusinessRepository();
     let apiResponse: APIResponse;
+    let business: model.BusinessModel;
     try {
-        if (req.body.contactNumbers == null || req.body.images == null || req.body.operationHours == null || req.body.tags == null) {
-            apiResponse = {              
-                isValid: false,
-                error: {
-                    message: "Input data missing.",
-                    errorCode: 1
-                }
-            };
-            res.send(apiResponse);
-            return;
-        }
-        let business: model.BusinessModel = {
+            business = {
             idCity: req.body.idCity
             , commenceDate: req.body.commenceDate
             , contactName: req.body.contactName
@@ -46,54 +36,44 @@ businessController.post('', function (req: express.Request, res: express.Respons
             , streetAddress: req.body.streetAddress
             , webURL: req.body.webURL
             , contactNumbers: getContactNumberList(JSON.parse(req.body.contactNumbers))
-            ,images: getImageList(JSON.parse(req.body.images))
-            ,operationHours: getOperationHourList(JSON.parse(req.body.operationHours))
-            ,tags: getTagList(req.body.tags)
+            , images: getImageList(JSON.parse(req.body.images))
+            , operationHours: getOperationHourList(JSON.parse(req.body.operationHours))
+            , tags: getTagList(req.body.tags)
         }
-              
-        businessRepo.register(business)
-            .then(function (result) {
-                apiResponse = {
-                    data: result,
-                    isValid: true
-                };
-                res.send(apiResponse);
-            })
-            .catch(function (err) {
-                apiResponse = {
-                    isValid: false,
-                    error: { message: err.message, errorCode: err.number }
-                };
-                res.send(apiResponse);
-            });
+
+            if (business != null) {
+                businessRepo.register(business)
+                    .then(function (result) {
+                        apiResponse = {
+                            data: result,
+                            isValid: true
+                        };
+                        res.send(apiResponse);
+                    })
+                    .catch(function (err) {
+                        next(err);
+                    });
+            }
     }
     catch (err) {
-        apiResponse = {
-            isValid: false,
-            error: { message: err.message, errorCode: err.number }
-        };
-        res.send(apiResponse);
+        next(err);
     }
 
 });
 
-businessController.get('/:id', function (req: express.Request, res: express.Response) {
+businessController.get('/:id', function (req: express.Request, res: express.Response, next: Function) {
     let businessRepo: BusinessRepository = new BusinessRepository();
     let apiResponse: APIResponse;
     businessRepo.find(req.params.id)
         .then(function (result) {
             apiResponse = {
                 data: result
-                ,isValid:true
+                , isValid: true
             };
             res.send(apiResponse);
         })
         .catch(function (err) {
-            apiResponse = {
-                error: { message: err.message, errorCode: err.number }
-                ,isValid:false
-            };
-            res.send(apiResponse);
+            next(err);
         })
 });
 function getContactNumberList(phones: Array<model.BusinessPhoneModel>): Array<model.BusinessPhoneModel> {
