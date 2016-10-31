@@ -31,6 +31,9 @@ stateController.get('', function (req: express.Request, res: express.Response, n
     if (limit <= 0 || limit > maxLimit) {
         limit = maxLimit;
     }
+    if (offset < 0) {
+        offset = 0;
+    }
         
     stateRepo.getAll(offset, limit, idCountry)
         .then(function (result) {

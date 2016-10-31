@@ -1,11 +1,32 @@
 ﻿//contain setting only relevent to prod to override default.json values.
+  //STAGE
+//{
+//  "dbConfig": {
+//    "host": "us-cdbr-iron-east-04.cleardb.net",
+//    "port": 0,
+//    "user": "b41fcc039dc0b4",
+//    "password": "ffbf2864",
+//    "database": "heroku_bd248f5d5a6eb6f"
+//  },
+//  "server": {
+//    "port": 1337
+//  },
+//  "token": {
+//    "daysToExpire": 1,
+//    "key": "sss.sss.sss.ssh"
+//  },
+//  "log": {
+//    "path": "/log"
+//  }
+//}
+
 {
   "dbConfig": {
     "host": "us-cdbr-iron-east-04.cleardb.net",
     "port": 0,
-    "user": "b41fcc039dc0b4",
-    "password": "ffbf2864",
-    "database": "heroku_bd248f5d5a6eb6f"
+    "user": "b3aa1e3b8b957e",
+    "password": "b6f6240c",
+    "database": "heroku_65760721db12b20"
   },
   "server": {
     "port": 1337

@@ -54,7 +54,6 @@ export class BusinessRepository implements irepo.IBusinessRepository {
         return new Promise(function (resolve, reject) {
         });
     };
-
     find(id: number): Promise<model.BusinessModel> {
         return new Promise(function (resolve, reject) {
             getBusiness(id)
@@ -70,7 +69,6 @@ export class BusinessRepository implements irepo.IBusinessRepository {
         return new Promise(function (resolve, reject) {
         });
     };
-
     addOffer(offer: model.BusinessOfferModel): Promise<model.BusinessOfferModel> {
         return new Promise(function (resolve, reject) {
         });
