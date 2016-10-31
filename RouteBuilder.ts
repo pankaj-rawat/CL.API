@@ -20,7 +20,7 @@ export class RouteBuilder {
                 let route = '/api/';
 
                 if (basename != 'Auth') {
-                    route = '/api/' + basename; // for Auth(login), route will be without base name i.e. api/login.
+                    route = '/api/' + basename; // for Auth(connect), route will be without base name i.e. api/connect.
                 }               
                 let routeController = './routes/' + basename;
                 app.use(route, require(routeController));

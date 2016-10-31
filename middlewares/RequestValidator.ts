@@ -11,6 +11,7 @@ import {APIResponse} from "../APIResponse";
 import * as CLError from "../CLError";
 import {ErrorCode} from "../ErrorCode";
 
+
 export class RequestValidator {
 
     Validate(req: express.Request, res: express.Response, next: Function) {
@@ -20,9 +21,9 @@ export class RequestValidator {
         // We skip the token auth for [OPTIONS] requests.
         Logger.log.info('Request recieved: ' + req.originalUrl);
         if (req.method == 'OPTIONS') return next();
-        if ((req.url.indexOf('api/connect') >= 0)) return next(); // public route
 
-        const unsecuredRoutes: string[] = ['api/connect'];//public route... need to use this for list
+        let reqURL: string = req.url.toLowerCase();
+        if ((reqURL.indexOf('api/connect') >= 0)) return next(); // public route
 
         let clientToken = req.headers['x-client-token'] || (req.query && req.query.client_token) || (req.body && req.body.client_token);
         let clientKey = req.headers['x-client-key'] || (req.query && req.query.client_key) || (req.body && req.body.client_key);
@@ -59,17 +60,20 @@ export class RequestValidator {
 
 function validateUser(req: express.Request, res: express.Response, next: Function) {
     //check for public URL not required users to log in.
-    if ((req.url.indexOf('api/users/login') >= 0)
-        || (req.url.indexOf('api/users/logout') >= 0)
-        || (req.url.indexOf('api/search') >= 0)
-        || (req.url.indexOf('api/cities') >= 0)
-        || (req.url.indexOf('api/states') >= 0)
-        || (req.url.indexOf('api/countries') >= 0)
-        || (req.url.indexOf('api/categories') >= 0)
-        || (req.url.indexOf('api/tags') >= 0)
-        || (req.url.indexOf('api/businesses') >= 0)
-        || (req.url.indexOf('api/registrationplans') >= 0)
-        || (req.url.indexOf('api/users/signup') >= 0)) {
+    let reqURL: string = req.url.toLowerCase();
+    if (
+        (reqURL.indexOf('api/users/login') >= 0)
+        || (reqURL.indexOf('api/users/logout') >= 0)
+        || (reqURL.indexOf('api/users/signup') >= 0)
+        || (reqURL.indexOf('api/search') >= 0)
+        || (reqURL.indexOf('api/cities') >= 0)
+        || (reqURL.indexOf('api/states') >= 0)
+        || (reqURL.indexOf('api/countries') >= 0)
+        || (reqURL.indexOf('api/categories') >= 0)
+        || (reqURL.indexOf('api/tags') >= 0)
+        || (reqURL.indexOf('api/businesses') >= 0)
+        || (reqURL.indexOf('api/registrationplans') >= 0)
+        ) {
         return next();
     }
 
@@ -84,7 +88,7 @@ function validateUser(req: express.Request, res: express.Response, next: Functio
     //verify that user session token
     let userDecoded = jwt.decode(token, String(process.env.TOKEN_KEY || config.get("token.key")));
     if (new Date(userDecoded.exp).getTime() <= (new Date()).getTime()) {
-        return next(new CLError.Unauthorized(ErrorCode.USER_TOKEN_EXPIRED, 'Token expired.'));
+        return next(new CLError.Unauthorized(ErrorCode.USER_TOKEN_EXPIRED, 'User Token expired.'));
     }
 
     if (userDecoded.id != key) {
