@@ -7,22 +7,23 @@ import * as model  from "../models/AuthModel";
 import bcrypt = require('bcryptjs');
 import {Role} from "../Definitions";
 import * as CLError from "../CLError";
-import {ErrorCode} from "../ErrorCode";
 
 export class AuthRepository implements irepo.IAuthRepository {
 
     authenticateUser(username: string, password: string): Promise<model.AuthModel> {
         return new Promise(function (resolve, reject) {
             if (password == null || password.trim() == '') {
-                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'Password not supplied'));
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'Password not supplied'));
             }
             if (username == null || username.trim() == '') {
-                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'User id not supplied'));
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'User id not supplied'));
             }
 
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
-                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
+                    clError.stack = err.stack;
+                    return reject(clError);
                 }
                 let pwd: string;
                 let userId: number;
@@ -31,7 +32,9 @@ export class AuthRepository implements irepo.IAuthRepository {
                 let query = connection.query("CALL sp_user_select_pwd(?)", [username]);
                 query.on('error', function (err) {
                     encounteredError = true;
-                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Error occur while validating password. ' + err.message));
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occur while validating password. ' + err.message);
+                    clError.stack = err.stack;
+                    return reject(clError);
                 });
 
                 query.on('result', function (row, index) {
@@ -43,7 +46,9 @@ export class AuthRepository implements irepo.IAuthRepository {
                     }
                     catch (ex) {
                         encounteredError = true;
-                        return reject(new CLError.DBError(ErrorCode.DB_DATA_PARSE_ERROR, 'Error occured while parsing data. ' + ex.message));
+                        let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_DATA_PARSE_ERROR);
+                        clError.stack = err.stack;
+                        return reject(clError);
                     }
                 });
                 query.on('end', function (result) {
@@ -51,7 +56,7 @@ export class AuthRepository implements irepo.IAuthRepository {
                     if (!encounteredError) {
                         if (userId == null) //means supplied user not exist in system
                         {
-                            return reject(new CLError.Unauthorized(ErrorCode.USER_NOT_FOUND, 'Authentication failed. User not found.'));
+                            return reject(new CLError.Unauthorized(CLError.ErrorCode.USER_NOT_FOUND));
                         }
                         if (bcrypt.compareSync(password, pwd)) { //this is taking time
                             let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_USER || config.get("token.minutesToExpire-user")));
@@ -62,7 +67,7 @@ export class AuthRepository implements irepo.IAuthRepository {
                             resolve(auth);
                         }
                         else {
-                            return reject(new CLError.Unauthorized(ErrorCode.USER_NOT_AUTHENTICATED, 'Authentication failed.'));
+                            return reject(new CLError.Unauthorized(CLError.ErrorCode.USER_NOT_AUTHENTICATED));
                         }
                     }
                 });
@@ -74,24 +79,28 @@ export class AuthRepository implements irepo.IAuthRepository {
         let auth: model.AuthModel;
         return new Promise(function (resolve, reject) {
             if (clientKey == null || clientKey.trim() == '') {
-                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'Missing  client key.'));
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'Missing  client key.'));
             }
             //either clientKey or clientname must supplied
             if ((clientId == null || clientId <= 0) && (clientName == null || clientName.trim() == '')) //no need to go to DB
             {
                 //no need to check, just return error
-                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'Missing  client\'s id\name.'));
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'Missing  client\'s id\name.'));
             }
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
-                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
+                    clError.stack = err.stack;
+                    return reject(clError);
                 }
 
                 let encounteredError: boolean = false;
                 let query = connection.query("CALL sp_api_client_select(?,?)", [clientName, clientId]);
                 query.on('error', function (err) {
                     encounteredError = true;
-                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while authenticating client. ' + err.message));
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while authenticating client. ' + err.message);
+                    clError.stack = err.stack;
+                    return reject(clError);
                 });
 
                 let authModel: model.AuthModel;
@@ -110,28 +119,30 @@ export class AuthRepository implements irepo.IAuthRepository {
                     }
                     catch (ex) {
                         encounteredError = true;
-                        return reject(new CLError.DBError(ErrorCode.DB_DATA_PARSE_ERROR, 'Error occured while parsing data. ' + ex.message));
+                        let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_DATA_PARSE_ERROR);
+                        clError.stack = err.stack;
+                        return reject(clError);
                     }
                 });
                 query.on('end', function () {
                     connection.release();
                     if (!encounteredError) {
                         if (id == null || id == 0) {
-                            return reject(new CLError.Unauthorized(ErrorCode.CLIENT_NOT_FOUND, "Authentication failed. API client not found."));
+                            return reject(new CLError.Unauthorized(CLError.ErrorCode.CLIENT_NOT_FOUND));
                         }
 
                         //TODO: need to save apiKey in encrypted form as we are doing in user password.
                         if (ck != clientKey) {
-                            return reject(new CLError.Unauthorized(ErrorCode.INVALID_CLIENT_KEY, "Authentication failed. Client key is not valid."));
+                            return reject(new CLError.Unauthorized(CLError.ErrorCode.INVALID_CLIENT_KEY));
                         }
                         if (blocked) {
-                            return reject(new CLError.Unauthorized(ErrorCode.CLIENT_BLOCKED, "Authentication failed. Client is blocked."));
+                            return reject(new CLError.Forbidden(CLError.ErrorCode.CLIENT_BLOCKED));
                         }
 
                         //>0 means called for auto refresh
                         if (clientId > 0) {
                             if (!allowRefresh) {
-                                return reject(new CLError.Unauthorized(ErrorCode.CLIENT_AUTO_AUTH_DISABLED, "Auto authentication failed. Client is not allowed for autorefresh."));
+                                return reject(new CLError.Forbidden(CLError.ErrorCode.CLIENT_AUTO_AUTH_DISABLED));
                             }
                         }
 
@@ -153,13 +164,17 @@ export class AuthRepository implements irepo.IAuthRepository {
             let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_USER || config.get("token.minutesToExpire-user")));
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
-                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
+                    clError.stack = err.stack;
+                    return reject(clError);
                 }
                 let encounteredError: boolean = false;
                 let query = connection.query('Call sp_select_user_online(?,?)', [userid, location]);
                 query.on('error', function (err) {
                     encounteredError = true;
-                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error while checking user logged-in or not.'));
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error while checking user logged-in or not.' + err.message);
+                    clError.stack = err.stack;
+                    return reject(clError);
                 });
                 query.on('result', function (row, index) {
                     if (index == 0) {
@@ -177,7 +192,7 @@ export class AuthRepository implements irepo.IAuthRepository {
                             resolve(auth);
                         }
                         else {
-                            reject(new CLError.Unauthorized(ErrorCode.USER_TOKEN_EXPIRED,'Token expired. Can not auto-refresh.'));
+                            reject(new CLError.Unauthorized(CLError.ErrorCode.USER_TOKEN_EXPIRED,'Can not auto-refresh.'));
                         }
                     }
                 });

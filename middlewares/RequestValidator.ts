@@ -9,7 +9,6 @@ import express = require('express');
 import {Logger}  from "../Logger";
 import {APIResponse} from "../APIResponse";
 import * as CLError from "../CLError";
-import {ErrorCode} from "../ErrorCode";
 
 
 export class RequestValidator {
@@ -29,14 +28,14 @@ export class RequestValidator {
         let clientKey = req.headers['x-client-key'] || (req.query && req.query.client_key) || (req.body && req.body.client_key);
 
         if (clientToken == null || clientKey == null) {
-            return next(new CLError.Forbidden(ErrorCode.CLIENT_IDENTIFICATION_MISSING, "Missing client credentials."));
+            return next(new CLError.Forbidden(CLError.ErrorCode.CLIENT_IDENTIFICATION_MISSING));
         }
 
         //verify that client is known to us.
         let decoded = jwt.decode(clientToken, String(process.env.TOKEN_KEY || config.get("token.key")));
 
         if (decoded.client != clientKey) {
-            return next(new CLError.Unauthorized(ErrorCode.INVALID_CLIENT_KEY, "Authentication failed. Client is not valid."));
+            return next(new CLError.Unauthorized(CLError.ErrorCode.INVALID_CLIENT_KEY));
         }
 
         if (new Date(decoded.exp).getTime() <= (new Date()).getTime()) {
@@ -82,17 +81,17 @@ function validateUser(req: express.Request, res: express.Response, next: Functio
     let location = (req.query && req.query.location) || req.headers['x-location'];
 
     if (token == null || key == null || location == null) {
-        return next(new CLError.Forbidden(ErrorCode.USER_IDENTIFICATION_MISSING, "Missing User information."));
+        return next(new CLError.Forbidden(CLError.ErrorCode.USER_IDENTIFICATION_MISSING));
     }
 
     //verify that user session token
     let userDecoded = jwt.decode(token, String(process.env.TOKEN_KEY || config.get("token.key")));
     if (new Date(userDecoded.exp).getTime() <= (new Date()).getTime()) {
-        return next(new CLError.Unauthorized(ErrorCode.USER_TOKEN_EXPIRED, 'User Token expired.'));
+        return next(new CLError.Unauthorized(CLError.ErrorCode.USER_TOKEN_EXPIRED));
     }
 
     if (userDecoded.id != key) {
-        return next(new CLError.Unauthorized(ErrorCode.INVALID_USER_TOKEN, "Authentication failed. Token not valid."));
+        return next(new CLError.Unauthorized(CLError.ErrorCode.INVALID_USER_TOKEN));
     }
 
     //verify that user must logged in to procede further
@@ -101,7 +100,7 @@ function validateUser(req: express.Request, res: express.Response, next: Functio
     userRepo.getUserRoles(key)
         .then(function (userRoles) {
             if (!ld.includes(userRoles, Role.RegisteredUser)) {
-                return next(new CLError.Forbidden(ErrorCode.USER_NOT_AUTHORIZED, ' User not authorized.'));
+                return next(new CLError.Forbidden(CLError.ErrorCode.USER_NOT_AUTHORIZED));
             }
             //add refreshed acess token on response header with new expiration time
             let authrepo = new AuthRepository();

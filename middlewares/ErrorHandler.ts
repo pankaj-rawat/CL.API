@@ -1,13 +1,12 @@
 ﻿import express = require('express');
 import {Logger}  from "../Logger";
 import {APIResponse} from "../APIResponse";
-import {ErrorCode} from "../ErrorCode";
 import {UserRepository} from  "../repositories/UserRepository";
+import * as CLError from '../CLError';
 
 export function errorHandler(err, req: express.Request, res: express.Response, next) {
-    Logger.log.error(err.stack);
-
-    if (err.errorCode == ErrorCode.USER_TOKEN_EXPIRED) {
+    Logger.log.error(err.errorCode+ ": "+ err.message +". " + err.stack );
+    if (err.errorCode == CLError.ErrorCode.USER_TOKEN_EXPIRED) {
         //logout user.
         let urepo: UserRepository = new UserRepository();
         let userId = Number.parseInt(req.headers['x-key'] || (req.query && req.query.key));

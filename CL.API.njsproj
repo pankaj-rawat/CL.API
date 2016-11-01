@@ -72,7 +72,6 @@
     <TypeScriptCompile Include="CLError.ts" />
     <TypeScriptCompile Include="DB.ts" />
     <TypeScriptCompile Include="Definitions.ts" />
-    <TypeScriptCompile Include="ErrorCode.ts" />
     <TypeScriptCompile Include="Index.ts" />
     <TypeScriptCompile Include="interfaces\IAuthRepository.ts" />
     <TypeScriptCompile Include="interfaces\IBusinessRepository.ts" />
