@@ -87,11 +87,11 @@ function validateUser(req: express.Request, res: express.Response, next: Functio
     //verify that user session token
     let userDecoded = jwt.decode(token, String(process.env.TOKEN_KEY || config.get("token.key")));
     if (new Date(userDecoded.exp).getTime() <= (new Date()).getTime()) {
-        return next(new CLError.Unauthorized(CLError.ErrorCode.USER_TOKEN_EXPIRED));
+        return next(new CLError.Forbidden(CLError.ErrorCode.USER_TOKEN_EXPIRED));
     }
 
     if (userDecoded.id != key) {
-        return next(new CLError.Unauthorized(CLError.ErrorCode.INVALID_USER_TOKEN));
+        return next(new CLError.Forbidden(CLError.ErrorCode.INVALID_USER_TOKEN));
     }
 
     //verify that user must logged in to procede further
