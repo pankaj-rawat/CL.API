@@ -4,7 +4,7 @@ import {CategoryRepository} from "../repositories/CategoryTagRepository";
 import {APIResponse} from "../APIResponse";
 
 let categoryController = express.Router();
-categoryController.get('/:id', function (req: express.Request, res: express.Response) {
+categoryController.get('/:id', function (req: express.Request, res: express.Response,next:Function) {
     
     let id: number = req.params.id;
     let catRepo: CategoryRepository = new CategoryRepository();
@@ -18,15 +18,11 @@ categoryController.get('/:id', function (req: express.Request, res: express.Resp
         res.send(apiResponse);
     });
     categoryP.catch(function(err){
-        let apiResponse: APIResponse = {
-            isValid: false,
-            message:err.message
-        }
-        res.send(apiResponse);
+        next(err);
     });
 });
 
-categoryController.get('', function (req: express.Request, res: express.Response) {
+categoryController.get('', function (req: express.Request, res: express.Response, next: Function) {
     let catRepo: CategoryRepository = new CategoryRepository();
 
     let categoryP: Promise<Array<CategoryModel>> = catRepo.getAll();
@@ -38,11 +34,7 @@ categoryController.get('', function (req: express.Request, res: express.Response
         res.send(apiResponse);
     });
     categoryP.catch(function (err) {
-        let apiResponse: APIResponse = {
-            isValid: false,
-            message: err.message
-        }
-        res.send(apiResponse);
+       next(err)
     });
 });
 

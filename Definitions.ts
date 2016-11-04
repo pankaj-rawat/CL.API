@@ -6,11 +6,18 @@
     ReportedDataIncorrect = 5,
     Blocked = 6
 }
-export enum Role {
+export enum Role { 
     Guest = 1,
     Admin = 2,
     BussinessOwner = 3,
     RegisteredUser = 4
+}
+
+export enum Action {
+    Read = 1,
+    Modify = 2,
+    Add = 4,
+    Delete=8
 }
 
 export enum WeekDay {

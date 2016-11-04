@@ -22,13 +22,16 @@ DB.connect(environment, function (err) {
     }
 })
 
-//var http = require("http"),
-//    port = process.env.PORT || 1377;
 
-//var server = http.createServer(function (request, response) {
-//    response.writeHeader(200, { "Content-Type": "text/plain" });
-//    response.write("Hello HTTP!");
-//    response.end();
-//});
+/* Test code */
+/*
+var http = require("http"),
+    port = process.env.PORT || 1377;
 
-//server.listen(port);  
+var server = http.createServer(function (request, response) {
+    response.writeHeader(200, { "Content-Type": "text/plain" });
+    response.write("Hello HTTP!");
+    response.end();
+});
+server.listen(port);
+*/

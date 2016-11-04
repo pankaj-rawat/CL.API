@@ -2,6 +2,7 @@
 import {AuthRepository} from  "../repositories/AuthRepository";
 import {APIResponse} from "../APIResponse";
 import model = require('../models/UserModel');
+import {RepoResponse} from "../RepoResponse";
 import * as amodel from "../models/AuthModel";
 import bcrypt = require('bcryptjs');
 import express = require('express');
@@ -9,7 +10,27 @@ import {Logger}  from "../Logger";
 
 var userController = express.Router();
 
-userController.post('/login', function (req, res, next) {
+
+userController.get('/:id', function (req: express.Request, res: express.Response, next: Function) {
+    let userP: Promise<model.UserModel>;
+    let userRepo = new UserRepository();
+    let clres: APIResponse;
+    userP = userRepo.find(req.params.id);
+    userP.then(function (user: model.UserModel) {
+        clres = {
+            data: user,
+            isValid: true
+        };
+        res.send(clres);
+    });
+
+    userP.catch(function (err) {
+        next(err);
+    });
+});
+
+
+userController.post('/login', function (req: express.Request, res: express.Response, next: Function) {
     Logger.log.info('login is in process.');
     let clRes: APIResponse;
     let authrepo = new AuthRepository();
@@ -17,7 +38,7 @@ userController.post('/login', function (req, res, next) {
     let password = req.body.password;
     let userLocation = req.headers['x-location'] || (req.query && req.query.location);
     authrepo.authenticateUser(username, password)
-        .then(function (auth:amodel.AuthModel) {
+        .then(function (auth: amodel.AuthModel) {
             let userRepo = new UserRepository();
             userRepo.login(username, userLocation)
                 .then(function (user: model.UserModel) {
@@ -36,7 +57,7 @@ userController.post('/login', function (req, res, next) {
         });
 });
 
-userController.post('/logout', function (req, res, next) {
+userController.post('/logout', function (req: express.Request, res: express.Response, next: Function) {
     let clRes: APIResponse;    
     let userId = Number.parseInt(req.headers['x-key'] || (req.query && req.query.key));
     let userLocation = req.headers['x-location'] || (req.query && req.query.location);
@@ -52,29 +73,7 @@ userController.post('/logout', function (req, res, next) {
         });
 });
 
-userController.get('/:id', function (req: express.Request, res: express.Response) {
-    let userP: Promise<model.UserModel>;
-    let userRepo = new UserRepository();
-    let clres: APIResponse;
-    userP = userRepo.find(req.params.id);
-    userP.then(function (user: model.UserModel) {
-        clres = {
-            data: user,
-            isValid: true
-        };
-        res.send(clres);
-    });
-
-    userP.catch(function (err) {
-        clres = {
-            isValid: false,
-            message: err.message
-        };
-        res.send(clres);
-    });
-});
-
-userController.post('/signup', function (req, res) {
+userController.post('/signup', function (req: express.Request, res: express.Response, next: Function) {
     let usrepo = new UserRepository();
     let userP: Promise<model.UserModel>;
     let user: model.UserModel;
@@ -102,15 +101,11 @@ userController.post('/signup', function (req, res) {
         res.send(clres);
     });
     userP.catch(function (err) {
-        clres = {
-            isValid: false,
-            message: err.message
-        };
-        res.send(clres);
+        next(err);
     });
 });
 
-userController.post('/reset', function (req, res) {
+userController.post('/reset', function (req: express.Request, res: express.Response, next: Function) {
     let user = req.body.userName;
 
 });
