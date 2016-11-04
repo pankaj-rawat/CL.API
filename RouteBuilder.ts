@@ -19,9 +19,9 @@ export class RouteBuilder {
                 let basename = getBaseFileName(file);
                 let route = '/api/';
 
-                if (basename != 'Auth') {
+                //if (basename != 'Auth') {
                     route = '/api/' + basename; // for Auth(connect), route will be without base name i.e. api/connect.
-                }               
+                //}               
                 let routeController = './routes/' + basename;
                 app.use(route, require(routeController));               
                 Logger.log.info('Added: route:' + route + ' || router:' + routeController);

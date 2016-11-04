@@ -98,7 +98,7 @@ export class AuthRepository implements irepo.IAuthRepository {
                 let query = connection.query("CALL sp_api_client_select(?,?)", [clientName, clientId]);
                 query.on('error', function (err) {
                     encounteredError = true;
-                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while authenticating client. ' + err.message);
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, err.message);
                     clError.stack = err.stack;
                     return reject(clError);
                 });
@@ -158,9 +158,9 @@ export class AuthRepository implements irepo.IAuthRepository {
         });
     }
 
-    refreshAccessToken(userid: number, location: string): Promise<model.AuthModel> {
+    refreshAccessToken(userId: number, location: string): Promise<model.AuthModel> {
         return new Promise(function (resolve, reject) {
-            let isUserLoggedIn: boolean = false;
+            let roleId: number;
             let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_USER || config.get("token.minutesToExpire-user")));
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
@@ -169,35 +169,74 @@ export class AuthRepository implements irepo.IAuthRepository {
                     return reject(clError);
                 }
                 let encounteredError: boolean = false;
-                let query = connection.query('Call sp_select_user_online(?,?)', [userid, location]);
+                let query = connection.query('Call sp_select_user_online_role(?,?)', [userId, location]);
                 query.on('error', function (err) {
                     encounteredError = true;
-                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error while checking user logged-in or not.' + err.message);
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR,  err.message);
                     clError.stack = err.stack;
                     return reject(clError);
                 });
                 query.on('result', function (row, index) {
                     if (index == 0) {
-                        isUserLoggedIn = row.IsExists;
+                        roleId = row.idRole;
                     }
                 });
                 query.on('end', function () {
                     connection.release();
                     if (!encounteredError) {
-                        if (isUserLoggedIn) {
+                        if (roleId) {
                             let auth: model.AuthModel = {
                                 expires: expiryDate,
-                                token: genToken(userid, expiryDate)
+                                token: genToken(userId, expiryDate),
+                                userRoleId:roleId
                             };
                             resolve(auth);
                         }
                         else {
-                            reject(new CLError.Unauthorized(CLError.ErrorCode.USER_TOKEN_EXPIRED,'Can not auto-refresh.'));
+                            reject(new CLError.Unauthorized(CLError.ErrorCode.USER_TOKEN_EXPIRED,'Can not auto-refresh. Either user online status changed or user role not defined.'));
                         }
                     }
                 });
             });
 
+        });
+    }
+
+    getRoleAccessList(): Promise<Array<model.RoleAccess>> {
+        return new Promise(function (resolve, reject) {
+            //check for cache first.
+            DB.get().getConnection(function (err, connection) {
+                if (err != null) {
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
+                    clError.stack = err.stack;
+                    return reject(clError);
+                }
+                let roleAccesses:Array<model.RoleAccess>=new Array<model.RoleAccess>();
+                let encounteredError: boolean = false;
+                let query = connection.query('Call sp_select_roll_access()');
+                query.on('error', function (err) {
+                    encounteredError = true;
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error while getting roles access.' + err.message);
+                    clError.stack = err.stack;
+                    return reject(clError);
+                });
+                query.on('result', function (row, index) {
+                    if (index == 0) {
+                        let roleAccess: model.RoleAccess = {
+                            actionMask: row.actionMask,
+                            idRole: row.idRole,
+                            resource:row.resource
+                        }
+                        roleAccesses.push(roleAccess);
+                    }
+                });
+                query.on('end', function () {
+                    connection.release();
+                    if (!encounteredError) {
+                        resolve(roleAccesses);
+                    }
+                });
+            });
         });
     }
 }

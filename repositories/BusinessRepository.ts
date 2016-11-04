@@ -153,7 +153,7 @@ function getBusiness(id: number): Promise<model.BusinessModel> {
                             resolve(business);
                         }
                         else {
-                            return reject(new CLError.NotFound(CLError.ErrorCode.RESOURCE_NOT_FOUND,"Business for Id " + id + " not found"));
+                            return reject(new CLError.NotFound(CLError.ErrorCode.RESOURCE_NOT_FOUND,"Business for Id " + id + " not found."));
                         }
                     }
                 });

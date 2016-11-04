@@ -22,7 +22,7 @@ export enum ErrorCode {
     DB_DUPLICATE_ENTRY = 10019
 }
 
-function errorCodeMessage(errorCode: number, defaultmsg: string): string {
+function errorCodeMessage(errorCode: number,messageDetail:string): string {
     let msg: string = undefined;
     switch (errorCode) {
         case ErrorCode.DB_CONNECTION_FAIL:
@@ -82,22 +82,20 @@ function errorCodeMessage(errorCode: number, defaultmsg: string): string {
         case ErrorCode.CLIENT_TOKEN_EXPIRED:
             msg = "Client token expired.";
             break;
-        default:
-            msg = defaultmsg;
     }
-    return msg;
+    return msg + (messageDetail != null ? messageDetail : "");
 }
 
 export class CustomError extends Error {
     statusCode: number;
     errorCode: number;
-    constructor(name, statusCode, errorCode, message?: string) {
+    constructor(name, statusCode, errorCode, message: string) {
         super(message);
         Error.captureStackTrace(this, this.constructor);
-        this.name = name || 'CustomError';
-        this.message = message || 'Custom error without message';
+        this.name = name || 'CustomError';       
         this.statusCode = statusCode || 400;
         this.errorCode = errorCode || 400;
+        this.message = errorCodeMessage(errorCode, message);
     }
 };
 
@@ -108,9 +106,9 @@ export class Forbidden extends Error {
         super(message);
         Error.captureStackTrace(this, this.constructor);
         this.name = this.constructor.name;
-        this.message = message || 'Forbidden';
         this.statusCode = 403;
         this.errorCode = errorCode || 403;
+        this.message = errorCodeMessage(errorCode, message);
     }
 };
 
@@ -125,7 +123,7 @@ export class DBError extends Error {
         this.name = this.constructor.name;
         this.statusCode = 500;
         this.errorCode = errorCode || 500;
-        this.message = errorCodeMessage(errorCode, 'DBError') + (message!=null? message:"");
+        this.message = errorCodeMessage(errorCode, message);
     }
 };
 
@@ -136,9 +134,9 @@ export class BadRequest extends Error {
         super(message);
         Error.captureStackTrace(this, this.constructor);
         this.name = 'BadRequest';
-        this.message = message || 'Bad Request';
         this.statusCode = 400;
         this.errorCode = errorCode || 400;
+        this.message = errorCodeMessage(errorCode, message);
     }
 };
 
@@ -147,11 +145,11 @@ export class Unauthorized extends Error {
     errorCode: number;
     constructor(errorCode?: number, message?: string) {
         super(message);
-        Error.captureStackTrace(this, this.constructor);
+       Error.captureStackTrace(this, this.constructor);
         this.name = this.constructor.name;
-        this.message = message || 'Unauthorized Request';
         this.statusCode = 401;
         this.errorCode = errorCode || 401;
+        this.message = errorCodeMessage(errorCode, message);
     }
 };
 
@@ -162,9 +160,9 @@ export class NotFound extends Error {
         super(message);
         Error.captureStackTrace(this, this.constructor);
         this.name = this.constructor.name;
-        this.message = message || 'The requested resource couldn\'t be found';
         this.statusCode = 404;
         this.errorCode = errorCode || 404;
+        this.message = errorCodeMessage(errorCode, message);
     }
 };
 
@@ -175,9 +173,9 @@ export class InternalServerError extends Error {
         super(message);
         Error.captureStackTrace(this, this.constructor);
         this.name = this.constructor.name;
-        this.message = message || 'Internal Server Error';
         this.statusCode = 500;
         this.errorCode = errorCode || 500;
+        this.message = errorCodeMessage(errorCode, message);
     }
 };
 
@@ -188,9 +186,9 @@ export class RequestTimeout extends Error {
         super(message);
         Error.captureStackTrace(this, this.constructor);
         this.name = this.constructor.name;
-        this.message = message || 'Request Timeout';
         this.statusCode = 408;
         this.errorCode = errorCode || 408;
+        this.message = errorCodeMessage(errorCode, message);
     }
 };
 
@@ -201,8 +199,8 @@ export class UnprocessableEntity extends Error {
         super(message);
         Error.captureStackTrace(this, this.constructor);
         this.name = this.constructor.name;
-        this.message = message || 'Unprocessable Entity';
         this.statusCode = 422;
         this.errorCode = errorCode || 422;
+        this.message = errorCodeMessage(errorCode, message);
     }
 };
