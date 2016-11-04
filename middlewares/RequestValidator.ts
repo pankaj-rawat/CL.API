@@ -4,7 +4,7 @@ import {AuthRepository} from "../repositories/AuthRepository";
 //import {UserRepository} from "../repositories/UserRepository";
 import config = require('config');
 import *  as model from "../models/AuthModel";
-import {Role} from "../Definitions";
+import * as def from "../Definitions";
 import express = require('express');
 import {Logger}  from "../Logger";
 import {APIResponse} from "../APIResponse";
@@ -64,7 +64,9 @@ function validateUser(req: express.Request, res: express.Response, next: Functio
 
     //if none of the user specific param exists, check for guest
     if (token == null && key == null) {
-        checkRoleAccess(Role.Guest, reqURL, next);
+        let roles: Array<def.Role> = new Array<def.Role>();
+        roles.push(def.Role.Guest);
+        checkRoleAccess(roles, req, next);
     }
     else {
         //check for all required params.
@@ -86,7 +88,7 @@ function validateUser(req: express.Request, res: express.Response, next: Functio
             .then(function (result: model.AuthModel) {
                 res.setHeader("Access-Token", result.token);
                 res.setHeader("Access-Token-Expiry", result.expires.toJSON());
-                checkRoleAccess(result.userRoleId, reqURL, next);
+                checkRoleAccess(result.userRoleIds, req, next);
             })
             .catch(function (err) {
                 return next(err);
@@ -94,24 +96,46 @@ function validateUser(req: express.Request, res: express.Response, next: Functio
     }
 }
 
-function checkRoleAccess(roleId: number, reqURL: string, next: Function) {
+function checkRoleAccess(roleIds: Array<number>, req: express.Request, next: Function) {
     let hasAccess: boolean = true;
     let auth: AuthRepository = new AuthRepository();
+    let resource: string = req.url.toLowerCase();
+    let action: def.Action;
+    switch (req.method) {
+        case 'GET':
+            action = def.Action.Read;
+            break;
+        case 'PUT':
+            action = def.Action.Modify;
+            break;
+        case 'POST':
+            action = def.Action.Add;
+            break;
+        case 'DELETE':
+            action = def.Action.Delete;
+            break;
+    }
     auth.getRoleAccessList()
         .then(function (result: Array<model.RoleAccess>) {
-            let actionMask: number;
-            let aa: Array<model.RoleAccess>=new Array<model.RoleAccess>();
-            aa=result.filter(function (el) {
-               return el.idRole == roleId;
-            });
-            if (aa.length > 0) {
-                actionMask = aa[0].actionMask;
-
+            for (let roleId of roleIds) {
+                let aa: Array<model.RoleAccess> = new Array<model.RoleAccess>();
+                aa = result.filter(function (el) {
+                    return el.idRole == 1 && el.resource == resource && (el.actionMask & action) == action;
+                });
+                if (aa.length > 0) {
+                    hasAccess = true;
+                    break;
+                }
             }
-
+            hasAccess = true; // THIS IS TEMP
+            if (hasAccess) {
+                return next();
+            }
+            else {
+                return (new CLError.Forbidden(CLError.ErrorCode.USER_NOT_AUTHORIZED));
+            }
         })
         .catch(function (err) {
             return next(err);
         });
-
 }

@@ -1,7 +1,7 @@
 ﻿export interface AuthModel {
     token: string,
     expires: Date,
-    userRoleId?:number
+    userRoleIds?:Array<number>
 }
 
 export interface RoleAccess {

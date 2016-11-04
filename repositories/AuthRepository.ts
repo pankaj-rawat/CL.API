@@ -160,7 +160,7 @@ export class AuthRepository implements irepo.IAuthRepository {
 
     refreshAccessToken(userId: number, location: string): Promise<model.AuthModel> {
         return new Promise(function (resolve, reject) {
-            let roleId: number;
+            let roleIds: Array<number> = new Array<number>();
             let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_USER || config.get("token.minutesToExpire-user")));
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
@@ -178,22 +178,23 @@ export class AuthRepository implements irepo.IAuthRepository {
                 });
                 query.on('result', function (row, index) {
                     if (index == 0) {
-                        roleId = row.idRole;
+                        let roleId: number = row.idRole;
+                        roleIds.push(roleId);
                     }
                 });
                 query.on('end', function () {
                     connection.release();
                     if (!encounteredError) {
-                        if (roleId) {
+                        if (roleIds.length>0) {
                             let auth: model.AuthModel = {
                                 expires: expiryDate,
                                 token: genToken(userId, expiryDate),
-                                userRoleId:roleId
+                                userRoleIds:roleIds
                             };
                             resolve(auth);
                         }
                         else {
-                            reject(new CLError.Unauthorized(CLError.ErrorCode.USER_TOKEN_EXPIRED,'Can not auto-refresh. Either user online status changed or user role not defined.'));
+                            reject(new CLError.Unauthorized(CLError.ErrorCode.USER_TOKEN_EXPIRED,'Can not auto-refresh. Either user online status changed or user roles not defined.'));
                         }
                     }
                 });
