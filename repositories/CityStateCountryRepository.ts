@@ -7,7 +7,7 @@ import * as CLError from "../CLError";
 import {ErrorCode} from "../ErrorCode";
 
 class CityRepository implements irepo.ICityRepository {
-    find(id: number): Promise<model.CityModel> {
+    find(id: number): Promise<RepoResponse> {
         Logger.log.info('CityRepository - find - id:' + id);
         let city: model.CityModel;
         return new Promise(function (resolve, reject): void {
@@ -22,18 +22,20 @@ class CityRepository implements irepo.ICityRepository {
                     encounteredError = true;
                     return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while getting cities. ' + err.message));
                 });
-                query.on('result', function (row, result) {
-                    try {
-                        city =
-                            {
-                                id: row.id,
-                                name: row.name,
-                                idState: row.idState
-                            };
-                    }
-                    catch (ex) {
-                        encounteredError = true;
-                        return reject(new CLError.DBError(ErrorCode.DB_DATA_PARSE_ERROR, 'Error occured while parsing data. ' + ex.message));
+                query.on('result', function (row, index) {
+                    if (index == 0) {
+                        try {
+                            city =
+                                {
+                                    id: row.id,
+                                    name: row.name,
+                                    idState: row.idState
+                                };
+                        }
+                        catch (ex) {
+                            encounteredError = true;
+                            return reject(new CLError.DBError(ErrorCode.DB_DATA_PARSE_ERROR, 'Error occured while parsing data. ' + ex.message));
+                        }
                     }
                 });
 
@@ -48,7 +50,10 @@ class CityRepository implements irepo.ICityRepository {
                         stateRepo.find(city.id)
                             .then(function (result: model.StateModel) {
                                 city.state = result;
-                                resolve(city);
+                                let res: RepoResponse = {
+                                    data: city
+                                }
+                                resolve(res);
                             })
                             .catch(function (err) {
                                 reject(err);
@@ -59,23 +64,29 @@ class CityRepository implements irepo.ICityRepository {
         });
     }
 
-    getAll(): Promise<Array<model.CityModel>> {
+    getAll(offset: number, limit: number, idState: number): Promise<RepoResponse> {
         return new Promise(function (resolve, reject) {
+
+            if (offset < 0) {
+                return reject(new CLError.BadRequest(ErrorCode.INVALID_PARAM_VALUE, "Invalid value supplied for offset\limit params."));
+            }
+
             let cities: Array<model.CityModel> = new Array<model.CityModel>();
             DB.get().getConnection(function (err, connection) {
                 if (err) {
-                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, err.message));
                 }
 
                 let encounteredError: boolean = false;
-                let query = connection.query('SELECT * FROM city');
+                let recCount: number = 0;
+                let query = connection.query('SET @rCount=0; CAll sp_select_city(@rCount,?,?,?); select @rCount rcount;', [offset, limit, idState]);
                 query.on('error', function (err) {
                     encounteredError = true;
                     return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while getting cities. ' + err.message));
                 });
                 query.on('result', function (row, index) {
                     try {
-                        if (index == 0) {
+                        if (index == 1) {
                             let city: model.CityModel =
                                 {
                                     id: row.id,
@@ -83,6 +94,9 @@ class CityRepository implements irepo.ICityRepository {
                                     idState: row.idState
                                 };
                             cities.push(city);
+                        }
+                        if (index == 3) {
+                            recCount = row.rcount;
                         }
                     }
                     catch (err) {
@@ -93,51 +107,11 @@ class CityRepository implements irepo.ICityRepository {
                     connection.release();
                     if (!encounteredError) {
                         if (cities.length > 0) {
-                            resolve(cities);
-                        }
-                        else {
-                            reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND, "No city found."));
-                        }
-                    }
-                });
-            });
-        });
-    }
-    getCitiesByState(stateId: number): Promise<Array<model.CityModel>> {
-        return new Promise(function (resolve, reject) {
-            let cities: Array<model.CityModel> = new Array<model.CityModel>();
-            DB.get().getConnection(function (err, connection) {
-                if (err) {
-                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
-                }
-
-                let encounteredError: boolean = false;
-                let query = connection.query('SELECT * FROM city WHERE idState = ?', stateId);
-                query.on('error', function (err) {
-                    encounteredError = true;
-                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while getting cities. ' + err.message));
-                });
-                query.on('result', function (row, index) {
-                    try {
-                        if (index == 0) {
-                            let city: model.CityModel =
-                                {
-                                    id: row.id,
-                                    name: row.name,
-                                    idState: row.idState
-                                };
-                            cities.push(city);
-                        }
-                    }
-                    catch (err) {
-                        return reject(new CLError.DBError(ErrorCode.DB_DATA_PARSE_ERROR, "Error occured while parsing data. " + err.message));
-                    }
-                });
-                query.on('end', function () {
-                    connection.release();
-                    if (!encounteredError) {
-                        if (cities.length > 0) {
-                            resolve(cities);
+                            let res: RepoResponse = {
+                                data: cities
+                                , recordCount: recCount
+                            };
+                            resolve(res);
                         }
                         else {
                             reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND, "No city found."));
@@ -156,44 +130,48 @@ class StateRepository implements irepo.IStateRepository {
         return new Promise<RepoResponse>((resolve, reject) => {
             DB.get().getConnection(function (err, connection) {
                 if (err) {
-                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, err.message));
                 }
 
                 let encounteredError: boolean = false;
                 let query = connection.query('SELECT * FROM state where id=?', id);
                 query.on('error', function (err) {
+                    encounteredError = true;
                     reject(err);
                 });
 
                 query.on('result', function (row, index) {
-                    state =
-                        {
-                            id: row.id,
-                            abbr: row.abbr,
-                            name: row.name,
-                            idCountry: row.IdCountry
-                        };
+                    if (index == 0) {
+                        state =
+                            {
+                                id: row.id,
+                                abbr: row.abbr,
+                                name: row.name,
+                                idCountry: row.idCountry
+                            };
+                    }
                 });
                 query.on('end', function (result) {
-                    if (state != null) {
-                        let countryRepo = new CountryRepository();
-                        countryRepo.find(state.id)
-                            .then(function (result: model.CountryModel) {
-                                state.country = result;
-                                let res: RepoResponse = {
-                                    data: state
-                                }
-                                resolve(res);
-                            })
-                            .catch(function (error) {
-                                Logger.log.error("Error while fetching Country for state:" + state.id + " - " + error);
-                                reject(err.message);
-                            });
-                    }
-                    else {
-                        reject(new Error("State not found."));
-                    }
                     connection.release();
+                    if (!encounteredError) {
+                        if (state != null) {
+                            let countryRepo = new CountryRepository();
+                            countryRepo.find(state.idCountry)
+                                .then(function (result: model.CountryModel) {
+                                    state.country = result;
+                                    let res: RepoResponse = {
+                                        data: state
+                                    }
+                                    resolve(res);
+                                })
+                                .catch(function (err) {
+                                    reject(err.message);
+                                });
+                        }
+                        else {
+                            reject(new Error("State not found."));
+                        }
+                    }
                 });
             });
         });
@@ -207,7 +185,7 @@ class StateRepository implements irepo.IStateRepository {
             }
             DB.get().getConnection(function (err, connection) {
                 if (err) {
-                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, err.message));
                 }
                 let encounteredError: boolean = false;
                 let recCount: number = 0;
@@ -237,7 +215,7 @@ class StateRepository implements irepo.IStateRepository {
                         if (states.length > 0) {
                             let res: RepoResponse = {
                                 data: states
-                                ,recordCount:recCount
+                                , recordCount: recCount
                             };
                             resolve(res);
                         }
@@ -249,82 +227,70 @@ class StateRepository implements irepo.IStateRepository {
             });
         });
     }
-
-    getStatesByCountry(countryId: number): Promise<Array<model.StateModel>> {
-        let states: Array<model.StateModel> = new Array<model.StateModel>();
-        return new Promise<Array<model.StateModel>>((resolve, reject) => {
-            DB.get().getConnection(function (err, connection) {
-                let query = connection.query('SELECT * FROM state WHERE idCountry=?', countryId);
-
-                query.on('error', function (err) {
-                    Logger.log.info('Error occured in StateRepository - getAll Error:' + err);
-                    reject(err);
-                });
-
-                query.on('result', function (row, result) {
-                    let state: model.StateModel =
-                        {
-                            id: row.id,
-                            abbr: row.abbr,
-                            name: row.name,
-                            idCountry: row.idCountry
-                        };
-                    states.push(state);
-                });
-                query.on('end', function (result) {
-                    resolve(states);
-                    connection.release();
-                });
-            });
-        });
-    }
 };
 
 class CountryRepository implements irepo.ICountryRepository {
-    find(id: number): Promise<model.CountryModel> {
+    find(id: number): Promise<RepoResponse> {
         return new Promise((resolve, reject) => {
             let country: model.CountryModel;
             DB.get().getConnection(function (err, connection) {
-                if (err != null) {
-                    Logger.log.error('Error occured in CountryRepository - find - id:' + id + '  Error:' + err);
-                    reject(err);
+                if (err) {
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, err.message));
                 }
-                else {
-                    let query = connection.query('SELECT * FROM country where id=?', id);
-                    query.on('error', function (err) {
-                        reject(err);
-                    });
-                    query.on('result', function (row, index) {
+                let encounteredError: boolean = false;
+                let query = connection.query('SELECT * FROM country where id=?', id);
+                query.on('error', function (err) {
+                    encounteredError = true;
+                    reject(err);
+                });
+                query.on('result', function (row, index) {
+                    if (index == 0) {
                         country =
                             {
                                 id: row.id,
                                 abbr: row.abbr,
                                 name: row.name
                             };
-                    });
+                    }
+                });
 
-                    query.on('end', function (result) {
-                        resolve(country);
-                        connection.release();
-                    });
-                }//else closing
+                query.on('end', function (result) {
+                    connection.release();
+                    if (!encounteredError) {
+                        if (country == null) {
+                            return reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND, 'Country not found.'));
+                        }
+                        let res: RepoResponse = {
+                            data: country
+                        }
+                        resolve(res);
+                    }
+                });
             });
         });
     }
 
-    getAll(): Promise<Array<model.CountryModel>> {
+    getAll(offset: number, limit: number): Promise<RepoResponse> {
         let countries: Array<model.CountryModel> = new Array<model.CountryModel>();
-        return new Promise<Array<model.CountryModel>>((resolve, reject) => {
+        return new Promise<RepoResponse>((resolve, reject) => {
             Logger.log.info('CountryRepository - getAll');
+            if (offset < 0) {
+                return reject(new CLError.BadRequest(ErrorCode.INVALID_PARAM_VALUE, "Invalid value supplied for offset\limit params."));
+            }
             DB.get().getConnection(function (err, connection) {
+                if (err) {
+                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, err.message));
+                }
 
-                let query = connection.query('SELECT * FROM country');
+                let encounteredError: boolean = false;
+                let recCount: number = 0;
+                let query = connection.query('SET @rCount=0; CAll sp_select_country(@rCount,?,?); select @rCount rcount;', [offset, limit]);
                 query.on('error', function (err) {
+                    encounteredError = true;
                     reject(err);
                 });
-
                 query.on('result', function (row, index) {
-                    if (index == 0) {
+                    if (index == 1) {
                         let country: model.CountryModel =
                             {
                                 id: row.id,
@@ -333,11 +299,25 @@ class CountryRepository implements irepo.ICountryRepository {
                             };
                         countries.push(country);
                     }
+                    if (index == 3) {
+                        recCount = row.rcount;
+                    }
                 });
-
                 query.on('end', function (result) {
-                    resolve(countries);
                     connection.release();
+                    if (!encounteredError) {
+                        if (countries.length > 0) {
+                            let res: RepoResponse = {
+                                data: countries
+                                , recordCount: recCount
+                            };
+                            resolve(res);
+                        }
+                        else {
+                            reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND, "No state found."));
+                        }
+
+                    }
                 });
             });
         });
