@@ -18,6 +18,6 @@
     "path": "/log"
   },
   "paging": {
-    "limit": 5
+    "limit": 100
   }
 }

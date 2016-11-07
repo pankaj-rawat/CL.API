@@ -26,7 +26,7 @@ stateController.get('', function (req: express.Request, res: express.Response, n
     let maxLimit: number = Number(process.env.PAGING_LIMIT || config.get("paging.limit")); 
     let offset: number = Number(req.query.offset || 0);  
     let limit: number = Number(req.query.limit || 0);
-    let idCountry: number = Number(req.query.idCountry || 0);
+    let idCountry: number = Number(req.query.idcountry || 0);
 
     if (limit <= 0 || limit > maxLimit) {
         limit = maxLimit;

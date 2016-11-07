@@ -29,8 +29,18 @@ app.use(function (req: express.Request, res: express.Response, next) {
 // configure app to use bodyParser()
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+
 app.all('/api/*', validateRequest.Validate);
 //load router
+
+//to make querystring case insensitive : TODO :it is adding duplicate 
+app.use(function (req, res, next) {
+    for (var key in req.query) {
+        req.query[key.toLowerCase()] = req.query[key];        
+    }
+    next();
+});
+
 router.build(app);
 app.use(errorHandler);
 process.on('unhandledRejection', (reason: string, p) => {
