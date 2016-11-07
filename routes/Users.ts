@@ -7,6 +7,8 @@ import * as amodel from "../models/AuthModel";
 import bcrypt = require('bcryptjs');
 import express = require('express');
 import {Logger}  from "../Logger";
+import config = require('config');
+import {Util} from "../Util";
 
 var userController = express.Router();
 
@@ -24,6 +26,36 @@ userController.get('/:id', function (req: express.Request, res: express.Response
     });
 
     userP.catch(function (err) {
+        next(err);
+    });
+});
+
+userController.get('', function (req: express.Request, res: express.Response, next: Function) {
+    let userRepo = new UserRepository();
+    let clRes: APIResponse;
+   
+
+    let maxLimit: number = Number(process.env.PAGING_LIMIT || config.get("paging.limit"));
+    let offset: number = Number(req.query.offset || 0);
+    let limit: number = Number(req.query.limit || 0);
+    let idUser: number = req.params.id || 0;
+    if (limit <= 0 || limit > maxLimit) {
+        limit = maxLimit;
+    }
+    if (offset < 0) {
+        offset = 0;
+    }
+
+    userRepo.getAll(offset, limit, idUser)
+    .then(function (result) {
+        let util: Util = new Util();
+        clRes = { data: result.data, isValid: true };
+        var pageLink = util.getPageLinks(util.getURLstring(req), offset, limit, result.recordCount);
+        res.links(pageLink);
+        res.setHeader('Content-Range', util.getHeaderContentRange(offset, limit, result.recordCount));
+        res.send(clRes);
+    })
+    .catch(function (err) {
         next(err);
     });
 });

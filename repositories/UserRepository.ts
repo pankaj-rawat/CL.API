@@ -34,8 +34,8 @@ class UserRepository implements irepo.IUserRepository {
                     connection.release();
                     if (!encounteredError) {
                         if (userId != null) {
-                            getUser(0,1,userId)
-                                .then(function (result:RepoResponse) {
+                            getUser(0, 1, userId)
+                                .then(function (result: RepoResponse) {
                                     resolve(result.data[0]);
                                 })
                                 .catch(function (err) {
@@ -51,7 +51,7 @@ class UserRepository implements irepo.IUserRepository {
         });
     }
 
-    logout(userId:number, userLocation: string): Promise<boolean> {
+    logout(userId: number, userLocation: string): Promise<boolean> {
         return new Promise(function (resolve, reject) {
             if (userLocation == null) {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'Missing user location.'));
@@ -89,7 +89,10 @@ class UserRepository implements irepo.IUserRepository {
     }
 
     find(id: number): Promise<model.UserModel> {
-        return new Promise(function(resolve, reject){
+        return new Promise(function (resolve, reject) {
+            if (id == null) {
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'User id not supplied.'));
+            }
             getUser(0, 1, id)
                 .then(function (result: RepoResponse) {
                     resolve(result.data[0]);
@@ -98,6 +101,10 @@ class UserRepository implements irepo.IUserRepository {
                     reject(err);
                 });
         });
+    }
+
+    getAll(offset: number, limit: number,idUser:number): Promise<RepoResponse> {
+        return getUser(offset, limit,idUser);
     }
 
     create(user: model.UserModel): Promise<model.UserModel> {
@@ -171,42 +178,9 @@ class UserRepository implements irepo.IUserRepository {
             });
         });
     }
+
     remove(id: number): Promise<number> {
         return new Promise(function (resolve, reject) {
-        });
-    }
-
-    getUserRoles(id: number): Promise<Array<number>> {
-        return new Promise(function (resolve, reject) {
-            DB.get().getConnection(function (err, connection) {
-                if (err != null) {
-                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
-                    clError.stack = err.stack;
-                    return reject(clError);
-                }
-
-                let encounteredError: boolean = false;
-                let roles: Array<number> = new Array<number>();
-                let query = connection.query("Select idrole from userrole where iduser=?", id);
-                query.on('error', function (err) {
-                    encounteredError = true;
-                    return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while getting user roles. ' + err.message));
-                });
-                query.on('result', function (row, index) {
-                    if (index == 0) {
-                        roles.push(row.idrole);
-                    }
-                });
-                query.on('end', function (result) {
-                    connection.release();
-                    if (!encounteredError) {
-                        if (!roles) {
-                            return reject(new CLError.NotFound(CLError.ErrorCode.RESOURCE_NOT_FOUND, 'Roles not defined for user.'));
-                        }
-                        resolve(roles);
-                    }
-                });
-            });
         });
     }
 
@@ -222,10 +196,7 @@ function getUser(offset: number, limit: number, idUser?: number): Promise<RepoRe
         let users: Array<model.UserModel> = new Array<model.UserModel>();
         if (offset < 0) {
             return reject(new CLError.BadRequest(CLError.ErrorCode.INVALID_PARAM_VALUE, "Invalid value supplied for offset\limit params."));
-        }
-        if (idUser == null) {
-            return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'User id not supplied.'));
-        }
+        }     
 
         DB.get().getConnection(function (err, connection) {
             if (err != null) {
@@ -249,7 +220,7 @@ function getUser(offset: number, limit: number, idUser?: number): Promise<RepoRe
             query.on('result', function (row, index) {
                 try {
                     if (index == 1) {
-                        let user:model.UserModel = {
+                        let user: model.UserModel = {
                             id: row.id,
                             email: row.email,
                             phoneLandLine: row.phoneLandline,
@@ -286,7 +257,7 @@ function getUser(offset: number, limit: number, idUser?: number): Promise<RepoRe
                     }
                     else {
                         reject(new CLError.NotFound(CLError.ErrorCode.RESOURCE_NOT_FOUND, 'User not found.'));
-                    }                   
+                    }
                 }
             });
         });

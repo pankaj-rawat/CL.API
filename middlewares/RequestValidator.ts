@@ -96,9 +96,9 @@ function validateUser(req: express.Request, res: express.Response, next: Functio
 }
 
 function checkRoleAccess(roleIds: Array<number>, req: express.Request, next: Function) {
-    let hasAccess: boolean = true;
+    let hasAccess: boolean = false;
     let auth: AuthRepository = new AuthRepository();
-    let resource: string = req.url.toLowerCase();
+    let reqURL: string = req.url.toLowerCase();
     let action: def.Action;
     switch (req.method) {
         case 'GET':
@@ -119,19 +119,19 @@ function checkRoleAccess(roleIds: Array<number>, req: express.Request, next: Fun
             for (let roleId of roleIds) {
                 let aa: Array<model.RoleAccess> = new Array<model.RoleAccess>();
                 aa = result.filter(function (el) {
-                    return el.idRole == 1 && el.resource == resource && (el.actionMask & action) == action;
+                    return el.idRole == roleId && reqURL.includes(el.resource.toLocaleLowerCase()) && (el.actionMask & action) == action;
                 });
                 if (aa.length > 0) {
                     hasAccess = true;
                     break;
                 }
             }
-            hasAccess = true; // THIS IS TEMP
+         
             if (hasAccess) {
                 return next();
             }
             else {
-                return (new CLError.Forbidden(CLError.ErrorCode.USER_NOT_AUTHORIZED));
+                return next(new CLError.Forbidden(CLError.ErrorCode.USER_NOT_AUTHORIZED));
             }
         })
         .catch(function (err) {
