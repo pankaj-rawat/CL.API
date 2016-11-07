@@ -7,7 +7,7 @@ import * as CLError from '../CLError';
 
 export class BusinessRepository implements irepo.IBusinessRepository {
     register(business: model.BusinessModel): Promise<model.BusinessModel> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<model.BusinessModel>(function (resolve, reject) {
             if (business.contactNumbers == null || business.images == null || business.operationHours == null || business.tags == null) {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, "Input data missing."));
             }
@@ -64,11 +64,11 @@ export class BusinessRepository implements irepo.IBusinessRepository {
         });
     };
     unRegister(id: number): Promise<number> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<number> (function (resolve, reject) {
         });
     };
     find(id: number): Promise<model.BusinessModel> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<model.BusinessModel>(function (resolve, reject) {
             getBusiness(id)
                 .then(function (result) {
                     resolve(result);
@@ -79,25 +79,25 @@ export class BusinessRepository implements irepo.IBusinessRepository {
         });
     };
     update(business: model.BusinessModel): Promise<model.BusinessModel> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<model.BusinessModel>(function (resolve, reject) {
         });
     };
     addOffer(offer: model.BusinessOfferModel): Promise<model.BusinessOfferModel> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<model.BusinessOfferModel>(function (resolve, reject) {
         });
     };
     updateOffer(offer: model.BusinessOfferModel): Promise<model.BusinessOfferModel> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<model.BusinessOfferModel>(function (resolve, reject) {
         });
     };
     deactivateOffer(id: number): Promise<boolean> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<boolean>(function (resolve, reject) {
         });
     };
 }
 
 function getBusiness(id: number): Promise<model.BusinessModel> {
-    return new Promise(function (resolve, reject) {
+    return new Promise<model.BusinessModel>(function (resolve, reject) {
         let business: model.BusinessModel;
         DB.get().getConnection(function (err, connection) {
             if (err) {

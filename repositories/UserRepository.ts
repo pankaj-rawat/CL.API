@@ -8,7 +8,7 @@ import {RepoResponse} from "../RepoResponse";
 class UserRepository implements irepo.IUserRepository {
 
     login(username: string, userLocation: string): Promise<model.UserModel> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<model.UserModel>(function (resolve, reject) {
             if (userLocation == null) {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'Missing user location.'));
             }
@@ -52,7 +52,7 @@ class UserRepository implements irepo.IUserRepository {
     }
 
     logout(userId: number, userLocation: string): Promise<boolean> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<boolean>(function (resolve, reject) {
             if (userLocation == null) {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'Missing user location.'));
             }
@@ -89,7 +89,7 @@ class UserRepository implements irepo.IUserRepository {
     }
 
     find(id: number): Promise<model.UserModel> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<model.UserModel>(function (resolve, reject) {
             if (id == null) {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'User id not supplied.'));
             }
@@ -109,7 +109,7 @@ class UserRepository implements irepo.IUserRepository {
 
     create(user: model.UserModel): Promise<model.UserModel> {
         let repoName: string = "UserRepository";
-        return new Promise(function (resolve, reject) {
+        return new Promise<model.UserModel>(function (resolve, reject) {
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
                     let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
@@ -150,7 +150,7 @@ class UserRepository implements irepo.IUserRepository {
     }
 
     update(user: model.UserModel): Promise<model.UserModel> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<model.UserModel>(function (resolve, reject) {
             let user: model.UserModel;
             DB.get().getConnection(function (err, connection) {
                 //if (err != null) {
@@ -180,7 +180,7 @@ class UserRepository implements irepo.IUserRepository {
     }
 
     remove(id: number): Promise<number> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<number>(function (resolve, reject){
         });
     }
 

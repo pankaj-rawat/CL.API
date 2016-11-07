@@ -11,7 +11,7 @@ import * as CLError from "../CLError";
 export class AuthRepository implements irepo.IAuthRepository {
 
     authenticateUser(username: string, password: string): Promise<model.AuthModel> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<model.AuthModel>(function (resolve, reject) {
             if (password == null || password.trim() == '') {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'Password not supplied'));
             }
@@ -77,7 +77,7 @@ export class AuthRepository implements irepo.IAuthRepository {
 
     connect(clientId: number, clientName: string, clientKey: string): Promise<model.AuthModel> {
         let auth: model.AuthModel;
-        return new Promise(function (resolve, reject) {
+        return new Promise<model.AuthModel>(function (resolve, reject) {
             if (clientKey == null || clientKey.trim() == '') {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'Missing  client key.'));
             }
@@ -159,7 +159,7 @@ export class AuthRepository implements irepo.IAuthRepository {
     }
 
     refreshAccessToken(userId: number, location: string): Promise<model.AuthModel> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<model.AuthModel>(function (resolve, reject) {
             let roleIds: Array<number> = new Array<number>();
             let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_USER || config.get("token.minutesToExpire-user")));
             DB.get().getConnection(function (err, connection) {
@@ -204,7 +204,7 @@ export class AuthRepository implements irepo.IAuthRepository {
     }
 
     getRoleAccessList(): Promise<Array<model.RoleAccess>> {
-        return new Promise(function (resolve, reject) {
+        return new Promise < Array<model.RoleAccess>>(function (resolve, reject) {
             //check for cache first.
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {

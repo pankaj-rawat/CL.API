@@ -9,7 +9,7 @@ class CityRepository implements irepo.ICityRepository {
     find(id: number): Promise<model.CityModel> {
         Logger.log.info('CityRepository - find - id:' + id);
         let city: model.CityModel;
-        return new Promise(function (resolve, reject): void {
+        return new Promise<model.CityModel>(function (resolve, reject): void {
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
                     return reject(new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL));
@@ -59,7 +59,7 @@ class CityRepository implements irepo.ICityRepository {
     }
 
     getAll(offset: number, limit: number, idState?: number): Promise<RepoResponse> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<RepoResponse>(function (resolve, reject) {
             let cities: Array<model.CityModel> = new Array<model.CityModel>();
             if (offset < 0) {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.INVALID_PARAM_VALUE, "Invalid value supplied for offset\limit params."));
@@ -210,7 +210,7 @@ class StateRepository implements irepo.IStateRepository {
 
 class CountryRepository implements irepo.ICountryRepository {
     find(id: number): Promise<model.CountryModel> {
-        return new Promise((resolve, reject) => {
+        return new Promise<model.CountryModel>((resolve, reject) => {
             let country: model.CountryModel;
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {

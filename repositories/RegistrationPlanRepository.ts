@@ -5,7 +5,7 @@ import * as CLError from "../CLError";
 
 export class RegistrationPlanRepository implements IRegistrationPlanRepository {
     find(id: number): Promise<model.RegistrationPlanModel> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<model.RegistrationPlanModel>(function (resolve, reject) {
             if (id != null) {
                 let registrationPlanModel: model.RegistrationPlanModel;
                 DB.get().getConnection(function (err, connection) {
@@ -64,7 +64,7 @@ export class RegistrationPlanRepository implements IRegistrationPlanRepository {
     }
 
     getAll(): Promise<Array<model.RegistrationPlanModel>> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<Array<model.RegistrationPlanModel>>(function (resolve, reject) {
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
                     let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);

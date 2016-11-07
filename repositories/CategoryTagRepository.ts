@@ -57,7 +57,7 @@ export class CategoryRepository implements irepo.ICategoryRepository {
     }
 
     getAll(): Promise<Array<model.CategoryModel>> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<Array<model.CategoryModel>>(function (resolve, reject) {
             let categories: Array<model.CategoryModel> = new Array<model.CategoryModel>();
             DB.get().getConnection(function (err, connection) {
                 if (err) {
@@ -141,7 +141,7 @@ export class TagRepository implements irepo.ITagRepository {
         });
     }
     getTagsByCategory(categoryId: number): Promise<Array<model.TagModel>> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<Array<model.TagModel>>(function (resolve, reject) {
             if (categoryId == null) {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING));
             }
@@ -225,7 +225,7 @@ export class TagRepository implements irepo.ITagRepository {
         });
     }
     remove(id: number): Promise<number> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<number>(function (resolve, reject) {
             if (id != null) {
             }
             else {

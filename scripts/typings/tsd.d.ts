@@ -15,3 +15,7 @@
 /// <reference path="lodash/lodash.d.ts" />
 /// <reference path="jwt-simple/jwt-simple.d.ts" />
 /// <reference path="bcryptjs/bcryptjs.d.ts" />
+/// <reference path="bluebird/bluebird-2.0.d.ts" />
+/// <reference path="nodemailer-direct-transport/nodemailer-direct-transport.d.ts" />
+/// <reference path="nodemailer-smtp-transport/nodemailer-smtp-transport.d.ts" />
+/// <reference path="nodemailer/nodemailer.d.ts" />

@@ -58,6 +58,18 @@
     },
     "bcryptjs/bcryptjs.d.ts": {
       "commit": "e22f1e32bce0cbcec0c098e9dcdc18c2c84fdb9f"
+    },
+    "nodemailer-smtp-transport/nodemailer-smtp-transport.d.ts": {
+      "commit": "dcdcc64c864036e9e280b1254c1b030765cb0171"
+    },
+    "nodemailer-direct-transport/nodemailer-direct-transport.d.ts": {
+      "commit": "dcdcc64c864036e9e280b1254c1b030765cb0171"
+    },
+    "nodemailer/nodemailer.d.ts": {
+      "commit": "dcdcc64c864036e9e280b1254c1b030765cb0171"
+    },
+    "bluebird/bluebird-2.0.d.ts": {
+      "commit": "dcdcc64c864036e9e280b1254c1b030765cb0171"
     }
   }
 }
