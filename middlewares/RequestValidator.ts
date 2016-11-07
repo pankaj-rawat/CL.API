@@ -1,7 +1,6 @@
 ﻿import ld = require('lodash');
 import jwt = require('jwt-simple');
 import {AuthRepository} from "../repositories/AuthRepository";
-//import {UserRepository} from "../repositories/UserRepository";
 import config = require('config');
 import *  as model from "../models/AuthModel";
 import * as def from "../Definitions";

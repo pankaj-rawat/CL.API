@@ -3,6 +3,7 @@ import model = require('../models/UserModel');
 import * as DB from "../DB";
 import {Logger}  from "../Logger";
 import * as CLError from "../CLError";
+import {RepoResponse} from "../RepoResponse";
 
 class UserRepository implements irepo.IUserRepository {
 
@@ -33,14 +34,13 @@ class UserRepository implements irepo.IUserRepository {
                     connection.release();
                     if (!encounteredError) {
                         if (userId != null) {
-                            getUser(userId)
-                                .then(function (result) {
-                                    resolve(result);
+                            getUser(0,1,userId)
+                                .then(function (result:RepoResponse) {
+                                    resolve(result.data[0]);
                                 })
                                 .catch(function (err) {
                                     return reject(err);
                                 });
-
                         }
                         else {
                             return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while getting recorded user detail. UserID:' + username));
@@ -89,7 +89,15 @@ class UserRepository implements irepo.IUserRepository {
     }
 
     find(id: number): Promise<model.UserModel> {
-        return getUser(id);
+        return new Promise(function(resolve, reject){
+            getUser(0, 1, id)
+                .then(function (result: RepoResponse) {
+                    resolve(result.data[0]);
+                })
+                .catch(function (err) {
+                    reject(err);
+                });
+        });
     }
 
     create(user: model.UserModel): Promise<model.UserModel> {
@@ -209,11 +217,13 @@ class UserRepository implements irepo.IUserRepository {
     }
 };
 
-function getUser(id: number): Promise<model.UserModel> {
-    let repoName: string = "UserRepository";
+function getUser(offset: number, limit: number, idUser?: number): Promise<RepoResponse> {
     return new Promise(function (resolve, reject) {
-        let user: model.UserModel;
-        if (id == null) {
+        let users: Array<model.UserModel> = new Array<model.UserModel>();
+        if (offset < 0) {
+            return reject(new CLError.BadRequest(CLError.ErrorCode.INVALID_PARAM_VALUE, "Invalid value supplied for offset\limit params."));
+        }
+        if (idUser == null) {
             return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'User id not supplied.'));
         }
 
@@ -225,7 +235,8 @@ function getUser(id: number): Promise<model.UserModel> {
             }
 
             let encounteredError: boolean = false;
-            let query = connection.query('SELECT * FROM user WHERE id = ?', id);
+            let recCount: number = 0;
+            let query = connection.query('SET @rCount=0; CAll sp_select_user(@rCount,?,?,?); select @rCount rcount;', [offset, limit, idUser]);
             query.on('error', function (err) {
                 encounteredError = true;
                 return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while getting user. ' + err.message));
@@ -237,8 +248,8 @@ function getUser(id: number): Promise<model.UserModel> {
 
             query.on('result', function (row, index) {
                 try {
-                    if (index == 0) {
-                        user = {
+                    if (index == 1) {
+                        let user:model.UserModel = {
                             id: row.id,
                             email: row.email,
                             phoneLandLine: row.phoneLandline,
@@ -251,6 +262,10 @@ function getUser(id: number): Promise<model.UserModel> {
                             subscriptionOptInDate: row.subscriptionOptInDate,
                             subscriptionOptOutDate: row.subscriptionOptOutDate
                         };
+                        users.push(user);
+                    }
+                    if (index == 3) {
+                        recCount = row.rcount;
                     }
                 }
                 catch (ex) {
@@ -262,12 +277,16 @@ function getUser(id: number): Promise<model.UserModel> {
             query.on('end', function (result: model.UserModel) {
                 connection.release();
                 if (!encounteredError) {
-                    if (user) {
-                        resolve(user);
+                    if (users.length > 0) {
+                        let res: RepoResponse = {
+                            data: users
+                            , recordCount: recCount
+                        };
+                        resolve(res);
                     }
                     else {
                         reject(new CLError.NotFound(CLError.ErrorCode.RESOURCE_NOT_FOUND, 'User not found.'));
-                    }
+                    }                   
                 }
             });
         });

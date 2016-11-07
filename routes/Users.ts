@@ -10,7 +10,6 @@ import {Logger}  from "../Logger";
 
 var userController = express.Router();
 
-
 userController.get('/:id', function (req: express.Request, res: express.Response, next: Function) {
     let userP: Promise<model.UserModel>;
     let userRepo = new UserRepository();
@@ -36,7 +35,7 @@ userController.post('/login', function (req: express.Request, res: express.Respo
     let authrepo = new AuthRepository();
     let username = req.body.username;
     let password = req.body.password;
-    let userLocation = req.headers['x-location'] || (req.query && req.query.location);
+    let userLocation = req.headers['x-location'] || (req.query && req.query.location) || req.body.location;
     authrepo.authenticateUser(username, password)
         .then(function (auth: amodel.AuthModel) {
             let userRepo = new UserRepository();
