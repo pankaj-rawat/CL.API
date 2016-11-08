@@ -19,5 +19,10 @@
   },
   "paging": {
     "limit": 100
+  },
+  "mail": {
+    "email": "citylocal.test@gmail.com",
+    "password": "citylocal123",
+    "smtp": "smtp.gmail.com"
   }
 }

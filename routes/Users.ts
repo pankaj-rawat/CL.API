@@ -136,9 +136,23 @@ userController.post('/signup', function (req: express.Request, res: express.Resp
     });
 });
 
-userController.post('/reset', function (req: express.Request, res: express.Response, next: Function) {
-    let user = req.body.userName;
-
+userController.post('/reset-password', function (req: express.Request, res: express.Response, next: Function) {
+    let email = req.body.email;
+    let location = req.body.location;
+    let resetURL = req.body.resetURL;
+    let usrepo = new UserRepository();
+    let clres: APIResponse;    
+    usrepo.resetPassword(email, location,resetURL)
+    
+    .then(function (result:boolean) {        
+        clres = {
+            data: result,
+            isValid: true
+        };
+        res.send(clres);
+    })
+    .catch(function (err) {
+        next(err);
+    });
 });
-
 module.exports = userController;

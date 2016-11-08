@@ -70,6 +70,7 @@
     <Content Include="ssl_cert\key.pem" />
     <Content Include="test\mocha.opts" />
     <TypeScriptCompile Include="CLError.ts" />
+    <TypeScriptCompile Include="CLMailer.ts" />
     <TypeScriptCompile Include="DB.ts" />
     <TypeScriptCompile Include="Definitions.ts" />
     <TypeScriptCompile Include="Index.ts" />

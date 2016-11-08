@@ -4,6 +4,7 @@ import * as DB from "../DB";
 import {Logger}  from "../Logger";
 import * as CLError from "../CLError";
 import {RepoResponse} from "../RepoResponse";
+import {CLMailer} from "../CLMailer";
 
 class UserRepository implements irepo.IUserRepository {
 
@@ -184,9 +185,17 @@ class UserRepository implements irepo.IUserRepository {
         });
     }
 
-    resetPassword(username: string): Promise<boolean> {
+    resetPassword(email: string,location:string,resetURL:string): Promise<boolean> {
         return new Promise<boolean>(function (resolve, reject) {
-
+            let clmailer: CLMailer = new CLMailer();
+            let msg: string = 'Please <a href='+ resetURL +'>click here</a> to reset the password.';
+            clmailer.sendMail(email, 'Password reste link.',null, msg)
+                .then(function (result: string) {
+                    resolve(true);
+                })
+                .catch(function (err) {
+                    reject(err);
+                });
         });
     }
 };
