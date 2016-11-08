@@ -185,7 +185,7 @@ class UserRepository implements irepo.IUserRepository {
         });
     }
 
-    resetPassword(email: string,location:string,resetURL:string): Promise<boolean> {
+    forgetPassword(email: string,location:string,resetURL:string): Promise<boolean> {
         return new Promise<boolean>(function (resolve, reject) {
             let clmailer: CLMailer = new CLMailer();
             let msg: string = 'Please <a href='+ resetURL +'>click here</a> to reset the password.';
@@ -196,6 +196,42 @@ class UserRepository implements irepo.IUserRepository {
                 .catch(function (err) {
                     reject(err);
                 });
+        });
+    }
+
+    resetPassword(email: string, location: string, currentPwd: string, newPwd:string): Promise<boolean> {
+        return new Promise<boolean>(function (resolve, reject) {
+            let isSuccess: boolean = false;
+            //'sp_update_user_password' need to create this sp
+            DB.get().getConnection(function (err, connection) {
+                if (err != null) {
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
+                    clError.stack = err.stack;
+                    return reject(clError);
+                }
+                let encounteredError: boolean = false;
+                let query = connection.query('CAll sp_update_user_password(?,?,?,?);', [email,currentPwd,newPwd,location]);
+                query.on('error', function (err) {
+                    encounteredError = true;
+                    return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while resetting pwd. ' + err.message));
+                });
+                query.on('result', function (row, index) {
+                    if (index == 1) {
+                        isSuccess = row.result;
+                    }
+                });
+                query.on('end', function () {
+                    connection.release();
+                    if (!encounteredError) {
+                        if (isSuccess) {
+                            return resolve(isSuccess);
+                        }
+                        else {
+                            return reject(new CLError.CustomError("Password reset failed",200,"300","Failed"));
+                        }
+                    }
+                });
+            });
         });
     }
 };

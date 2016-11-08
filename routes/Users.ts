@@ -136,13 +136,13 @@ userController.post('/signup', function (req: express.Request, res: express.Resp
     });
 });
 
-userController.post('/reset-password', function (req: express.Request, res: express.Response, next: Function) {
+userController.post('/forget-password', function (req: express.Request, res: express.Response, next: Function) {
     let email = req.body.email;
     let location = req.body.location;
     let resetURL = req.body.resetURL;
     let usrepo = new UserRepository();
     let clres: APIResponse;    
-    usrepo.resetPassword(email, location,resetURL)
+    usrepo.forgetPassword(email, location,resetURL)
     
     .then(function (result:boolean) {        
         clres = {
@@ -155,4 +155,25 @@ userController.post('/reset-password', function (req: express.Request, res: expr
         next(err);
     });
 });
+
+userController.post('/reset-password', function (req: express.Request, res: express.Response, next: Function) {
+    let email = req.body.email;
+    let location = req.body.location;
+    let currentPwd = req.body.currentPwd;
+    let newPwd = req.body.newPwd;
+    let usrepo = new UserRepository();
+    let clres: APIResponse;
+    usrepo.resetPassword(email, location,currentPwd,newPwd)
+        .then(function (result: boolean) {
+            clres = {
+                data: result,
+                isValid: true
+            };
+            res.send(clres);
+        })
+        .catch(function (err) {
+            next(err);
+        });
+});
+
 module.exports = userController;
