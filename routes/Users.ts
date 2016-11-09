@@ -151,15 +151,15 @@ userController.get('/forget-password', function (req: express.Request, res: expr
 });
 
 userController.put('/reset-password', function (req: express.Request, res: express.Response, next: Function) {
-    let email = req.body.email;
+    let idUser = req.body.idUser;
     let location = req.headers['x-location'] || req.query.location;
     let fpt: string = req.body.fpt;
     let newPwd: string = req.body.newPwd;    
     let userepo = new UserRepository();
     let authRepo: AuthRepository = new AuthRepository();
-    authRepo.authenticateForgetPasswordToken(email, fpt)
+    authRepo.authenticateForgetPasswordToken(idUser, fpt)
         .then(function (result: boolean) {
-            userepo.updatetPassword(email, location, newPwd)
+            userepo.updatetPassword(idUser, location, newPwd)
                 .then(function (result: boolean) {
                     let clres: APIResponse;
                     clres = {
@@ -178,17 +178,16 @@ userController.put('/reset-password', function (req: express.Request, res: expre
 });
 
 userController.put('/change-password', function (req: express.Request, res: express.Response, next: Function) {
-    let email = req.body.email;
-    
+    let idUser = req.headers['x-key'] || req.query.key;    
     let location = req.headers['x-location'] || req.query.location;
     let currentPwd = req.body.currentPwd;  
     let newPwd: string = req.body.newPwd;
 
     let usrepo = new UserRepository();
     let authRepo: AuthRepository = new AuthRepository();
-    authRepo.authenticateUser(email, currentPwd)
+    authRepo.authenticateUser(idUser, currentPwd)
         .then(function (result) {
-            usrepo.updatetPassword(email, location, newPwd)
+            usrepo.updatetPassword(idUser, location, newPwd)
                 .then(function (result: boolean) {
                     let clres: APIResponse;
                     clres = {

@@ -201,32 +201,41 @@ class UserRepository implements irepo.IUserRepository {
             let daysToLinkExpiry: number = process.env.FORGET_PWD_DAYS_TO_LINK_EXP || config.get("forget-pwd.daysToLinkExp");
             let linkExpiryDate = new Date(new Date().getTime() + (daysToLinkExpiry * 24 * 60 * 60 * 1000));
 
-            let token = jwt.encode({
-                exp: linkExpiryDate
-                , email: email
-            }, String(forgetPasswordKey));
+            getUser(0, 1, null, email)
+                .then(function (result: RepoResponse) {
+                    let idUser: number = result.data[0].id;
+                    let token = jwt.encode({
+                        exp: linkExpiryDate
+                        , id: idUser
+                    }, String(forgetPasswordKey));
 
-            //append token as querystring with resetURL.
-            if (resetURL.includes('?')) {
-                resetURL = resetURL + '&email=' + email + '&fpt=' + token;
-            }
-            else {
-                resetURL = resetURL + '?email=' + email + '&fpt=' + token;
-            }
+                    //append token as querystring with resetURL.
+                    if (resetURL.includes('?')) {
+                        resetURL = resetURL + '&id=' + idUser + '&fpt=' + token;
+                    }
+                    else {
+                        resetURL = resetURL + '?id=' + idUser + '&fpt=' + token;
+                    }
 
-            let clmailer: CLMailer = new CLMailer();
-            let msg: string = "Please follow the below link to reset password.<br><br> <a href='" + resetURL + "'>" + resetURL + "</a>";
-            clmailer.sendMail(email, 'Password reste link.', null, msg)
-                .then(function (result: string) {
-                    resolve(true);
+                    let clmailer: CLMailer = new CLMailer();
+                    let msg: string = "Please follow the below link to reset password.<br><br> <a href='" + resetURL + "'>" + resetURL + "</a>";
+                    clmailer.sendMail(email, 'Password reste link.', null, msg)
+                        .then(function (result: string) {
+                            resolve(true);
+                        })
+                        .catch(function (err) {
+                            reject(err);
+                        });
+
+
                 })
                 .catch(function (err) {
-                    reject(err);
+                    return reject(err);
                 });
         });
     }
 
-    updatetPassword(email: string, location: string, newPwd: string): Promise<boolean> {
+    updatetPassword(idUser: number, location: string, newPwd: string): Promise<boolean> {
         return new Promise<boolean>(function (resolve, reject) {
             let affectedRow:number;
             if (newPwd == null) {
@@ -240,7 +249,7 @@ class UserRepository implements irepo.IUserRepository {
                     return reject(clError);
                 }
                 let encounteredError: boolean = false;
-                let query = connection.query('CAll sp_update_user_password(?,?,?);', [email, getHashedPwd(newPwd), location]);
+                let query = connection.query('CAll sp_update_user_password(?,?,?);', [idUser, getHashedPwd(newPwd), location]);
                 query.on('error', function (err) {
                     encounteredError = true;
                     return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while resetting pwd. ' + err.message));
