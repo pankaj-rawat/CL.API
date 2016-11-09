@@ -4,7 +4,6 @@ import {APIResponse} from "../APIResponse";
 import model = require('../models/UserModel');
 import {RepoResponse} from "../RepoResponse";
 import * as amodel from "../models/AuthModel";
-import bcrypt = require('bcryptjs');
 import express = require('express');
 import {Logger}  from "../Logger";
 import config = require('config');
@@ -33,7 +32,7 @@ userController.get('/:id', function (req: express.Request, res: express.Response
 userController.get('', function (req: express.Request, res: express.Response, next: Function) {
     let userRepo = new UserRepository();
     let clRes: APIResponse;
-   
+
 
     let maxLimit: number = Number(process.env.PAGING_LIMIT || config.get("paging.limit"));
     let offset: number = Number(req.query.offset || 0);
@@ -47,17 +46,17 @@ userController.get('', function (req: express.Request, res: express.Response, ne
     }
 
     userRepo.getAll(offset, limit, idUser)
-    .then(function (result) {
-        let util: Util = new Util();
-        clRes = { data: result.data, isValid: true };
-        var pageLink = util.getPageLinks(util.getURLstring(req), offset, limit, result.recordCount);
-        res.links(pageLink);
-        res.setHeader('Content-Range', util.getHeaderContentRange(offset, limit, result.recordCount));
-        res.send(clRes);
-    })
-    .catch(function (err) {
-        next(err);
-    });
+        .then(function (result) {
+            let util: Util = new Util();
+            clRes = { data: result.data, isValid: true };
+            var pageLink = util.getPageLinks(util.getURLstring(req), offset, limit, result.recordCount);
+            res.links(pageLink);
+            res.setHeader('Content-Range', util.getHeaderContentRange(offset, limit, result.recordCount));
+            res.send(clRes);
+        })
+        .catch(function (err) {
+            next(err);
+        });
 });
 
 
@@ -65,13 +64,13 @@ userController.post('/login', function (req: express.Request, res: express.Respo
     Logger.log.info('login is in process.');
     let clRes: APIResponse;
     let authrepo = new AuthRepository();
-    let username = req.body.username;
+    let email = req.body.email;
     let password = req.body.password;
-    let userLocation = req.headers['x-location'] || (req.query && req.query.location) || req.body.location;
-    authrepo.authenticateUser(username, password)
+    let userLocation = req.headers['x-location'] || req.query.location;
+    authrepo.authenticateUser(email, password)
         .then(function (auth: amodel.AuthModel) {
             let userRepo = new UserRepository();
-            userRepo.login(username, userLocation)
+            userRepo.login(email, userLocation)
                 .then(function (user: model.UserModel) {
                     clRes = { data: user, isValid: true };
                     res.setHeader('Access-Token', auth.token);
@@ -89,12 +88,12 @@ userController.post('/login', function (req: express.Request, res: express.Respo
 });
 
 userController.post('/logout', function (req: express.Request, res: express.Response, next: Function) {
-    let clRes: APIResponse;    
+    let clRes: APIResponse;
     let userId = Number.parseInt(req.headers['x-key'] || (req.query && req.query.key));
     let userLocation = req.headers['x-location'] || (req.query && req.query.location);
     let userRepo = new UserRepository();
     userRepo.logout(userId, userLocation)
-        .then(function (isSuccess:boolean) {
+        .then(function (isSuccess: boolean) {
             clRes = { data: isSuccess, isValid: true };
             res.send(clRes);
             Logger.log.info('logout process complete.');
@@ -109,14 +108,10 @@ userController.post('/signup', function (req: express.Request, res: express.Resp
     let userP: Promise<model.UserModel>;
     let user: model.UserModel;
     let clres: APIResponse;
-
-    let salt = bcrypt.genSaltSync(10);
-    let hashedP: string = bcrypt.hashSync(req.body.password, salt);
-
     user = {
         email: req.body.email,
         idCity: req.body.idCity,
-        password: hashedP,
+        password: req.body.password,
         phoneLandLine: req.body.phoneLandline,
         extension: req.body.extension,
         phoneCell: req.body.phoneCell,
@@ -136,40 +131,75 @@ userController.post('/signup', function (req: express.Request, res: express.Resp
     });
 });
 
-userController.post('/forget-password', function (req: express.Request, res: express.Response, next: Function) {
+userController.get('/forget-password', function (req: express.Request, res: express.Response, next: Function) {
     let email = req.body.email;
-    let location = req.body.location;
+    let location = req.headers['x-location'] || req.query.location;
     let resetURL = req.body.resetURL;
     let usrepo = new UserRepository();
-    let clres: APIResponse;    
-    usrepo.forgetPassword(email, location,resetURL)
-    
-    .then(function (result:boolean) {        
-        clres = {
-            data: result,
-            isValid: true
-        };
-        res.send(clres);
-    })
-    .catch(function (err) {
-        next(err);
-    });
-});
-
-userController.post('/reset-password', function (req: express.Request, res: express.Response, next: Function) {
-    let email = req.body.email;
-    let location = req.body.location;
-    let currentPwd = req.body.currentPwd;
-    let newPwd = req.body.newPwd;
-    let usrepo = new UserRepository();
     let clres: APIResponse;
-    usrepo.resetPassword(email, location,currentPwd,newPwd)
+    usrepo.forgetPassword(email, location, resetURL)
         .then(function (result: boolean) {
             clres = {
                 data: result,
                 isValid: true
             };
             res.send(clres);
+        })
+        .catch(function (err) {
+            next(err);
+        });
+});
+
+userController.put('/reset-password', function (req: express.Request, res: express.Response, next: Function) {
+    let email = req.body.email;
+    let location = req.headers['x-location'] || req.query.location;
+    let fpt: string = req.body.fpt;
+    let newPwd: string = req.body.newPwd;    
+    let userepo = new UserRepository();
+    let authRepo: AuthRepository = new AuthRepository();
+    authRepo.authenticateForgetPasswordToken(email, fpt)
+        .then(function (result: boolean) {
+            userepo.updatetPassword(email, location, newPwd)
+                .then(function (result: boolean) {
+                    let clres: APIResponse;
+                    clres = {
+                        data: result,
+                        isValid: true
+                    };
+                    res.send(clres);
+                })
+                .catch(function (err) {
+                    next(err);
+                });
+        })
+        .catch(function (err) {
+            next(err);
+        });
+});
+
+userController.put('/change-password', function (req: express.Request, res: express.Response, next: Function) {
+    let email = req.body.email;
+    
+    let location = req.headers['x-location'] || req.query.location;
+    let currentPwd = req.body.currentPwd;  
+    let newPwd: string = req.body.newPwd;
+
+    let usrepo = new UserRepository();
+    let authRepo: AuthRepository = new AuthRepository();
+    authRepo.authenticateUser(email, currentPwd)
+        .then(function (result) {
+            usrepo.updatetPassword(email, location, newPwd)
+                .then(function (result: boolean) {
+                    let clres: APIResponse;
+                    clres = {
+                        data: result,
+                        isValid: true
+                    };
+                    res.send(clres);
+                })
+                .catch(function (err) {
+                    next(err);
+                });
         })
         .catch(function (err) {
             next(err);

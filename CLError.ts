@@ -19,53 +19,40 @@ export enum ErrorCode {
     INVALID_USER_TOKEN = 10016,
     RESOURCE_NOT_FOUND = 10017,
     INVALID_PARAM_VALUE = 10018,
-    DB_DUPLICATE_ENTRY = 10019
+    DB_DUPLICATE_ENTRY = 10019,  
+    INVALID_FORGET_PASSOWRD_LINK = 10020,
+    FORGET_PASSOWRD_LINK_EXPIRE = 10021
 }
 
 function errorCodeMessage(errorCode: number,messageDetail:string): string {
     let msg: string = undefined;
     switch (errorCode) {
+        case ErrorCode.REQUIRED_PARAM_MISSING:
+            msg = "Required parameter missing.";
+            break;    
         case ErrorCode.DB_CONNECTION_FAIL:
             msg = "Database connection failed.";
-            break;
-        case ErrorCode.DB_DUPLICATE_ENTRY:
-            msg = "Duplicate entry.";
             break;
         case ErrorCode.DB_QUERY_EXECUTION_ERROR:
             msg = "Database query execution failed.";
             break;
         case ErrorCode.DB_DATA_PARSE_ERROR:
             msg = "Error while parsing data.";
-            break;
-        case ErrorCode.REQUIRED_PARAM_MISSING:
-            msg = "Required parameter missing.";
-            break;    
+            break;  
         case ErrorCode.USER_NOT_FOUND:
             msg = "User not found.";
-            break;
-        case ErrorCode.USER_IDENTIFICATION_MISSING:
-            msg = "Missing User information.";
-            break;
+            break; 
         case ErrorCode.USER_NOT_AUTHENTICATED:
             msg = "Authentication failed.";
             break;
         case ErrorCode.USER_NOT_AUTHORIZED:
             msg = "User not authorized.";
             break;
+        case ErrorCode.USER_IDENTIFICATION_MISSING:
+            msg = "Missing User information.";
+            break;
         case ErrorCode.USER_TOKEN_EXPIRED:
             msg = "User token expired.";
-            break;
-        case ErrorCode.INVALID_USER_TOKEN:
-            msg = "Invalid user token.";
-            break;
-        case ErrorCode.CLIENT_AUTO_AUTH_DISABLED:
-            msg = "Client auto authorization is disbaled.";
-            break;
-        case ErrorCode.CLIENT_BLOCKED:
-            msg = "Client is blocked.";
-            break;
-        case ErrorCode.CLIENT_IDENTIFICATION_MISSING:
-            msg = "Missing client information.";
             break;
         case ErrorCode.CLIENT_NOT_FOUND:
             msg = "Client not found.";
@@ -73,14 +60,38 @@ function errorCodeMessage(errorCode: number,messageDetail:string): string {
         case ErrorCode.INVALID_CLIENT_KEY:
             msg = "Client key not valid.";
             break;
-        case ErrorCode.INVALID_PARAM_VALUE:
-            msg = "Invalid parameter(s).";
+        case ErrorCode.CLIENT_BLOCKED:
+            msg = "Client is blocked.";
+            break;
+        case ErrorCode.CLIENT_AUTO_AUTH_DISABLED:
+            msg = "Client auto authorization is disbaled.";
+            break;
+        case ErrorCode.CLIENT_IDENTIFICATION_MISSING:
+            msg = "Missing client information.";
+            break;
+        case ErrorCode.CLIENT_TOKEN_EXPIRED:
+            msg = "Client token expired.";
+            break;
+        case ErrorCode.INVALID_USER_TOKEN:
+            msg = "Invalid user token.";
             break;
         case ErrorCode.RESOURCE_NOT_FOUND:
             msg = "Resource not found.";
             break;
-        case ErrorCode.CLIENT_TOKEN_EXPIRED:
-            msg = "Client token expired.";
+        case ErrorCode.INVALID_PARAM_VALUE:
+            msg = "Invalid parameter(s).";
+            break;
+        case ErrorCode.DB_DUPLICATE_ENTRY:
+            msg = "Duplicate entry.";
+            break;  
+        case ErrorCode.INVALID_FORGET_PASSOWRD_LINK:
+            msg = "Invaliud forget password link.";
+            break;
+        case ErrorCode.FORGET_PASSOWRD_LINK_EXPIRE:
+            msg = "link expire";
+            break;  
+        default:
+            msg = errorCode.toString();
             break;
     }
     return msg + (messageDetail != null ? messageDetail : "");

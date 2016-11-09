@@ -2,7 +2,7 @@
 import {RepoResponse} from "../RepoResponse";
 
 export interface IUserRepository {
-    login(username: string, userLocation: string): Promise<model.UserModel>;
+    login(email: string, userLocation: string): Promise<model.UserModel>;
     find(id: number): Promise<model.UserModel>;  
     create(user:model.UserModel): Promise<model.UserModel>;
     update(user: model.UserModel):Promise<model.UserModel>;

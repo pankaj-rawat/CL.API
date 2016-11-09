@@ -22,8 +22,8 @@ export class RequestValidator {
         let reqURL: string = req.url.toLowerCase();
         if ((reqURL.indexOf('auth/connect') >= 0)) return next(); // public route
 
-        let clientToken = req.headers['x-client-token'] || (req.query && req.query.client_token) || (req.body && req.body.client_token);
-        let clientKey = req.headers['x-client-key'] || (req.query && req.query.client_key) || (req.body && req.body.client_key);
+        let clientToken = req.headers['x-client-token'] || (req.query && req.query.client_token);
+        let clientKey = req.headers['x-client-key'] || (req.query && req.query.client_key);
 
         if (clientToken == null || clientKey == null) {
             return next(new CLError.Forbidden(CLError.ErrorCode.CLIENT_IDENTIFICATION_MISSING));
@@ -56,9 +56,9 @@ export class RequestValidator {
 }
 
 function validateUser(req: express.Request, res: express.Response, next: Function) {
-    let token = (req.query && req.query.access_token) || req.headers['x-access-token'];
-    let key = (req.query && req.query.key) || req.headers['x-key'];
-    let location = (req.query && req.query.location) || req.headers['x-location'];
+    let token = req.headers['x-access-token'] || (req.query && req.query.access_token);
+    let key = req.headers['x-key'] || (req.query && req.query.key);
+    let location = req.headers['x-location'] || (req.query && req.query.location);
     let reqURL: string = req.url.toLowerCase();
 
     //if none of the user specific param exists, check for guest

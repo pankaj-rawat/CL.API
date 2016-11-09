@@ -24,5 +24,9 @@
     "email": "citylocal.test@gmail.com",
     "password": "citylocal123",
     "smtp": "smtp.gmail.com"
+  },
+  "forget-pwd": {
+    "daysToLinkExp": 1,
+    "key": "aa.aa.aa.aa.bbb"
   }
 }

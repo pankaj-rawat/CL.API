@@ -10,12 +10,12 @@ import * as CLError from "../CLError";
 
 export class AuthRepository implements irepo.IAuthRepository {
 
-    authenticateUser(username: string, password: string): Promise<model.AuthModel> {
+    authenticateUser(email: string, password: string): Promise<model.AuthModel> {
         return new Promise<model.AuthModel>(function (resolve, reject) {
             if (password == null || password.trim() == '') {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'Password not supplied'));
             }
-            if (username == null || username.trim() == '') {
+            if (email == null || email.trim() == '') {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'User id not supplied'));
             }
 
@@ -29,7 +29,7 @@ export class AuthRepository implements irepo.IAuthRepository {
                 let userId: number;
                 let encounteredError: boolean = false;
 
-                let query = connection.query("CALL sp_user_select_pwd(?)", [username]);
+                let query = connection.query("CALL sp_user_select_pwd(?)", [email]);
                 query.on('error', function (err) {
                     encounteredError = true;
                     let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occur while validating password. ' + err.message);
@@ -239,6 +239,23 @@ export class AuthRepository implements irepo.IAuthRepository {
                 });
             });
         });
+    }
+
+    authenticateForgetPasswordToken(email:string,fpt: string):Promise<boolean> {
+        return new Promise<boolean>(function (resolve, reject) {
+            let decoded = jwt.decode(fpt, String(process.env.FORGET_PWD_KEY || config.get("forget-pwd.key")));
+
+            if (decoded.email != email) {
+                return reject(new CLError.Unauthorized(CLError.ErrorCode.INVALID_FORGET_PASSOWRD_LINK));
+            }
+
+            if (new Date(decoded.exp).getTime() <= (new Date()).getTime()) {
+                return reject(new CLError.Unauthorized(CLError.ErrorCode.FORGET_PASSOWRD_LINK_EXPIRE));
+            }
+            else {
+                resolve(true);                
+            }
+        });        
     }
 }
 

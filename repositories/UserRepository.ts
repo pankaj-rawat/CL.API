@@ -5,10 +5,13 @@ import {Logger}  from "../Logger";
 import * as CLError from "../CLError";
 import {RepoResponse} from "../RepoResponse";
 import {CLMailer} from "../CLMailer";
+import jwt = require('jwt-simple');
+import config = require('config');
+import bcrypt = require('bcryptjs');
 
 class UserRepository implements irepo.IUserRepository {
 
-    login(username: string, userLocation: string): Promise<model.UserModel> {
+    login(email: string, userLocation: string): Promise<model.UserModel> {
         return new Promise<model.UserModel>(function (resolve, reject) {
             if (userLocation == null) {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'Missing user location.'));
@@ -21,7 +24,7 @@ class UserRepository implements irepo.IUserRepository {
                 }
                 let encounteredError: boolean = false;
                 let userId: number;
-                let query = connection.query('Call sp_insert_user_online(?,?)', [username, userLocation]);
+                let query = connection.query('Call sp_insert_user_online(?,?)', [email, userLocation]);
                 query.on('error', function (err) {
                     encounteredError = true;
                     return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while recording user login. ' + err.message));
@@ -44,7 +47,7 @@ class UserRepository implements irepo.IUserRepository {
                                 });
                         }
                         else {
-                            return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while getting recorded user detail. UserID:' + username));
+                            return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while getting recorded user detail. UserID:' + email));
                         }
                     }
                 });
@@ -104,13 +107,19 @@ class UserRepository implements irepo.IUserRepository {
         });
     }
 
-    getAll(offset: number, limit: number,idUser:number): Promise<RepoResponse> {
-        return getUser(offset, limit,idUser);
+    getAll(offset: number, limit: number, idUser: number): Promise<RepoResponse> {
+        return getUser(offset, limit, idUser);
     }
 
     create(user: model.UserModel): Promise<model.UserModel> {
         let repoName: string = "UserRepository";
         return new Promise<model.UserModel>(function (resolve, reject) {
+            //check for required parameters
+            if (user.password == null) {
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, "Password missing."));
+            }
+            
+
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
                     let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
@@ -120,7 +129,7 @@ class UserRepository implements irepo.IUserRepository {
 
                 let encounteredError: boolean = false;
                 let query = connection.query('CALL sp_user_insert(?,?,?,?,?,?,?)',
-                    [user.email, user.password, user.phoneLandLine, user.extension, user.phoneCell, user.idCity, user.subscriptionOptIn]);
+                    [user.email, getHashedPwd(user.password), user.phoneLandLine, user.extension, user.phoneCell, user.idCity, user.subscriptionOptIn]);
 
                 query.on('error', function (err) {
                     encounteredError = true;
@@ -181,15 +190,33 @@ class UserRepository implements irepo.IUserRepository {
     }
 
     remove(id: number): Promise<number> {
-        return new Promise<number>(function (resolve, reject){
+        return new Promise<number>(function (resolve, reject) {
         });
     }
 
-    forgetPassword(email: string,location:string,resetURL:string): Promise<boolean> {
+    forgetPassword(email: string, location: string, resetURL: string): Promise<boolean> {
         return new Promise<boolean>(function (resolve, reject) {
+            let dateObj = new Date();
+            let forgetPasswordKey: string = process.env.FORGET_PWD_KEY || config.get("forget-pwd.key");
+            let daysToLinkExpiry: number = process.env.FORGET_PWD_DAYS_TO_LINK_EXP || config.get("forget-pwd.daysToLinkExp");
+            let linkExpiryDate = new Date(new Date().getTime() + (daysToLinkExpiry * 24 * 60 * 60 * 1000));
+
+            let token = jwt.encode({
+                exp: linkExpiryDate
+                , email: email
+            }, String(forgetPasswordKey));
+
+            //append token as querystring with resetURL.
+            if (resetURL.includes('?')) {
+                resetURL = resetURL + '&email=' + email + '&fpt=' + token;
+            }
+            else {
+                resetURL = resetURL + '?email=' + email + '&fpt=' + token;
+            }
+
             let clmailer: CLMailer = new CLMailer();
-            let msg: string = 'Please <a href='+ resetURL +'>click here</a> to reset the password.';
-            clmailer.sendMail(email, 'Password reste link.',null, msg)
+            let msg: string = "Please follow the below link to reset password.<br><br> <a href='" + resetURL + "'>" + resetURL + "</a>";
+            clmailer.sendMail(email, 'Password reste link.', null, msg)
                 .then(function (result: string) {
                     resolve(true);
                 })
@@ -199,9 +226,12 @@ class UserRepository implements irepo.IUserRepository {
         });
     }
 
-    resetPassword(email: string, location: string, currentPwd: string, newPwd:string): Promise<boolean> {
+    updatetPassword(email: string, location: string, newPwd: string): Promise<boolean> {
         return new Promise<boolean>(function (resolve, reject) {
-            let isSuccess: boolean = false;
+            let affectedRow:number;
+            if (newPwd == null) {
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, " Password missing."));
+            }
             //'sp_update_user_password' need to create this sp
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
@@ -210,38 +240,39 @@ class UserRepository implements irepo.IUserRepository {
                     return reject(clError);
                 }
                 let encounteredError: boolean = false;
-                let query = connection.query('CAll sp_update_user_password(?,?,?,?);', [email,currentPwd,newPwd,location]);
+                let query = connection.query('CAll sp_update_user_password(?,?,?);', [email, getHashedPwd(newPwd), location]);
                 query.on('error', function (err) {
                     encounteredError = true;
                     return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while resetting pwd. ' + err.message));
                 });
                 query.on('result', function (row, index) {
-                    if (index == 1) {
-                        isSuccess = row.result;
+                    if (index == 0) {
+                        affectedRow = row.row_affected;
                     }
                 });
                 query.on('end', function () {
                     connection.release();
                     if (!encounteredError) {
-                        if (isSuccess) {
-                            return resolve(isSuccess);
+                        if (affectedRow>0) {
+                            return resolve(true);
                         }
                         else {
-                            return reject(new CLError.CustomError("Password reset failed",200,"300","Failed"));
+                            return reject(new CLError.CustomError("Password not updated", 200, "300", " Password not updated"));
                         }
                     }
                 });
             });
         });
     }
+
 };
 
-function getUser(offset: number, limit: number, idUser?: number): Promise<RepoResponse> {
+function getUser(offset: number, limit: number, idUser?: number,email?:string): Promise<RepoResponse> {
     return new Promise(function (resolve, reject) {
         let users: Array<model.UserModel> = new Array<model.UserModel>();
         if (offset < 0) {
             return reject(new CLError.BadRequest(CLError.ErrorCode.INVALID_PARAM_VALUE, "Invalid value supplied for offset\limit params."));
-        }     
+        }
 
         DB.get().getConnection(function (err, connection) {
             if (err != null) {
@@ -252,7 +283,7 @@ function getUser(offset: number, limit: number, idUser?: number): Promise<RepoRe
 
             let encounteredError: boolean = false;
             let recCount: number = 0;
-            let query = connection.query('SET @rCount=0; CAll sp_select_user(@rCount,?,?,?); select @rCount rcount;', [offset, limit, idUser]);
+            let query = connection.query('SET @rCount=0; CAll sp_select_user(@rCount,?,?,?,?); select @rCount rcount;', [offset, limit, idUser,email]);
             query.on('error', function (err) {
                 encounteredError = true;
                 return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while getting user. ' + err.message));
@@ -309,4 +340,8 @@ function getUser(offset: number, limit: number, idUser?: number): Promise<RepoRe
     });
 }
 
+function getHashedPwd(pwd: string):string {
+    let salt = bcrypt.genSaltSync(10);
+    return bcrypt.hashSync(pwd, salt);
+}
 export {UserRepository};
