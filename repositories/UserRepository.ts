@@ -197,17 +197,17 @@ class UserRepository implements irepo.IUserRepository {
     forgetPassword(email: string, location: string, resetURL: string): Promise<boolean> {
         return new Promise<boolean>(function (resolve, reject) {
             let dateObj = new Date();
-            let forgetPasswordKey: string = process.env.FORGET_PWD_KEY || config.get("forget-pwd.key");
             let daysToLinkExpiry: number = process.env.FORGET_PWD_DAYS_TO_LINK_EXP || config.get("forget-pwd.daysToLinkExp");
             let linkExpiryDate = new Date(new Date().getTime() + (daysToLinkExpiry * 24 * 60 * 60 * 1000));
 
             getUser(0, 1, null, email)
                 .then(function (result: RepoResponse) {
-                    let idUser: number = result.data[0].id;
+                    let idUser: number = result.data[0].id;                   
                     let token = jwt.encode({
                         exp: linkExpiryDate
                         , id: idUser
-                    }, String(forgetPasswordKey));
+
+                    }, String(process.env.TOKEN_KEY || config.get("token.key")));
 
                     //append token as querystring with resetURL.
                     if (resetURL.includes('?')) {

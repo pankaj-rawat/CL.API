@@ -57,7 +57,7 @@ export class RequestValidator {
 
 function validateUser(req: express.Request, res: express.Response, next: Function) {
     let token = req.headers['x-access-token'] || (req.query && req.query.access_token);
-    let key = req.headers['x-key'] || (req.query && req.query.key);
+    let key = req.headers['x-key'] || (req.query && req.query.key) ;
     let location = req.headers['x-location'] || (req.query && req.query.location);
     let reqURL: string = req.url.toLowerCase();
 
@@ -83,11 +83,32 @@ function validateUser(req: express.Request, res: express.Response, next: Functio
 
         //check for token and id in the database for online users. and get roleid.
         let authrepo = new AuthRepository();
-        authrepo.refreshAccessToken(userDecoded.id, location)
-            .then(function (result: model.AuthModel) {
-                res.setHeader("Access-Token", result.token);
-                res.setHeader("Access-Token-Expiry", result.expires.toJSON());
-                checkRoleAccess(result.userRoleIds, req, next);
+        //check user is online or not.
+        authrepo.getOnlinestatus(userDecoded.id, location)
+            .then(function (result: def.UserOnlineStatus) {
+                try {
+                    let newToken: string = token;
+                    let newExpiry: Date = new Date(userDecoded.exp);
+                    if (result == def.UserOnlineStatus.ONLINE) {
+                        let auth: model.AuthModel = authrepo.refreshAccessToken(userDecoded.id);
+                        newToken = auth.token;
+                        newExpiry = auth.expires;
+                    }
+                    res.setHeader("Access-Token", newToken);
+                    res.setHeader("Access-Token-Expiry", newExpiry.toJSON());
+                }
+                catch (err) {
+                    return next(err);
+                }
+
+                //get user's roles
+                authrepo.getUserRoles(userDecoded.id)
+                    .then(function (result: Array<number>) {
+                        checkRoleAccess(result, req, next);
+                    })
+                    .catch(function (err) {
+                        return next(err);
+                    });                
             })
             .catch(function (err) {
                 return next(err);

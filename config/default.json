@@ -26,7 +26,6 @@
     "smtp": "smtp.gmail.com"
   },
   "forget-pwd": {
-    "daysToLinkExp": 1,
-    "key": "aa.aa.aa.aa.bbb"
+    "daysToLinkExp": 1
   }
 }

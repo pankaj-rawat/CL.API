@@ -131,7 +131,7 @@ userController.post('/signup', function (req: express.Request, res: express.Resp
     });
 });
 
-userController.get('/forget-password', function (req: express.Request, res: express.Response, next: Function) {
+userController.post('/forget-password', function (req: express.Request, res: express.Response, next: Function) {
     let email = req.body.email;
     let location = req.headers['x-location'] || req.query.location;
     let resetURL = req.body.resetURL;
@@ -150,55 +150,19 @@ userController.get('/forget-password', function (req: express.Request, res: expr
         });
 });
 
-userController.put('/reset-password', function (req: express.Request, res: express.Response, next: Function) {
-    let idUser = req.body.idUser;
+userController.put('/:id/password', function (req: express.Request, res: express.Response, next: Function) {
+    let idUser = req.params.id;
     let location = req.headers['x-location'] || req.query.location;
-    let fpt: string = req.body.fpt;
-    let newPwd: string = req.body.newPwd;    
-    let userepo = new UserRepository();
-    let authRepo: AuthRepository = new AuthRepository();
-    authRepo.authenticateForgetPasswordToken(idUser, fpt)
-        .then(function (result: boolean) {
-            userepo.updatetPassword(idUser, location, newPwd)
-                .then(function (result: boolean) {
-                    let clres: APIResponse;
-                    clres = {
-                        data: result,
-                        isValid: true
-                    };
-                    res.send(clres);
-                })
-                .catch(function (err) {
-                    next(err);
-                });
-        })
-        .catch(function (err) {
-            next(err);
-        });
-});
-
-userController.put('/change-password', function (req: express.Request, res: express.Response, next: Function) {
-    let idUser = req.headers['x-key'] || req.query.key;    
-    let location = req.headers['x-location'] || req.query.location;
-    let currentPwd = req.body.currentPwd;  
     let newPwd: string = req.body.newPwd;
-
-    let usrepo = new UserRepository();
-    let authRepo: AuthRepository = new AuthRepository();
-    authRepo.authenticateUser(idUser, currentPwd)
-        .then(function (result) {
-            usrepo.updatetPassword(idUser, location, newPwd)
-                .then(function (result: boolean) {
-                    let clres: APIResponse;
-                    clres = {
-                        data: result,
-                        isValid: true
-                    };
-                    res.send(clres);
-                })
-                .catch(function (err) {
-                    next(err);
-                });
+    let userepo = new UserRepository();
+    userepo.updatetPassword(idUser, location, newPwd)
+        .then(function (result: boolean) {
+            let clres: APIResponse;
+            clres = {
+                data: result,
+                isValid: true
+            };
+            res.send(clres);
         })
         .catch(function (err) {
             next(err);

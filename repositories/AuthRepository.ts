@@ -5,7 +5,7 @@ import * as DB from "../DB";
 import {Logger}  from "../Logger";
 import * as model  from "../models/AuthModel";
 import bcrypt = require('bcryptjs');
-import {Role} from "../Definitions";
+import * as def from "../Definitions";
 import * as CLError from "../CLError";
 
 export class AuthRepository implements irepo.IAuthRepository {
@@ -29,7 +29,7 @@ export class AuthRepository implements irepo.IAuthRepository {
                 let userId: number;
                 let encounteredError: boolean = false;
 
-                let query = connection.query("CALL sp_user_select_pwd(?)", [email]);
+                let query = connection.query("CALL sp_select_user_login(?)", [email]);
                 query.on('error', function (err) {
                     encounteredError = true;
                     let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occur while validating password. ' + err.message);
@@ -158,10 +158,9 @@ export class AuthRepository implements irepo.IAuthRepository {
         });
     }
 
-    refreshAccessToken(userId: number, location: string): Promise<model.AuthModel> {
-        return new Promise<model.AuthModel>(function (resolve, reject) {
-            let roleIds: Array<number> = new Array<number>();
-            let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_USER || config.get("token.minutesToExpire-user")));
+    getOnlinestatus(userId: number, location: string): Promise<def.UserOnlineStatus> {
+        return new Promise<def.UserOnlineStatus>(function (resolve, reject) {
+            let status: number;          
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
                     let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
@@ -169,10 +168,42 @@ export class AuthRepository implements irepo.IAuthRepository {
                     return reject(clError);
                 }
                 let encounteredError: boolean = false;
-                let query = connection.query('Call sp_select_user_online_role(?,?)', [userId, location]);
+                let query = connection.query('Call sp_select_user_online_status(?,?)', [userId, location]);
                 query.on('error', function (err) {
                     encounteredError = true;
-                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR,  err.message);
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, err.message);
+                    clError.stack = err.stack;
+                    return reject(clError);
+                });
+                query.on('result', function (row, index) {
+                    if (index == 0) {
+                        status = row.OnlineStatus;                     
+                    }
+                });
+                query.on('end', function () {
+                    connection.release();
+                    if (!encounteredError) {                       
+                        resolve(status);
+                    }
+                });
+            });
+        });
+    }
+
+    getUserRoles(userId: number): Promise<Array<number>> {
+        return new Promise<Array<number>>(function (resolve, reject) {
+            let roleIds: Array<number> = new Array<number>();
+            DB.get().getConnection(function (err, connection) {
+                if (err != null) {
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
+                    clError.stack = err.stack;
+                    return reject(clError);
+                }
+                let encounteredError: boolean = false;
+                let query = connection.query('Call sp_select_user_role(?)', [userId]);
+                query.on('error', function (err) {
+                    encounteredError = true;
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, err.message);
                     clError.stack = err.stack;
                     return reject(clError);
                 });
@@ -185,22 +216,20 @@ export class AuthRepository implements irepo.IAuthRepository {
                 query.on('end', function () {
                     connection.release();
                     if (!encounteredError) {
-                        if (roleIds.length>0) {
-                            let auth: model.AuthModel = {
-                                expires: expiryDate,
-                                token: genToken(userId, expiryDate),
-                                userRoleIds:roleIds
-                            };
-                            resolve(auth);
-                        }
-                        else {
-                            reject(new CLError.Unauthorized(CLError.ErrorCode.USER_TOKEN_EXPIRED,'Can not auto-refresh. Either user online status changed or user roles not defined.'));
-                        }
+                        resolve(roleIds);
                     }
                 });
             });
-
         });
+    }
+
+    refreshAccessToken(userId: number): model.AuthModel {
+        let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_USER || config.get("token.minutesToExpire-user")));
+        let auth: model.AuthModel = {
+            token: genToken(userId, expiryDate)
+            ,expires:expiryDate
+        }
+        return auth;
     }
 
     getRoleAccessList(): Promise<Array<model.RoleAccess>> {
@@ -240,23 +269,6 @@ export class AuthRepository implements irepo.IAuthRepository {
             });
         });
     }
-
-    authenticateForgetPasswordToken(email:string,fpt: string):Promise<boolean> {
-        return new Promise<boolean>(function (resolve, reject) {
-            let decoded = jwt.decode(fpt, String(process.env.FORGET_PWD_KEY || config.get("forget-pwd.key")));
-
-            if (decoded.email != email) {
-                return reject(new CLError.Unauthorized(CLError.ErrorCode.INVALID_FORGET_PASSOWRD_LINK));
-            }
-
-            if (new Date(decoded.exp).getTime() <= (new Date()).getTime()) {
-                return reject(new CLError.Unauthorized(CLError.ErrorCode.FORGET_PASSOWRD_LINK_EXPIRE));
-            }
-            else {
-                resolve(true);                
-            }
-        });        
-    }
 }
 
 // private method
@@ -264,6 +276,7 @@ function genToken(userid: number, expires: Date): string {
     let token = jwt.encode({
         exp: expires
         , id: userid
+        
     }, String(process.env.TOKEN_KEY || config.get("token.key")));
     return token;
 }

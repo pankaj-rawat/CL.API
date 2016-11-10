@@ -20,8 +20,6 @@ export enum ErrorCode {
     RESOURCE_NOT_FOUND = 10017,
     INVALID_PARAM_VALUE = 10018,
     DB_DUPLICATE_ENTRY = 10019,  
-    INVALID_FORGET_PASSOWRD_LINK = 10020,
-    FORGET_PASSOWRD_LINK_EXPIRE = 10021
 }
 
 function errorCodeMessage(errorCode: number,messageDetail:string): string {
@@ -83,13 +81,7 @@ function errorCodeMessage(errorCode: number,messageDetail:string): string {
             break;
         case ErrorCode.DB_DUPLICATE_ENTRY:
             msg = "Duplicate entry.";
-            break;  
-        case ErrorCode.INVALID_FORGET_PASSOWRD_LINK:
-            msg = "Invaliud forget password link.";
-            break;
-        case ErrorCode.FORGET_PASSOWRD_LINK_EXPIRE:
-            msg = "link expire";
-            break;  
+            break;       
         default:
             msg = errorCode.toString();
             break;

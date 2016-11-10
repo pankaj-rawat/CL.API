@@ -29,3 +29,8 @@ export enum WeekDay {
     Saturday = 6,
     Sunday=7
 }
+export enum UserOnlineStatus {
+    OFFLINE = 0
+    , ONLINE = 1
+    ,ONLINE_AT_DIFFERENT_LOCATION=2
+}
