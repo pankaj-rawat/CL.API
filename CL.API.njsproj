@@ -22,7 +22,7 @@
     <OutputPath>.</OutputPath>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <ProjectTypeGuids>{3AF33F2E-1136-4D97-BBB7-1795711AC8B8};{349c5851-65df-11da-9384-00065b846f21};{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}</ProjectTypeGuids>
-    <ProjectView>ProjectFiles</ProjectView>
+    <ProjectView>ShowAllFiles</ProjectView>
     <NodejsPort>1337</NodejsPort>
     <TypeScriptSourceMap>true</TypeScriptSourceMap>
     <TypeScriptModuleKind>CommonJS</TypeScriptModuleKind>
@@ -109,6 +109,7 @@
     <TypeScriptCompile Include="routes\Users.ts" />
     <TypeScriptCompile Include="Scripts\typings\async\async.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\bcryptjs\bcryptjs.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\bluebird\bluebird-2.0.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\body-parser\body-parser.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\config\config.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\express-serve-static-core\express-serve-static-core.d.ts" />
@@ -118,6 +119,9 @@
     <TypeScriptCompile Include="Scripts\typings\mime\mime.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\mocha\mocha.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\mysql\mysql.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\nodemailer-direct-transport\nodemailer-direct-transport.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\nodemailer-smtp-transport\nodemailer-smtp-transport.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\nodemailer\nodemailer.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\node\node.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\serve-static\serve-static.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\should\should.d.ts" />
@@ -143,6 +147,10 @@
     <Folder Include="Metadata\deploymentTemplates\" />
     <Folder Include="middlewares\" />
     <Folder Include="models\" />
+    <Folder Include="scripts\typings\bluebird\" />
+    <Folder Include="scripts\typings\nodemailer-direct-transport\" />
+    <Folder Include="scripts\typings\nodemailer-smtp-transport\" />
+    <Folder Include="scripts\typings\nodemailer\" />
     <Folder Include="ssl_cert\" />
     <Folder Include="repositories\" />
     <Folder Include="routes\" />
