@@ -1,4 +1,4 @@
-﻿import * as nodemailer from "nodemailer";
+﻿import nodemailer = require('nodemailer');
 import config = require('config');
 export class CLMailer {
     sendMail(to: string, subject: string,text?: string,html?:string): Promise<string> {
