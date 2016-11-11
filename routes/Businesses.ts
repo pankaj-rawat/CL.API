@@ -4,6 +4,7 @@ import {Logger} from "../Logger";
 import *  as model from "../models/BusinessModel";
 import * as CategoryTagModel from "../models/CategoryTagModel";
 import {BusinessRepository} from "../repositories/BusinessRepository";
+import {Util} from "../Util";
 
 let businessController = express.Router();
 
@@ -48,7 +49,9 @@ businessController.post('', function (req: express.Request, res: express.Respons
                             data: result,
                             isValid: true
                         };
-                        res.send(apiResponse);
+                        let util: Util = new Util();
+                        res.setHeader('location',util.getPostedResourceLocation(req,result.id.toString()));
+                        res.send(201,apiResponse);
                     })
                     .catch(function (err) {
                         next(err);

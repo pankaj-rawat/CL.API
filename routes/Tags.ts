@@ -2,6 +2,7 @@
 import {TagModel} from "../models/CategoryTagModel";
 import {TagRepository} from "../repositories/CategoryTagRepository";
 import {APIResponse} from "../APIResponse";
+import {Util} from "../Util";
 
 let tagController = express.Router();
 tagController.get('/:id', function (req: express.Request, res: express.Response, next) {
@@ -36,7 +37,7 @@ tagController.get('/category/:id', function (req: express.Request, res: express.
     });
 });
 
-tagController.post('/', function (req: express.Request, res: express.Response, next) {
+tagController.post('', function (req: express.Request, res: express.Response, next) {
 
     let tagRepo: TagRepository = new TagRepository();
 
@@ -52,7 +53,9 @@ tagController.post('/', function (req: express.Request, res: express.Response, n
                 data: result,
                 isValid: true
             }
-            res.send(apiResponse);
+            let util: Util = new Util();
+            res.setHeader('location',util.getPostedResourceLocation(req,result.id.toString()));
+            res.send(201,apiResponse);
         })
         .catch(function (err) {
             next(err);
