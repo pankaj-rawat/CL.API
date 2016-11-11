@@ -58,6 +58,12 @@ export class Util {
     getHeaderContentRange(offset: number, limit: number, recordCount: number): string {
         return offset.toString() + "-" + ((offset - 0) + (limit - 1)).toString() + "/" + recordCount; //subtracting with 0 just to convert into number again.;
     }
+
+    getPostedResourceLocation(req:express.Request,resourceId:string):string {
+        let locationLink: string;
+        locationLink = this.getURLstring(req) + "/" +resourceId;
+        return locationLink;
+    }
 };
 
 interface Links {

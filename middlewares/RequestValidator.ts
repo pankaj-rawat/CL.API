@@ -22,8 +22,8 @@ export class RequestValidator {
         let reqURL: string = req.url.toLowerCase();
         if ((reqURL.indexOf('auth/connect') >= 0)) return next(); // public route
 
-        let clientToken = req.headers['x-client-token'] || (req.query && req.query.client_token);
-        let clientKey = req.headers['x-client-key'] || (req.query && req.query.client_key);
+        let clientToken = req.headers['clapi-client-token'] || (req.query && req.query.client_token);
+        let clientKey = req.headers['clapi-client-key'] || (req.query && req.query.client_key);
 
         if (clientToken == null || clientKey == null) {
             return next(new CLError.Forbidden(CLError.ErrorCode.CLIENT_IDENTIFICATION_MISSING));
@@ -42,7 +42,7 @@ export class RequestValidator {
             let authrepo = new AuthRepository();
             authrepo.connect(decoded.id, undefined, decoded.client)
                 .then(function (result: model.AuthModel) {
-                    res.setHeader('Client-Token', result.token);
+                    res.setHeader('CLAPI-Client-Token', result.token);
                     validateUser(req, res, next);
                 })
                 .catch(function (error) {
@@ -56,9 +56,9 @@ export class RequestValidator {
 }
 
 function validateUser(req: express.Request, res: express.Response, next: Function) {
-    let token = req.headers['x-access-token'] || (req.query && req.query.access_token);
-    let key = req.headers['x-key'] || (req.query && req.query.key) ;
-    let location = req.headers['x-location'] || (req.query && req.query.location);
+    let token = req.headers['clapi-user-access-Token'] || (req.query && req.query.user_access_token);
+    let key = req.headers['clapi-user-key'] || (req.query && req.query.user_key) ;
+    let location = req.headers['clapi-user-location'] || (req.query && req.query.user_location);
     let reqURL: string = req.url.toLowerCase();
 
     //if none of the user specific param exists, check for guest
@@ -94,8 +94,8 @@ function validateUser(req: express.Request, res: express.Response, next: Functio
                         newToken = auth.token;
                         newExpiry = auth.expires;
                     }
-                    res.setHeader("Access-Token", newToken);
-                    res.setHeader("Access-Token-Expiry", newExpiry.toJSON());
+                    res.setHeader("CLAPI-User-Access-Token", newToken);
+                    res.setHeader("CLAPI-User-Access-Token-Expiry", newExpiry.toJSON());
                 }
                 catch (err) {
                     return next(err);

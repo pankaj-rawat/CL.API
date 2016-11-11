@@ -16,6 +16,9 @@ class UserRepository implements irepo.IUserRepository {
             if (userLocation == null) {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'Missing user location.'));
             }
+            if (email == null) {
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'user email missing.'));
+            }
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
                     let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
@@ -59,6 +62,9 @@ class UserRepository implements irepo.IUserRepository {
         return new Promise<boolean>(function (resolve, reject) {
             if (userLocation == null) {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'Missing user location.'));
+            }
+            if (userId == null) {
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'User id missing.'));
             }
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
@@ -107,7 +113,7 @@ class UserRepository implements irepo.IUserRepository {
         });
     }
 
-    getAll(offset: number, limit: number, idUser: number): Promise<RepoResponse> {
+    getAll(offset: number, limit: number, idUser?: number): Promise<RepoResponse> {
         return getUser(offset, limit, idUser);
     }
 
@@ -115,10 +121,19 @@ class UserRepository implements irepo.IUserRepository {
         let repoName: string = "UserRepository";
         return new Promise<model.UserModel>(function (resolve, reject) {
             //check for required parameters
-            if (user.password == null) {
+            if (user.password == null || user.password=='') {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, "Password missing."));
             }
-            
+            if (user.email == null || user.email == '') {
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, "email missing."));
+            }          
+            if (user.idCity == null) {
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, "User city missing."));
+            }
+
+            if (user.subscriptionOptIn == null) {
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, "User subscription option missing."));
+            }
 
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
@@ -196,6 +211,13 @@ class UserRepository implements irepo.IUserRepository {
 
     forgetPassword(email: string, location: string, resetURL: string): Promise<boolean> {
         return new Promise<boolean>(function (resolve, reject) {
+            if (email == null || email == '') {
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, "email missing."));
+            }
+            if (location == null || location == '') {
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, "location missing."));
+            }
+
             let dateObj = new Date();
             let daysToLinkExpiry: number = process.env.FORGET_PWD_DAYS_TO_LINK_EXP || config.get("forget-pwd.daysToLinkExp");
             let linkExpiryDate = new Date(new Date().getTime() + (daysToLinkExpiry * 24 * 60 * 60 * 1000));
@@ -238,7 +260,13 @@ class UserRepository implements irepo.IUserRepository {
     updatetPassword(idUser: number, location: string, newPwd: string): Promise<boolean> {
         return new Promise<boolean>(function (resolve, reject) {
             let affectedRow:number;
-            if (newPwd == null) {
+            if (idUser == null) {
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, " User id missing."));
+            }
+            if (location == null) {
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, " User location missing."));
+            }
+            if (newPwd == null || newPwd == '') {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, " Password missing."));
             }
             //'sp_update_user_password' need to create this sp
@@ -279,7 +307,7 @@ class UserRepository implements irepo.IUserRepository {
 function getUser(offset: number, limit: number, idUser?: number,email?:string): Promise<RepoResponse> {
     return new Promise(function (resolve, reject) {
         let users: Array<model.UserModel> = new Array<model.UserModel>();
-        if (offset < 0) {
+        if (offset==null || offset < 0 || limit==null || limit==0) {
             return reject(new CLError.BadRequest(CLError.ErrorCode.INVALID_PARAM_VALUE, "Invalid value supplied for offset\limit params."));
         }
 

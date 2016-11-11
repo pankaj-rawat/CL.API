@@ -22,7 +22,7 @@ let httpsServerOption = {
 //enable CORS
 app.use(function (req: express.Request, res: express.Response, next) {
     res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, x-client-token,x-client-key,x-access-token,x-key,x-location");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, clapi-client-token,clapi-client-key,clapi-user-access-token,clapi-user-key,clapi-user-location");
     next();
 });
 
