@@ -3,15 +3,19 @@ import model = require("../models/BusinessModel");
 import * as CategoryTagModel from "../models/CategoryTagModel";
 import * as DB from "../DB";
 import {Logger as logger} from "../Logger";
-import {ErrorCode} from '../ErrorCode';
 import * as CLError from '../CLError';
 
 export class BusinessRepository implements irepo.IBusinessRepository {
     register(business: model.BusinessModel): Promise<model.BusinessModel> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<model.BusinessModel>(function (resolve, reject) {
+            if (business.contactNumbers == null || business.images == null || business.operationHours == null || business.tags == null) {
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, "Input data missing."));
+            }
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
-                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
+                    clError.stack = err.stack;
+                    return reject(clError);
                 }
                 else {
                     let encounteredError: boolean = false;
@@ -20,14 +24,23 @@ export class BusinessRepository implements irepo.IBusinessRepository {
                     let phones: string = getPhonesString(business.contactNumbers);
                     let tags: string = getTagsString(business.tags);
                     let operationhours: string = getOperationHourString(business.operationHours);
-                    let query = connection.query('Call sp_business_insert(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+                    let query = connection.query('Call sp_insert_business(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
                         , [business.name, business.contactName, business.contactTitle, business.idStatus, business.streetAddress,
                             business.postalCode, business.idCity, business.idState, business.idCountry, business.webURL, business.latitude,
                             business.longitude, business.description, business.commenceDate, images, phones, tags, operationhours,
                             business.idRegistrationPlan, business.idUser]);
                     query.on('error', function (err) {
                         encounteredError = true;
-                        return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR,"Error occured while saving business."));
+                        let clError: CLError.DBError; 
+                        if (err.code =="ER_DUP_CODE")
+                        {
+                            clError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while saving business. " + err.message);
+                        }
+                        else {
+                            clError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR);
+                        }
+                        clError.stack = err.stack;
+                        return reject(clError);
                     });
                     query.on('result', function (row, index) {
                         if (index == 0) {
@@ -51,12 +64,11 @@ export class BusinessRepository implements irepo.IBusinessRepository {
         });
     };
     unRegister(id: number): Promise<number> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<number> (function (resolve, reject) {
         });
     };
-
     find(id: number): Promise<model.BusinessModel> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<model.BusinessModel>(function (resolve, reject) {
             getBusiness(id)
                 .then(function (result) {
                     resolve(result);
@@ -67,37 +79,40 @@ export class BusinessRepository implements irepo.IBusinessRepository {
         });
     };
     update(business: model.BusinessModel): Promise<model.BusinessModel> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<model.BusinessModel>(function (resolve, reject) {
         });
     };
-
     addOffer(offer: model.BusinessOfferModel): Promise<model.BusinessOfferModel> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<model.BusinessOfferModel>(function (resolve, reject) {
         });
     };
     updateOffer(offer: model.BusinessOfferModel): Promise<model.BusinessOfferModel> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<model.BusinessOfferModel>(function (resolve, reject) {
         });
     };
     deactivateOffer(id: number): Promise<boolean> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<boolean>(function (resolve, reject) {
         });
     };
 }
 
 function getBusiness(id: number): Promise<model.BusinessModel> {
-    return new Promise(function (resolve, reject) {
+    return new Promise<model.BusinessModel>(function (resolve, reject) {
         let business: model.BusinessModel;
         DB.get().getConnection(function (err, connection) {
             if (err) {
-                return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
+                let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
+                clError.stack = err.stack;
+                return reject(clError);
             }
             else {
                 let encounteredError: boolean = false;
                 let query = connection.query('Call sp_business_select(?)', id);
                 query.on('error', function (err) {
                     encounteredError = true;
-                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while reading business. ' + err.message));
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while reading business. ' + err.message);
+                    clError.stack = err.stack;
+                    return reject(clError);
                 });
                 query.on('result', function (row, index) {
                     if (index == 0) {
@@ -138,7 +153,7 @@ function getBusiness(id: number): Promise<model.BusinessModel> {
                             resolve(business);
                         }
                         else {
-                            return reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND,"Business for Id " + id + " not found"));
+                            return reject(new CLError.NotFound(CLError.ErrorCode.RESOURCE_NOT_FOUND,"Business for Id " + id + " not found."));
                         }
                     }
                 });

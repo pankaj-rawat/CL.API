@@ -1,16 +1,18 @@
 ﻿import * as model from "../models/RegistrationPlanModel";
 import {IRegistrationPlanRepository} from "../interfaces/IRegistrationPlanRepository";
-import {ErrorCode} from "../ErrorCode";
 import * as DB from "../DB";
+import * as CLError from "../CLError";
 
 export class RegistrationPlanRepository implements IRegistrationPlanRepository {
     find(id: number): Promise<model.RegistrationPlanModel> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<model.RegistrationPlanModel>(function (resolve, reject) {
             if (id != null) {
                 let registrationPlanModel: model.RegistrationPlanModel;
                 DB.get().getConnection(function (err, connection) {
                     if (err) {
-                        reject(err);
+                        let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
+                        clError.stack = err.stack;
+                        return reject(clError);
                     }
                     else {
                         let query = connection.query('SELECT * FROM registrationPlan where id=?', [id]);
@@ -56,16 +58,18 @@ export class RegistrationPlanRepository implements IRegistrationPlanRepository {
                 });
             }
             else {
-                reject(ErrorCode.REQUIRED_PARAM_MISSING);
+                reject(CLError.ErrorCode.REQUIRED_PARAM_MISSING);
             }
         });
     }
 
     getAll(): Promise<Array<model.RegistrationPlanModel>> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<Array<model.RegistrationPlanModel>>(function (resolve, reject) {
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
-                    reject(err);
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
+                    clError.stack = err.stack;
+                    return reject(clError);
                 }
                 else {
                     connection.query('SELECT * FROM registrationplan', function (err, results, fields) {

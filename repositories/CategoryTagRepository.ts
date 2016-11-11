@@ -2,26 +2,27 @@
 import model = require("../models/CategoryTagModel");
 import * as DB from "../DB";
 import {Logger} from "../Logger";
-import {ErrorCode} from "../ErrorCode";
 import * as CLError from '../CLError';
 
 export class CategoryRepository implements irepo.ICategoryRepository {
     find(id: number): Promise<model.CategoryModel> {
         return new Promise(function (resolve, reject) {
             if (id == null) {
-                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, "Parameter missing."));
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING));
             }
 
             let category: model.CategoryModel;
             DB.get().getConnection(function (err, connection) {
                 if (err) {
-                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
+                    clError.stack = err.stack;
+                    return reject(clError);
                 }
                 let encounteredError: boolean = false;
                 let query = connection.query('SELECT * FROM category WHERE id=?', id);
                 query.on('error', function (err) {
                     encounteredError = true;
-                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while getting category." + err.message));
+                    return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while getting category." + err.message));
                 });
                 query.on('result', function (row, index: number) {
                     if (index == 0) {
@@ -47,7 +48,7 @@ export class CategoryRepository implements irepo.ICategoryRepository {
                                 });
                         }
                         else {
-                            reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND, "Category not found for id " + id));
+                            reject(new CLError.NotFound(CLError.ErrorCode.RESOURCE_NOT_FOUND, "Category not found for id " + id));
                         }
                     }
                 });
@@ -56,17 +57,19 @@ export class CategoryRepository implements irepo.ICategoryRepository {
     }
 
     getAll(): Promise<Array<model.CategoryModel>> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<Array<model.CategoryModel>>(function (resolve, reject) {
             let categories: Array<model.CategoryModel> = new Array<model.CategoryModel>();
             DB.get().getConnection(function (err, connection) {
                 if (err) {
-                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, 'Database connection failed. ' + err.message));
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
+                    clError.stack = err.stack;
+                    return reject(clError);
                 }
                 let encounteredError: boolean = false;
                 let query = connection.query('SELECT * FROM category');
                 query.on('error', function (err) {
                     encounteredError = true;
-                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while reading categories. " + err.message));
+                    return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while reading categories. " + err.message));
                 });
                 query.on('result', function (row, index: number) {
                     if (index == 0) {
@@ -85,7 +88,7 @@ export class CategoryRepository implements irepo.ICategoryRepository {
                             resolve(categories);
                         }
                         else {
-                            reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND, 'No catgory found.'));
+                            reject(new CLError.NotFound(CLError.ErrorCode.RESOURCE_NOT_FOUND, 'No catgory found.'));
                         }
                     }
                 });
@@ -98,18 +101,20 @@ export class TagRepository implements irepo.ITagRepository {
     find(id: number): Promise<model.TagModel> {
         return new Promise(function (resolve, reject) {
             if (id == null) {
-                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING, 'Parameter missing.'));
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING));
             }
             let tag: model.TagModel;
             DB.get().getConnection(function (err, connection) {
                 if (err) {
-                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, "Database connection failed." + err.message));
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
+                    clError.stack = err.stack;
+                    return reject(clError);
                 }
                 let encounteredError: boolean = false;
                 let query = connection.query('select * from tag where id=?', id);
                 query.on('error', function (err) {
                     encounteredError = true;
-                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while reading tag. " + err.message));
+                    return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while reading tag. " + err.message));
                 });
                 query.on('result', function (row, index) {
                     if (index == 0) {
@@ -128,7 +133,7 @@ export class TagRepository implements irepo.ITagRepository {
                             resolve(tag);
                         }
                         else {
-                            reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND, "Tag not found for id " + id));
+                            reject(new CLError.NotFound(CLError.ErrorCode.RESOURCE_NOT_FOUND, "Tag not found for id " + id));
                         }
                     }
                 })
@@ -136,21 +141,23 @@ export class TagRepository implements irepo.ITagRepository {
         });
     }
     getTagsByCategory(categoryId: number): Promise<Array<model.TagModel>> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<Array<model.TagModel>>(function (resolve, reject) {
             if (categoryId == null) {
-                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING,"Parameter missing."));
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING));
             }
             let tags: Array<model.TagModel> = new Array<model.TagModel>();
             DB.get().getConnection(function (err, connection) {
                 if (err) {
-                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, "Database connection failed." + err.message));
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
+                    clError.stack = err.stack;
+                    return reject(clError);
                 }
 
                 let encounteredError: boolean = false;
                 let query = connection.query('select * from tag where idCategory=?', categoryId);
                 query.on('error', function (err) {
                     encounteredError = true;
-                    return reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, " Error occured while reading tags. " + err.message));
+                    return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, " Error occured while reading tags. " + err.message));
                 });
                 query.on('result', function (row, index) {
                     if (index == 0) {
@@ -170,7 +177,7 @@ export class TagRepository implements irepo.ITagRepository {
                             resolve(tags);
                         }
                         else {
-                            reject(new CLError.NotFound(ErrorCode.RESOURCE_NOT_FOUND, "Tags not founds."));
+                            reject(new CLError.NotFound(CLError.ErrorCode.RESOURCE_NOT_FOUND, "Tags not founds."));
                         }
                     }
                 })
@@ -181,11 +188,13 @@ export class TagRepository implements irepo.ITagRepository {
     create(tag: model.TagModel): Promise<model.TagModel> {
         return new Promise(function (resolve, reject) {
             if (tag == null) {
-                return reject(new CLError.BadRequest(ErrorCode.REQUIRED_PARAM_MISSING));
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING));
             }
             DB.get().getConnection(function (err, connection) {
                 if (err) {
-                    return reject(new CLError.DBError(ErrorCode.DB_CONNECTION_FAIL, "Database connection failed." + err.message));
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
+                    clError.stack = err.stack;
+                    return reject(clError);
                 }
                 //let post = {
                 //    value: tag.value,
@@ -195,7 +204,7 @@ export class TagRepository implements irepo.ITagRepository {
                 let query = connection.query('INSERT INTO tag SET value=?, idcategory=?,active=?', [tag.value, tag.idCategory, tag.active], function (err, result) {
                     if (err) {
                         connection.release();
-                        reject(new CLError.DBError(ErrorCode.DB_QUERY_EXECUTION_ERROR, " Error occured while saving tag." + err.message));
+                        reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, " Error occured while saving tag." + err.message));
                     }
                     else {
                         connection.release();
@@ -211,16 +220,16 @@ export class TagRepository implements irepo.ITagRepository {
             if (tag != null) {
             }
             else {
-                reject(ErrorCode.REQUIRED_PARAM_MISSING);
+                reject(CLError.ErrorCode.REQUIRED_PARAM_MISSING);
             }
         });
     }
     remove(id: number): Promise<number> {
-        return new Promise(function (resolve, reject) {
+        return new Promise<number>(function (resolve, reject) {
             if (id != null) {
             }
             else {
-                reject(ErrorCode.REQUIRED_PARAM_MISSING);
+                reject(CLError.ErrorCode.REQUIRED_PARAM_MISSING);
             }
         });
     }

@@ -19,5 +19,13 @@
   },
   "paging": {
     "limit": 100
+  },
+  "mail": {
+    "email": "citylocal.test@gmail.com",
+    "password": "citylocal123",
+    "smtp": "smtp.gmail.com"
+  },
+  "forget-pwd": {
+    "daysToLinkExp": 1
   }
 }
