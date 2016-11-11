@@ -109,6 +109,7 @@
     <TypeScriptCompile Include="routes\Users.ts" />
     <TypeScriptCompile Include="Scripts\typings\async\async.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\bcryptjs\bcryptjs.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\bluebird\bluebird-2.0.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\body-parser\body-parser.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\config\config.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\express-serve-static-core\express-serve-static-core.d.ts" />
@@ -146,6 +147,7 @@
     <Folder Include="Metadata\deploymentTemplates\" />
     <Folder Include="middlewares\" />
     <Folder Include="models\" />
+    <Folder Include="scripts\typings\bluebird\" />
     <Folder Include="scripts\typings\nodemailer-direct-transport\" />
     <Folder Include="scripts\typings\nodemailer-smtp-transport\" />
     <Folder Include="scripts\typings\nodemailer\" />
