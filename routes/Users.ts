@@ -54,7 +54,7 @@ userController.post('', function (req: express.Request, res: express.Response, n
         if (user.id != null) {
             res.setHeader('location', util.getPostedResourceLocation(req, user.id.toString()));
         }
-        res.send(201,clres);
+        res.status(201).send(clres);
     });
     userP.catch(function (err) {
         next(err);

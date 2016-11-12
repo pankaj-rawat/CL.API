@@ -55,7 +55,7 @@ tagController.post('', function (req: express.Request, res: express.Response, ne
             }
             let util: Util = new Util();
             res.setHeader('location',util.getPostedResourceLocation(req,result.id.toString()));
-            res.send(201,apiResponse);
+            res.status(201).send(apiResponse);
         })
         .catch(function (err) {
             next(err);
