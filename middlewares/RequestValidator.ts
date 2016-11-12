@@ -56,7 +56,7 @@ export class RequestValidator {
 }
 
 function validateUser(req: express.Request, res: express.Response, next: Function) {
-    let token = req.headers['clapi-user-access-Token'] || (req.query && req.query.user_access_token);
+    let token = req.headers['clapi-user-access-token'] || (req.query && req.query.user_access_token);
     let key = req.headers['clapi-user-key'] || (req.query && req.query.user_key) ;
     let location = req.headers['clapi-user-location'] || (req.query && req.query.user_location);
     let reqURL: string = req.url.toLowerCase();
