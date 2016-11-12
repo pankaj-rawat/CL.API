@@ -167,7 +167,11 @@ class UserRepository implements irepo.IUserRepository {
                 query.on('end', function (result) {
                     connection.release();
                     if (!encounteredError) {
-                        resolve(user);
+                        if (user.id == null) {
+                            reject(new CLError.CustomError("No data saved",'500',CLError.ErrorCode.RESOURCE_NOT_FOUND, 'Error occured while saving user.'));
+                        } else {
+                            resolve(user);
+                        }
                     }
                 });
             });
