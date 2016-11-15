@@ -120,21 +120,7 @@ function checkRoleAccess(roleIds: Array<number>, req: express.Request, next: Fun
     let hasAccess: boolean = false;
     let auth: AuthRepository = new AuthRepository();
     let reqURL: string = req.url.toLowerCase();
-    let action: def.Action;
-    switch (req.method) {
-        case 'GET':
-            action = def.Action.Read;
-            break;
-        case 'PUT':
-            action = def.Action.Modify;
-            break;
-        case 'POST':
-            action = def.Action.Add;
-            break;
-        case 'DELETE':
-            action = def.Action.Delete;
-            break;
-    }
+    let action: def.Action = getAction(req);    
     auth.getRoleAccessList()
         .then(function (result: Array<model.RoleAccess>) {
             for (let roleId of roleIds) {
@@ -158,4 +144,46 @@ function checkRoleAccess(roleIds: Array<number>, req: express.Request, next: Fun
         .catch(function (err) {
             return next(err);
         });
+}
+
+function getAction(req: express.Request): def.Action {
+    let action: def.Action;
+    let idUser = req.params.id || req.query.id;
+    let loggedin_user = req.headers['clapi-user-key'] || (req.query && req.query.user_key);
+
+    switch (req.method) {
+        case 'GET': //read
+            if (loggedin_user != null && loggedin_user == idUser) {
+                action = def.Action.Get_Self;
+            }
+            else {
+                action = def.Action.Get_Any;
+            }
+            break;
+        case 'PUT'://modify          
+            if (loggedin_user != null && loggedin_user == idUser){
+                action = def.Action.Put_Self;
+            }
+            else {
+                action = def.Action.Put_Any;
+            }
+            break;
+        case 'POST'://add/create
+            if (loggedin_user != null && loggedin_user == idUser) {
+                action = def.Action.Post_Self;
+            }
+            else {
+                action = def.Action.Post_Any;
+            }
+            break;
+        case 'DELETE':
+            if (loggedin_user != null && loggedin_user == idUser) {
+                action = def.Action.Delete_Self;
+            }
+            else {
+                action = def.Action.Delete_Any;
+            }
+            break;
+    }
+    return action;
 }

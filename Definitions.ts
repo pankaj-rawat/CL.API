@@ -8,16 +8,19 @@
 }
 export enum Role { 
     Guest = 1,
-    Admin = 2,
-    BussinessOwner = 3,
-    RegisteredUser = 4
+    Admin = 2,    
+    RegisteredUser = 3
 }
 
 export enum Action {
-    Read = 1,
-    Modify = 2,
-    Add = 4,
-    Delete=8
+    Get_Any = 1,
+    Get_Self = 2,
+    Put_Any = 4,
+    Put_Self = 8,
+    Post_Any = 16,
+    Post_Self = 32,
+    Delete_Any = 64,
+    Delete_Self= 128
 }
 
 export enum WeekDay {
