@@ -32,13 +32,7 @@ export class BusinessRepository implements irepo.IBusinessRepository {
                     query.on('error', function (err) {
                         encounteredError = true;
                         let clError: CLError.DBError; 
-                        if (err.code =="ER_DUP_ENTRY")
-                        {
-                            clError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while saving business. " + err.message);
-                        }
-                        else {
-                            clError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR);
-                        }
+                        clError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while saving business. " + err.message);
                         clError.stack = err.stack;
                         return reject(clError);
                     });

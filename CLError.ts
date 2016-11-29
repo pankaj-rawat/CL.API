@@ -44,7 +44,7 @@ function errorCodeMessage(errorCode: number,messageDetail:string): string {
             msg = "Authentication failed.";
             break;
         case ErrorCode.USER_NOT_AUTHORIZED:
-            msg = "User not authorized.";
+            msg = "Access denied. User not authorized.";
             break;
         case ErrorCode.USER_IDENTIFICATION_MISSING:
             msg = "Missing User information.";
