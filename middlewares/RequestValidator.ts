@@ -119,28 +119,17 @@ function validateUser(req: express.Request, res: express.Response, next: Functio
 function checkRoleAccess(roleIds: Array<number>, req: express.Request, next: Function) {
     let hasAccess: boolean = false;
     let auth: AuthRepository = new AuthRepository();
-    let reqURL: string = req.url.toLowerCase();
-    let action: def.Action;
-    switch (req.method) {
-        case 'GET':
-            action = def.Action.Read;
-            break;
-        case 'PUT':
-            action = def.Action.Modify;
-            break;
-        case 'POST':
-            action = def.Action.Add;
-            break;
-        case 'DELETE':
-            action = def.Action.Delete;
-            break;
+    let reqURL: string[] = req.url.toLowerCase().split('/');
+    let resourceRequested: string = "";
+    if (reqURL.length > 2) {
+        resourceRequested = reqURL[2];
     }
-    auth.getRoleAccessList()
+    auth.getResourceRoleAccess(resourceRequested,roleIds)
         .then(function (result: Array<model.RoleAccess>) {
             for (let roleId of roleIds) {
                 let aa: Array<model.RoleAccess> = new Array<model.RoleAccess>();
                 aa = result.filter(function (el) {
-                    return el.idRole == roleId && reqURL.includes(el.resource.toLocaleLowerCase()) && (el.actionMask & action) == action;
+                    return getAction (el.actionMask,req.method) 
                 });
                 if (aa.length > 0) {
                     hasAccess = true;
@@ -158,4 +147,17 @@ function checkRoleAccess(roleIds: Array<number>, req: express.Request, next: Fun
         .catch(function (err) {
             return next(err);
         });
+}
+
+function getAction(roleActionMask,reqAction): boolean {
+    switch (reqAction) {
+        case 'GET': //read
+            return ((roleActionMask & def.Action.Get_Any) == def.Action.Get_Any || (roleActionMask & def.Action.Get_Owner) == def.Action.Get_Owner);
+        case 'PUT'://modify          
+            return ((roleActionMask & def.Action.Put_Any) == def.Action.Put_Any || (roleActionMask & def.Action.Put_Owner) == def.Action.Put_Owner);
+        case 'POST'://add/create
+            return ((roleActionMask & def.Action.Post_Any) == def.Action.Post_Any || (roleActionMask & def.Action.Post_Owner) == def.Action.Post_Owner);
+        case 'DELETE':
+            return ((roleActionMask & def.Action.Delete_Any) == def.Action.Delete_Any|| (roleActionMask & def.Action.Delete_Owner) == def.Action.Delete_Owner);
+    }
 }

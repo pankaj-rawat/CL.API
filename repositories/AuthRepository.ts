@@ -233,7 +233,11 @@ export class AuthRepository implements irepo.IAuthRepository {
     }
 
     getRoleAccessList(): Promise<Array<model.RoleAccess>> {
-        return new Promise < Array<model.RoleAccess>>(function (resolve, reject) {
+        return this.getResourceRoleAccess('',[]);
+    }
+
+    getResourceRoleAccess(resourceName: string, roleIds: Array<number>): Promise<Array<model.RoleAccess>> {
+        return new Promise<Array<model.RoleAccess>>(function (resolve, reject) {
             //check for cache first.
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
@@ -241,9 +245,10 @@ export class AuthRepository implements irepo.IAuthRepository {
                     clError.stack = err.stack;
                     return reject(clError);
                 }
-                let roleAccesses:Array<model.RoleAccess>=new Array<model.RoleAccess>();
+                let roleAccesses: Array<model.RoleAccess> = new Array<model.RoleAccess>();
                 let encounteredError: boolean = false;
-                let query = connection.query('Call sp_select_roll_access()');
+                //TODO: need to implement caching
+                let query = connection.query('Call sp_select_roll_access(?,?)', [resourceName, roleIds.join(',')]);
                 query.on('error', function (err) {
                     encounteredError = true;
                     let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error while getting roles access.' + err.message);
@@ -255,7 +260,8 @@ export class AuthRepository implements irepo.IAuthRepository {
                         let roleAccess: model.RoleAccess = {
                             actionMask: row.actionMask,
                             idRole: row.idRole,
-                            resource:row.resource
+                            idResource: row.idResource,
+                            resource: row.resource
                         }
                         roleAccesses.push(roleAccess);
                     }
