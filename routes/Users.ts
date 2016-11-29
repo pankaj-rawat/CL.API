@@ -29,7 +29,7 @@ userController.get('/:id', function (req: express.Request, res: express.Response
     });
 });
 
-userController.post('', function (req: express.Request, res: express.Response, next: Function) {
+userController.post('/', function (req: express.Request, res: express.Response, next: Function) {
     let usrepo = new UserRepository();
     let userP: Promise<model.UserModel>;
     let user: model.UserModel;
@@ -61,7 +61,7 @@ userController.post('', function (req: express.Request, res: express.Response, n
     });
 });
 
-userController.get('', function (req: express.Request, res: express.Response, next: Function) {
+userController.get('/', function (req: express.Request, res: express.Response, next: Function) {
     let userRepo = new UserRepository();
     let clRes: APIResponse;
 
@@ -90,7 +90,7 @@ userController.get('', function (req: express.Request, res: express.Response, ne
         });
 });
 
-userController.put('/:id/password', function (req: express.Request, res: express.Response, next: Function) {
+userController.put('/:id/password/', function (req: express.Request, res: express.Response, next: Function) {
     let idUser = req.params.id;
     let location = req.headers['clapi-user-location'] || req.query.user_location;
     let newPwd: string = req.body.newPassword;

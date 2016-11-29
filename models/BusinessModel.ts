@@ -30,7 +30,8 @@ export interface BusinessModel {
     operationHours?: Array<BusinessOperationHourModel>
     categories?: Array<model.CategoryModel>
     tags?: Array<model.TagModel>,
-    contactNumbers?: Array<BusinessPhoneModel>
+    contactNumbers?: Array<BusinessPhoneModel>,
+    createdBy:Number
 }
 
 export interface BusinessPhoneModel {

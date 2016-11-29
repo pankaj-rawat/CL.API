@@ -6,6 +6,7 @@
 
 export interface RoleAccess {
     idRole: number,
+    idResource:number,
     resource: string,
     actionMask:number
 }

@@ -13,7 +13,11 @@ businessController.post('', function (req: express.Request, res: express.Respons
     let businessImages: Array<model.BusinessImageModel> = new Array<model.BusinessImageModel>();
     let businessOperationHours: Array<model.BusinessOperationHourModel> = new Array<model.BusinessOperationHourModel>();
     let tags: Array<CategoryTagModel.TagModel> = new Array<CategoryTagModel.TagModel>();
-
+    let createdBy:number = req.headers['clapi-user-key'] || (req.query && req.query.user_key)
+    if (createdBy == null) {
+        //request by guest
+        createdBy = 0;
+    }
     Logger.log.info("business registration requested from " + req.hostname);
     let businessRepo: BusinessRepository = new BusinessRepository();
     let apiResponse: APIResponse;
@@ -39,7 +43,8 @@ businessController.post('', function (req: express.Request, res: express.Respons
             , contactNumbers: getContactNumberList(JSON.parse(req.body.contactNumbers))
             , images: getImageList(JSON.parse(req.body.images))
             , operationHours: getOperationHourList(JSON.parse(req.body.operationHours))
-            , tags: getTagList(req.body.tags)
+                , tags: getTagList(req.body.tags)
+                , createdBy: createdBy
         }
 
             if (business != null) {
@@ -61,7 +66,6 @@ businessController.post('', function (req: express.Request, res: express.Respons
     catch (err) {
         next(err);
     }
-
 });
 
 businessController.get('/:id', function (req: express.Request, res: express.Response, next: Function) {
@@ -79,6 +83,7 @@ businessController.get('/:id', function (req: express.Request, res: express.Resp
             next(err);
         })
 });
+
 function getContactNumberList(phones: Array<model.BusinessPhoneModel>): Array<model.BusinessPhoneModel> {
     let contactNumbers: Array<model.BusinessPhoneModel> = new Array<model.BusinessPhoneModel>();
     //Do any massage if required  else removes these methods call in future.

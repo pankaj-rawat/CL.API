@@ -24,15 +24,15 @@ export class BusinessRepository implements irepo.IBusinessRepository {
                     let phones: string = getPhonesString(business.contactNumbers);
                     let tags: string = getTagsString(business.tags);
                     let operationhours: string = getOperationHourString(business.operationHours);
-                    let query = connection.query('Call sp_insert_business(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+                    let query = connection.query('Call sp_insert_business(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
                         , [business.name, business.contactName, business.contactTitle, business.idStatus, business.streetAddress,
                             business.postalCode, business.idCity, business.idState, business.idCountry, business.webURL, business.latitude,
                             business.longitude, business.description, business.commenceDate, images, phones, tags, operationhours,
-                            business.idRegistrationPlan, business.idUser]);
+                            business.idRegistrationPlan, business.idUser, business.createdBy]);
                     query.on('error', function (err) {
                         encounteredError = true;
                         let clError: CLError.DBError; 
-                        if (err.code =="ER_DUP_CODE")
+                        if (err.code =="ER_DUP_ENTRY")
                         {
                             clError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while saving business. " + err.message);
                         }
@@ -142,7 +142,8 @@ function getBusiness(id: number): Promise<model.BusinessModel> {
                             idRegistrationPlan: row.idRegistrationPlan,
                             registrationPlanExpiry: row.registrationPlanExpiry,
                             registrationPlanOptDate: row.registrationPlanOptDate,
-                            registrationPlanName: row.rpName
+                            registrationPlanName: row.rpName,
+                            createdBy:row.createdBy
                         };
                     }
                 });

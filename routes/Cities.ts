@@ -23,7 +23,7 @@ cityController.get('/:id', function (req: express.Request, res: express.Response
 
 
 
-cityController.get('', function (req: express.Request, res: express.Response, next) {
+cityController.get('/', function (req: express.Request, res: express.Response, next) {
     let clRes: APIResponse.APIResponse;
     let cscrepo = new CityRepository();
     let maxLimit: number = Number(process.env.PAGING_LIMIT || config.get("paging.limit"));

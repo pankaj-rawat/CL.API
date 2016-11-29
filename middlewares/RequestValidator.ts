@@ -119,14 +119,17 @@ function validateUser(req: express.Request, res: express.Response, next: Functio
 function checkRoleAccess(roleIds: Array<number>, req: express.Request, next: Function) {
     let hasAccess: boolean = false;
     let auth: AuthRepository = new AuthRepository();
-    let reqURL: string = req.url.toLowerCase();
-    let action: def.Action = getAction(req);    
-    auth.getRoleAccessList()
+    let reqURL: string[] = req.url.toLowerCase().split('/');
+    let resourceRequested: string = "";
+    if (reqURL.length > 2) {
+        resourceRequested = reqURL[2];
+    }
+    auth.getResourceRoleAccess(resourceRequested,roleIds)
         .then(function (result: Array<model.RoleAccess>) {
             for (let roleId of roleIds) {
                 let aa: Array<model.RoleAccess> = new Array<model.RoleAccess>();
                 aa = result.filter(function (el) {
-                    return el.idRole == roleId && reqURL.includes(el.resource.toLocaleLowerCase()) && (el.actionMask & action) == action;
+                    return getAction (el.actionMask,req.method) 
                 });
                 if (aa.length > 0) {
                     hasAccess = true;
@@ -146,44 +149,15 @@ function checkRoleAccess(roleIds: Array<number>, req: express.Request, next: Fun
         });
 }
 
-function getAction(req: express.Request): def.Action {
-    let action: def.Action;
-    let idUser = req.params.id || req.query.id;
-    let loggedin_user = req.headers['clapi-user-key'] || (req.query && req.query.user_key);
-
-    switch (req.method) {
+function getAction(roleActionMask,reqAction): boolean {
+    switch (reqAction) {
         case 'GET': //read
-            if (loggedin_user != null && loggedin_user == idUser) {
-                action = def.Action.Get_Self;
-            }
-            else {
-                action = def.Action.Get_Any;
-            }
-            break;
+            return ((roleActionMask & def.Action.Get_Any) == def.Action.Get_Any || (roleActionMask & def.Action.Get_Owner) == def.Action.Get_Owner);
         case 'PUT'://modify          
-            if (loggedin_user != null && loggedin_user == idUser){
-                action = def.Action.Put_Self;
-            }
-            else {
-                action = def.Action.Put_Any;
-            }
-            break;
+            return ((roleActionMask & def.Action.Put_Any) == def.Action.Put_Any || (roleActionMask & def.Action.Put_Owner) == def.Action.Put_Owner);
         case 'POST'://add/create
-            if (loggedin_user != null && loggedin_user == idUser) {
-                action = def.Action.Post_Self;
-            }
-            else {
-                action = def.Action.Post_Any;
-            }
-            break;
+            return ((roleActionMask & def.Action.Post_Any) == def.Action.Post_Any || (roleActionMask & def.Action.Post_Owner) == def.Action.Post_Owner);
         case 'DELETE':
-            if (loggedin_user != null && loggedin_user == idUser) {
-                action = def.Action.Delete_Self;
-            }
-            else {
-                action = def.Action.Delete_Any;
-            }
-            break;
+            return ((roleActionMask & def.Action.Delete_Any) == def.Action.Delete_Any|| (roleActionMask & def.Action.Delete_Owner) == def.Action.Delete_Owner);
     }
-    return action;
 }
