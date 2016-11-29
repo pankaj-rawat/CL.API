@@ -29,7 +29,7 @@ cityController.get('/', function (req: express.Request, res: express.Response, n
     let maxLimit: number = Number(process.env.PAGING_LIMIT || config.get("paging.limit"));
     let offset: number = Number(req.query.offset || 0);
     let limit: number = Number(req.query.limit || 0);
-    let idState: number = Number(req.query.idState || 0);
+    let idState: number = Number(req.query.idstate || 0);
 
     if (limit <= 0 || limit > maxLimit) {
         limit = maxLimit;
