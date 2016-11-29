@@ -39,15 +39,15 @@ export class RegistrationPlanRepository implements IRegistrationPlanRepository {
                                     else {
                                         registrationPlanModel.features = new Array<model.RegistrationPlanFeatureModel>();
                                         for (var i = 0; i < results.length; i++) {
-                                            let feature:model.RegistrationPlanFeatureModel={
+                                            let feature: model.RegistrationPlanFeatureModel = {
                                                 active: results[i].active,
                                                 createdOn: results[i].createdOn,
                                                 feature: results[i].feature,
                                                 id: results[i].id,
                                                 idRegistrationPlan: results[i].idRegistrationPlan,
                                                 lastUpdatedOn: results[i].lastUpdatedOn
-                                            };  
-                                            registrationPlanModel.features.push(feature);                                         
+                                            };
+                                            registrationPlanModel.features.push(feature);
                                         }
                                         resolve(registrationPlanModel);
                                     }
@@ -65,34 +65,49 @@ export class RegistrationPlanRepository implements IRegistrationPlanRepository {
 
     getAll(): Promise<Array<model.RegistrationPlanModel>> {
         return new Promise<Array<model.RegistrationPlanModel>>(function (resolve, reject) {
+            let registrationPlans: Array<model.RegistrationPlanModel> = new Array<model.RegistrationPlanModel>();
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
                     let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
                     clError.stack = err.stack;
                     return reject(clError);
                 }
-                else {
-                    connection.query('SELECT * FROM registrationplan', function (err, results, fields) {
-                        if (err) {
-                            reject(err);
+                let encounteredError: boolean = false;
+                let query = connection.query('SELECT * FROM registrationplan');
+                query.on('error', function (err) {
+                    encounteredError = true;
+                    return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while saving user. ' + err.message));
+                });
+                query.on('result', function (row, index) {
+                    try {
+                        if (index == 0) {
+                            let plan: model.RegistrationPlanModel = {
+                                id: row.id,
+                                detail: row.detail,
+                                name: row.name,
+                                createdOn: row.createdOn,
+                                price: row.price,
+                                lastUpdatedOn: row.lastUpdatedOn,
+                                active: row.active
+                            };                            
+                            registrationPlans.push(plan);
                         }
-                        else {
-                            let registrationPlans: Array<model.RegistrationPlanModel> = new Array<model.RegistrationPlanModel>();
-                            for (var i = 1; i < results.length; i++) {
-                                registrationPlans.push({
-                                    id: results[i].id,
-                                    detail: results[i].detail,
-                                    name: results[i].name,
-                                    createdOn: results[i].createdOn,
-                                    price: results[i].price,
-                                    lastUpdatedOn: results[i].lastUpdatedOn,
-                                    active: results[i].active
-                                });
-                            }
+                    }
+                    catch (ex) {
+                        encounteredError = true;
+                        return reject(new CLError.DBError(CLError.ErrorCode.DB_DATA_PARSE_ERROR));
+                    }
+                });
+                query.on('end', function (result) {
+                    connection.release();
+                    if (!encounteredError) {
+                        if (registrationPlans.length == 0) {
+                            reject(new CLError.NotFound(CLError.ErrorCode.RESOURCE_NOT_FOUND, 'Plans not found.'));
+                        } else {
                             resolve(registrationPlans);
                         }
-                    });
-                }
+                    }
+                });
             });
         });
     }

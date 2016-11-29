@@ -122,7 +122,7 @@ function checkRoleAccess(roleIds: Array<number>, req: express.Request, next: Fun
     let reqURL: string[] = req.url.toLowerCase().split('/');
     let resourceRequested: string = "";
     if (reqURL.length > 2) {
-        resourceRequested = reqURL[2];
+        resourceRequested = reqURL[2].split('?')[0]; //it m ight have querystring
     }
     auth.getResourceRoleAccess(resourceRequested,roleIds)
         .then(function (result: Array<model.RoleAccess>) {
