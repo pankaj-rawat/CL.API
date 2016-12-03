@@ -14,13 +14,13 @@ export enum Role {
 
 export enum Action {
     Get_Any = 1,
-    Get_Owner = 2,
+    Get_Owned = 2,
     Put_Any = 4,
-    Put_Owner = 8,
+    Put_Owned = 8,
     Post_Any = 16,
-    Post_Owner = 32,
+    Post_Owned = 32,
     Delete_Any = 64,
-    Delete_Owner= 128
+    Delete_Owned= 128
 }
 
 export enum WeekDay {

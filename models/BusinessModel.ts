@@ -27,11 +27,35 @@ export interface BusinessModel {
     registrationPlanExpiry?: Date,
     registrationPlanName?:string,
     images?: Array<BusinessImageModel>,
-    operationHours?: Array<BusinessOperationHourModel>
-    categories?: Array<model.CategoryModel>
+    operationHours?: Array<BusinessOperationHourModel>,
+    idCategory:number,
     tags?: Array<model.TagModel>,
     contactNumbers?: Array<BusinessPhoneModel>,
-    createdBy:Number
+    createdBy:number
+}
+
+export interface BusinessSearchResultModel {
+    id: number,    
+    name: string,    
+    idStatus: number,
+    status:string,
+    streetAddress: string,
+    postalCode: number,
+    idCity: number,
+    city: string,
+    idState: number,
+    state: string,
+    webURL?: string,
+    latitude?: number,
+    longitude?: number,
+    geo?: string,    
+    profileImgURL?: string,
+    idOffer?: number,
+    offer?: string,
+    rating: Number,
+    idCategory: number,
+    category: string,    
+    idUser?: number,
 }
 
 export interface BusinessPhoneModel {

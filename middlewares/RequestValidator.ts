@@ -152,12 +152,12 @@ function checkRoleAccess(roleIds: Array<number>, req: express.Request, next: Fun
 function getAction(roleActionMask,reqAction): boolean {
     switch (reqAction) {
         case 'GET': //read
-            return ((roleActionMask & def.Action.Get_Any) == def.Action.Get_Any || (roleActionMask & def.Action.Get_Owner) == def.Action.Get_Owner);
+            return ((roleActionMask & def.Action.Get_Any) == def.Action.Get_Any || (roleActionMask & def.Action.Get_Owned) == def.Action.Get_Owned);
         case 'PUT'://modify          
-            return ((roleActionMask & def.Action.Put_Any) == def.Action.Put_Any || (roleActionMask & def.Action.Put_Owner) == def.Action.Put_Owner);
+            return ((roleActionMask & def.Action.Put_Any) == def.Action.Put_Any || (roleActionMask & def.Action.Put_Owned) == def.Action.Put_Owned);
         case 'POST'://add/create
-            return ((roleActionMask & def.Action.Post_Any) == def.Action.Post_Any || (roleActionMask & def.Action.Post_Owner) == def.Action.Post_Owner);
+            return ((roleActionMask & def.Action.Post_Any) == def.Action.Post_Any || (roleActionMask & def.Action.Post_Owned) == def.Action.Post_Owned);
         case 'DELETE':
-            return ((roleActionMask & def.Action.Delete_Any) == def.Action.Delete_Any|| (roleActionMask & def.Action.Delete_Owner) == def.Action.Delete_Owner);
+            return ((roleActionMask & def.Action.Delete_Any) == def.Action.Delete_Any|| (roleActionMask & def.Action.Delete_Owned) == def.Action.Delete_Owned);
     }
 }
