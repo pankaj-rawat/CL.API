@@ -42,7 +42,7 @@ export class RequestValidator {
             let authrepo = new AuthRepository();
             authrepo.connect(decoded.id, undefined, decoded.client)
                 .then(function (result: model.AuthModel) {
-                    res.setHeader('CLAPI-Client-Token', result.token);
+                    res.setHeader('clapi-client-token', result.token);
                     validateUser(req, res, next);
                 })
                 .catch(function (error) {
@@ -94,8 +94,8 @@ function validateUser(req: express.Request, res: express.Response, next: Functio
                         newToken = auth.token;
                         newExpiry = auth.expires;
                     }
-                    res.setHeader("CLAPI-User-Access-Token", newToken);
-                    res.setHeader("CLAPI-User-Access-Token-Expiry", newExpiry.toJSON());
+                    res.setHeader("clapi-user-access-token", newToken);
+                    res.setHeader("clapi-user-access-token-expiry", newExpiry.toJSON());
                 }
                 catch (err) {
                     return next(err);

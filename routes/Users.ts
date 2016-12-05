@@ -52,7 +52,7 @@ userController.post('/', function (req: express.Request, res: express.Response, 
         };
         let util: Util = new Util();
         if (user.id != null) {
-            res.setHeader('location', util.getPostedResourceLocation(req, user.id.toString()));
+            res.setHeader('clapi-resource-location', util.getPostedResourceLocation(req, user.id.toString()));
         }
         res.status(201).send(clres);
     });
@@ -82,7 +82,7 @@ userController.get('/', function (req: express.Request, res: express.Response, n
             clRes = { data: result.data, isValid: true };
             var pageLink = util.getPageLinks(util.getURLstring(req), offset, limit, result.recordCount);
             res.links(pageLink);
-            res.setHeader('Content-Range', util.getHeaderContentRange(offset, limit, result.recordCount));
+            res.setHeader('content-range', util.getHeaderContentRange(offset, limit, result.recordCount));
             res.send(clRes);
         })
         .catch(function (err) {
@@ -122,8 +122,8 @@ userController.post('/login', function (req: express.Request, res: express.Respo
             userRepo.login(email, userLocation)
                 .then(function (user: model.UserModel) {
                     clRes = { data: user, isValid: true };
-                    res.setHeader('CLAPI-User-Access-Token', auth.token);
-                    res.setHeader('CLAPI-User-Access-Token-Expiry', auth.expires.toJSON());
+                    res.setHeader('clapi-user-access-token', auth.token);
+                    res.setHeader('clapi-user-access-token-expiry', auth.expires.toJSON());
                     res.send(clRes);
                     Logger.log.info('login process complete.');
                 })
