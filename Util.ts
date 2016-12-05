@@ -56,7 +56,13 @@ export class Util {
     }
 
     getHeaderContentRange(offset: number, limit: number, recordCount: number): string {
-        return offset.toString() + "-" + ((offset - 0) + (limit - 1)).toString() + "/" + recordCount; //subtracting with 0 just to convert into number again.;
+        let rangeFrom: number = offset+1;
+        let rangeTo: number = offset + limit;
+        let rangeOf: number = recordCount;
+        if (rangeTo > rangeOf) {
+            rangeTo = rangeOf;
+        }
+        return rangeFrom.toString() + "-" + rangeTo.toString() + "/" + rangeOf; //subtracting with 0 just to convert into number again.;
     }
 
     getPostedResourceLocation(req:express.Request,resourceId:string):string {

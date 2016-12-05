@@ -18,7 +18,7 @@
     "path": "/log"
   },
   "paging": {
-    "limit": 100
+    "limit": 5
   },
   "mail": {
     "email": "citylocal.test@gmail.com",

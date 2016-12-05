@@ -10,7 +10,7 @@ import {RepoResponse} from "../RepoResponse";
 
 let businessController = express.Router();
 
-businessController.post('', function (req: express.Request, res: express.Response, next: Function) {
+businessController.post('/', function (req: express.Request, res: express.Response, next: Function) {
     let contactNumbers: Array<model.BusinessPhoneModel> = new Array<model.BusinessPhoneModel>();
     let businessImages: Array<model.BusinessImageModel> = new Array<model.BusinessImageModel>();
     let businessOperationHours: Array<model.BusinessOperationHourModel> = new Array<model.BusinessOperationHourModel>();
@@ -71,7 +71,7 @@ businessController.post('', function (req: express.Request, res: express.Respons
     }
 });
 
-businessController.get('search/', function (req: express.Request, res: express.Response, next: Function) {
+businessController.get('/', function (req: express.Request, res: express.Response, next: Function) {
     let businessRepo: BusinessRepository = new BusinessRepository();
     let clRes: APIResponse;
 
@@ -82,6 +82,14 @@ businessController.get('search/', function (req: express.Request, res: express.R
     let searchText: string = req.query.searchText || req.body.searchText || '';
     let latitude: number = req.query.lat || req.body.lat;
     let longitude: number = req.query.long || req.body.long;
+
+    if (limit <= 0 || limit > maxLimit) {
+        limit = maxLimit;
+    }
+    if (offset < 0) {
+        offset = 0;
+    }
+
     let repoResponse: Promise<RepoResponse>;
 
     if (idCity != 0) {
