@@ -20,6 +20,7 @@ export enum ErrorCode {
     RESOURCE_NOT_FOUND = 10017,
     INVALID_PARAM_VALUE = 10018,
     DB_DUPLICATE_ENTRY = 10019,  
+    CLIENT_AUTO_AUTH_FAILED = 10020
 }
 
 function errorCodeMessage(errorCode: number,messageDetail:string): string {
@@ -81,6 +82,9 @@ function errorCodeMessage(errorCode: number,messageDetail:string): string {
             break;
         case ErrorCode.DB_DUPLICATE_ENTRY:
             msg = "Duplicate entry.";
+            break; 
+        case ErrorCode.CLIENT_AUTO_AUTH_FAILED:
+            msg = "Client auto authorization failed.";
             break;       
         default:
             msg = errorCode.toString();
