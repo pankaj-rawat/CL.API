@@ -41,7 +41,7 @@ stateController.get('', function (req: express.Request, res: express.Response, n
             clRes = { data: result.data, isValid: true };
             var pageLink = util.getPageLinks(util.getURLstring(req), offset, limit, result.recordCount);
             res.links(pageLink);            
-            res.setHeader('Content-Range', util.getHeaderContentRange(offset,limit,result.recordCount));
+            res.setHeader('content-range', util.getHeaderContentRange(offset,limit,result.recordCount));
             res.send(clRes);
         })
         .catch(function (err) {

@@ -54,7 +54,7 @@ tagController.post('', function (req: express.Request, res: express.Response, ne
                 isValid: true
             }
             let util: Util = new Util();
-            res.setHeader('location',util.getPostedResourceLocation(req,result.id.toString()));
+            res.setHeader('clapi-resource-location',util.getPostedResourceLocation(req,result.id.toString()));
             res.status(201).send(apiResponse);
         })
         .catch(function (err) {

@@ -50,21 +50,21 @@ businessController.post('/', function (req: express.Request, res: express.Respon
             , idCategory: req.body.idCategory
         }
 
-        if (business != null) {
-            businessRepo.register(business)
-                .then(function (result) {
-                    apiResponse = {
-                        data: result,
-                        isValid: true
-                    };
-                    let util: Util = new Util();
-                    res.setHeader('location', util.getPostedResourceLocation(req, result.id.toString()));
-                    res.status(201).send(apiResponse);
-                })
-                .catch(function (err) {
-                    next(err);
-                });
-        }
+            if (business != null) {
+                businessRepo.register(business)
+                    .then(function (result) {
+                        apiResponse = {
+                            data: result,
+                            isValid: true
+                        };
+                        let util: Util = new Util();
+                        res.setHeader('clapi-resource-location', util.getPostedResourceLocation(req, result.id.toString()));
+                        res.status(201).send(apiResponse);
+                    })
+                    .catch(function (err) {
+                        next(err);
+                    });
+            }
     }
     catch (err) {
         next(err);
