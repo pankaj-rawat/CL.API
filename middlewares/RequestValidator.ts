@@ -57,7 +57,7 @@ export class RequestValidator {
 
 function validateUser(req: express.Request, res: express.Response, next: Function) {
     let token = req.headers['clapi-user-access-token'] || (req.query && req.query.user_access_token);
-    let key = req.headers['clapi-user-key'] || (req.query && req.query.user_key) ;
+    let key = req.headers['clapi-user-key'] || (req.query && req.query.user_key);
     let location = req.headers['clapi-user-location'] || (req.query && req.query.user_location);
     let reqURL: string = req.url.toLowerCase();
 
@@ -108,7 +108,7 @@ function validateUser(req: express.Request, res: express.Response, next: Functio
                     })
                     .catch(function (err) {
                         return next(err);
-                    });                
+                    });
             })
             .catch(function (err) {
                 return next(err);
@@ -117,39 +117,27 @@ function validateUser(req: express.Request, res: express.Response, next: Functio
 }
 
 function checkRoleAccess(roleIds: Array<number>, req: express.Request, next: Function) {
-    let hasAccess: boolean = false;
     let auth: AuthRepository = new AuthRepository();
     let reqURL: string[] = req.url.toLowerCase().split('/');
     let resourceRequested: string = "";
     if (reqURL.length > 2) {
-        resourceRequested = reqURL[2].split('?')[0]; //it m ight have querystring
+        resourceRequested = reqURL[2].split('?')[0]; //it might have querystring
     }
-    auth.getResourceRoleAccess(resourceRequested,roleIds)
+    auth.getResourceRoleAccess(resourceRequested, roleIds)
         .then(function (result: Array<model.RoleAccess>) {
-            for (let roleId of roleIds) {
-                let aa: Array<model.RoleAccess> = new Array<model.RoleAccess>();
-                aa = result.filter(function (el) {
-                    return getAction (el.actionMask,req.method) 
-                });
-                if (aa.length > 0) {
-                    hasAccess = true;
-                    break;
+            for (let roleAccess of result) {
+                if (getAction(roleAccess.actionMask, req.method)) {
+                    return next();
                 }
             }
-         
-            if (hasAccess) {
-                return next();
-            }
-            else {
-                return next(new CLError.Forbidden(CLError.ErrorCode.USER_NOT_AUTHORIZED));
-            }
+            return next(new CLError.Forbidden(CLError.ErrorCode.USER_NOT_AUTHORIZED));
         })
         .catch(function (err) {
             return next(err);
         });
 }
 
-function getAction(roleActionMask,reqAction): boolean {
+function getAction(roleActionMask, reqAction): boolean {
     switch (reqAction) {
         case 'GET': //read
             return ((roleActionMask & def.Action.Get_Any) == def.Action.Get_Any || (roleActionMask & def.Action.Get_Owned) == def.Action.Get_Owned);
@@ -158,6 +146,6 @@ function getAction(roleActionMask,reqAction): boolean {
         case 'POST'://add/create
             return ((roleActionMask & def.Action.Post_Any) == def.Action.Post_Any || (roleActionMask & def.Action.Post_Owned) == def.Action.Post_Owned);
         case 'DELETE':
-            return ((roleActionMask & def.Action.Delete_Any) == def.Action.Delete_Any|| (roleActionMask & def.Action.Delete_Owned) == def.Action.Delete_Owned);
+            return ((roleActionMask & def.Action.Delete_Any) == def.Action.Delete_Any || (roleActionMask & def.Action.Delete_Owned) == def.Action.Delete_Owned);
     }
 }
