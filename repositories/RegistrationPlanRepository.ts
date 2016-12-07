@@ -15,7 +15,7 @@ export class RegistrationPlanRepository implements IRegistrationPlanRepository {
                         return reject(clError);
                     }
                     else {
-                        let query = connection.query('SELECT * FROM registrationPlan where id=?', [id]);
+                        let query = connection.query('SELECT * FROM registration_plan where id=?', [id]);
                         query.on('error', function (err) {
                             reject(err);
                         });
@@ -32,7 +32,7 @@ export class RegistrationPlanRepository implements IRegistrationPlanRepository {
                         });
                         query.on('end', function () {
                             if (registrationPlanModel != null) {
-                                connection.query('SELECT * FROM registrationplanfeature WHERE idRegistrationPlan=?', [registrationPlanModel.id], function (err, results, fields) {
+                                connection.query('SELECT * FROM registration_plan_feature WHERE idRegistrationPlan=?', [registrationPlanModel.id], function (err, results, fields) {
                                     if (err) {
                                         reject(err);
                                     }
@@ -73,7 +73,7 @@ export class RegistrationPlanRepository implements IRegistrationPlanRepository {
                     return reject(clError);
                 }
                 let encounteredError: boolean = false;
-                let query = connection.query('SELECT * FROM registrationplan');
+                let query = connection.query('SELECT * FROM registration_plan');
                 query.on('error', function (err) {
                     encounteredError = true;
                     return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while saving user. ' + err.message));

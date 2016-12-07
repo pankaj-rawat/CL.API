@@ -143,7 +143,7 @@ class UserRepository implements irepo.IUserRepository {
                 }
 
                 let encounteredError: boolean = false;
-                let query = connection.query('CALL sp_user_insert(?,?,?,?,?,?,?)',
+                let query = connection.query('CALL sp_insert_user(?,?,?,?,?,?,?)',
                     [user.email, getHashedPwd(user.password), user.phoneLandLine, user.extension, user.phoneCell, user.idCity, user.subscriptionOptIn]);
 
                 query.on('error', function (err) {

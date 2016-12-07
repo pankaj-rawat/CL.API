@@ -95,7 +95,7 @@ export class AuthRepository implements irepo.IAuthRepository {
                 }
 
                 let encounteredError: boolean = false;
-                let query = connection.query("CALL sp_api_client_select(?,?)", [clientName, clientId]);
+                let query = connection.query("CALL sp_select_api_client(?,?)", [clientName, clientId]);
                 query.on('error', function (err) {
                     encounteredError = true;
                     let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, err.message);
