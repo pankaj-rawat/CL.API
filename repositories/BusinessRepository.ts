@@ -1,4 +1,5 @@
 ﻿import irepo = require("../interfaces/IBusinessRepository");
+import {RepoResponse } from "../RepoResponse";
 import model = require("../models/BusinessModel");
 import * as CategoryTagModel from "../models/CategoryTagModel";
 import * as DB from "../DB";
@@ -24,11 +25,11 @@ export class BusinessRepository implements irepo.IBusinessRepository {
                     let phones: string = getPhonesString(business.contactNumbers);
                     let tags: string = getTagsString(business.tags);
                     let operationhours: string = getOperationHourString(business.operationHours);
-                    let query = connection.query('Call sp_insert_business(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+                    let query = connection.query('Call sp_insert_business(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
                         , [business.name, business.contactName, business.contactTitle, business.idStatus, business.streetAddress,
                             business.postalCode, business.idCity, business.idState, business.idCountry, business.webURL, business.latitude,
                             business.longitude, business.description, business.commenceDate, images, phones, tags, operationhours,
-                            business.idRegistrationPlan, business.idUser, business.createdBy]);
+                            business.idRegistrationPlan, business.idUser, business.createdBy,business.idCategory]);
                     query.on('error', function (err) {
                         encounteredError = true;
                         let clError: CLError.DBError; 
@@ -72,6 +73,15 @@ export class BusinessRepository implements irepo.IBusinessRepository {
                 });
         });
     };
+
+    searchByLatLong(offset: number, limit: number, searchText: string, latitude: Number, longitude: Number): Promise<RepoResponse> {
+        return searchBusiness(offset, limit, searchText,latitude,longitude, 0);
+    }; 
+
+    searchByCity(offset: number, limit: number, searchText: string,idCity:number): Promise<RepoResponse> {
+        return searchBusiness(offset, limit, searchText, 0,0,idCity);
+    }; 
+
     update(business: model.BusinessModel): Promise<model.BusinessModel> {
         return new Promise<model.BusinessModel>(function (resolve, reject) {
         });
@@ -90,6 +100,75 @@ export class BusinessRepository implements irepo.IBusinessRepository {
     };
 }
 
+function searchBusiness(offset: number, limit: number, searchText: string, latitude: Number, longitude: Number, idCity: number): Promise<RepoResponse> {
+    return new Promise<RepoResponse>(function (resolve, reject) {
+        if (offset < 0) {
+            return reject(new CLError.BadRequest(CLError.ErrorCode.INVALID_PARAM_VALUE, "Invalid value supplied for offset\limit params."));
+        }
+        DB.get().getConnection(function (err, connection) {
+            if (err) {
+                return reject(new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL));
+            }
+            let businesses: Array<model.BusinessSearchResultModel> = new Array<model.BusinessSearchResultModel>();
+            let encounteredError: boolean = false;
+            let recCount: number = 0;
+            let query = connection.query('SET @rCount=0; CAll sp_search_business(@rCount,?,?,?,?,?,?); select @rCount rcount;', [offset, limit, idCity,latitude,longitude,searchText]);
+            query.on('error', function (err) {
+                encounteredError = true;
+                return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while searching businesses." + err.message));
+            });
+            query.on('result', function (row, index) {
+                if (index == 1) {
+                    let business: model.BusinessSearchResultModel =
+                        {
+                            id: row.id
+                            , name: row.name
+                            , streetAddress: row.streetAddress
+                            , idCity: row.idCity
+                            , city: row.city
+                            , idState: row.idState
+                            , state: row.state
+                            , postalCode: row.postalCode
+                            , webURL: row.webURL
+                            , latitude: row.latitude
+                            , longitude: row.longitude
+                            , geo: row.geo
+                            , idStatus: row.idStatus
+                            , status: row.status
+                            , profileImgURL: row.imgURL
+                            , idOffer: row.idOffer
+                            , offer: row.offer
+                            , rating: row.rating
+                            , idCategory: row.idCategory
+                            , category: row.category
+                            ,idUser:row.idUser                            
+                        };
+                    businesses.push(business);
+                }
+                if (index == 3) {
+                    recCount = row.rcount;
+                }
+            });
+            query.on('end', function () {
+                connection.release();
+                if (!encounteredError) {
+                    if (businesses.length > 0) {
+                        let res: RepoResponse = {
+                            data: businesses
+                            , recordCount: recCount
+                        };
+                        resolve(res);
+                    }
+                    else {
+                        reject(new CLError.NotFound(CLError.ErrorCode.RESOURCE_NOT_FOUND, "No record found."));
+                    }
+                }
+            });
+        });      
+    });
+}
+
+
 function getBusiness(id: number): Promise<model.BusinessModel> {
     return new Promise<model.BusinessModel>(function (resolve, reject) {
         let business: model.BusinessModel;
@@ -101,7 +180,7 @@ function getBusiness(id: number): Promise<model.BusinessModel> {
             }
             else {
                 let encounteredError: boolean = false;
-                let query = connection.query('Call sp_business_select(?)', id);
+                let query = connection.query('Call sp_select_business(?)', id);
                 query.on('error', function (err) {
                     encounteredError = true;
                     let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while reading business. ' + err.message);
@@ -137,7 +216,8 @@ function getBusiness(id: number): Promise<model.BusinessModel> {
                             registrationPlanExpiry: row.registrationPlanExpiry,
                             registrationPlanOptDate: row.registrationPlanOptDate,
                             registrationPlanName: row.rpName,
-                            createdBy:row.createdBy
+                            createdBy: row.createdBy,
+                            idCategory:row.idCategory
                         };
                     }
                 });

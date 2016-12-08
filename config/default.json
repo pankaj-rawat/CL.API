@@ -18,11 +18,11 @@
     "path": "/log"
   },
   "paging": {
-    "limit": 100
+    "limit": 5
   },
   "mail": {
     "email": "citylocal.test@gmail.com",
-    "password": "citylocal123",
+    "password": "Citylocal@123",
     "smtp": "smtp.gmail.com"
   },
   "forget-pwd": {

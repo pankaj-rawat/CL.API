@@ -67,7 +67,7 @@ export class AuthRepository implements irepo.IAuthRepository {
                             resolve(auth);
                         }
                         else {
-                            return reject(new CLError.Unauthorized(CLError.ErrorCode.USER_NOT_AUTHENTICATED));
+                            return reject(new CLError.Unauthorized(CLError.ErrorCode.USER_AUTHENTICATION_FAILED));
                         }
                     }
                 });
@@ -95,7 +95,7 @@ export class AuthRepository implements irepo.IAuthRepository {
                 }
 
                 let encounteredError: boolean = false;
-                let query = connection.query("CALL sp_api_client_select(?,?)", [clientName, clientId]);
+                let query = connection.query("CALL sp_select_api_client(?,?)", [clientName, clientId]);
                 query.on('error', function (err) {
                     encounteredError = true;
                     let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, err.message);
@@ -127,12 +127,15 @@ export class AuthRepository implements irepo.IAuthRepository {
                 query.on('end', function () {
                     connection.release();
                     if (!encounteredError) {
-                        if (id == null || id == 0) {
+                        if (id == null) {
+                            //>0 means auto refresh 
+                            if (clientId > 0) {
+                                return reject(new CLError.Unauthorized(CLError.ErrorCode.CLIENT_AUTO_AUTH_FAILED));
+                            }
                             return reject(new CLError.Unauthorized(CLError.ErrorCode.CLIENT_NOT_FOUND));
                         }
-
                         //TODO: need to save apiKey in encrypted form as we are doing in user password.
-                        if (ck != clientKey) {
+                        if (ck != clientKey) {                            
                             return reject(new CLError.Unauthorized(CLError.ErrorCode.INVALID_CLIENT_KEY));
                         }
                         if (blocked) {

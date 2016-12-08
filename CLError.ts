@@ -6,7 +6,7 @@ export enum ErrorCode {
     DB_QUERY_EXECUTION_ERROR = 10003,
     DB_DATA_PARSE_ERROR = 10004,
     USER_NOT_FOUND = 10005,
-    USER_NOT_AUTHENTICATED = 10006,
+    USER_AUTHENTICATION_FAILED = 10006,
     USER_NOT_AUTHORIZED = 10007,
     USER_IDENTIFICATION_MISSING = 10008,
     USER_TOKEN_EXPIRED = 10009,
@@ -20,6 +20,8 @@ export enum ErrorCode {
     RESOURCE_NOT_FOUND = 10017,
     INVALID_PARAM_VALUE = 10018,
     DB_DUPLICATE_ENTRY = 10019,  
+    CLIENT_AUTO_AUTH_FAILED = 10020,
+    PASSWORD_RESET_LINK_EXPIRED=10021
 }
 
 function errorCodeMessage(errorCode: number,messageDetail:string): string {
@@ -40,8 +42,8 @@ function errorCodeMessage(errorCode: number,messageDetail:string): string {
         case ErrorCode.USER_NOT_FOUND:
             msg = "User not found.";
             break; 
-        case ErrorCode.USER_NOT_AUTHENTICATED:
-            msg = "Authentication failed.";
+        case ErrorCode.USER_AUTHENTICATION_FAILED:
+            msg = "Incorrect credentials. Authentication failed.";
             break;
         case ErrorCode.USER_NOT_AUTHORIZED:
             msg = "Access denied. User not authorized.";
@@ -81,6 +83,12 @@ function errorCodeMessage(errorCode: number,messageDetail:string): string {
             break;
         case ErrorCode.DB_DUPLICATE_ENTRY:
             msg = "Duplicate entry.";
+            break; 
+        case ErrorCode.CLIENT_AUTO_AUTH_FAILED:
+            msg = "Client auto authorization failed.";
+            break;    
+        case ErrorCode.PASSWORD_RESET_LINK_EXPIRED:
+            msg = "Password reset link expired.";
             break;       
         default:
             msg = errorCode.toString();
