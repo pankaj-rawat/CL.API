@@ -8,7 +8,7 @@ import {CLMailer} from "../CLMailer";
 import jwt = require('jwt-simple');
 import config = require('config');
 import bcrypt = require('bcryptjs');
-import {CLConstants} from "../clconstants";
+import {CLConstants} from "../CLConstants";
 
 
 class UserRepository implements irepo.IUserRepository {
