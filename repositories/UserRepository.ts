@@ -8,6 +8,8 @@ import {CLMailer} from "../CLMailer";
 import jwt = require('jwt-simple');
 import config = require('config');
 import bcrypt = require('bcryptjs');
+import {CLConstants} from "../clconstants";
+
 
 class UserRepository implements irepo.IUserRepository {
 
@@ -41,7 +43,7 @@ class UserRepository implements irepo.IUserRepository {
                     connection.release();
                     if (!encounteredError) {
                         if (userId != null) {
-                            getUser(0, 1, userId)
+                            getUser(0, 1, userId,CLConstants.SYSTEM_USER)
                                 .then(function (result: RepoResponse) {
                                     resolve(result.data[0]);
                                 })
@@ -98,12 +100,12 @@ class UserRepository implements irepo.IUserRepository {
         });
     }
 
-    find(id: number): Promise<model.UserModel> {
+    get(id: number,requestedBy:number): Promise<model.UserModel> {
         return new Promise<model.UserModel>(function (resolve, reject) {
             if (id == null) {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'User id not supplied.'));
             }
-            getUser(0, 1, id)
+            getUser(0, 1, requestedBy, id)
                 .then(function (result: RepoResponse) {
                     resolve(result.data[0]);
                 })
@@ -113,8 +115,8 @@ class UserRepository implements irepo.IUserRepository {
         });
     }
 
-    getAll(offset: number, limit: number, idUser?: number): Promise<RepoResponse> {
-        return getUser(offset, limit, idUser);
+    getAll(offset: number, limit: number,requestedBy:number, idUser?: number): Promise<RepoResponse> {
+        return getUser(offset, limit,requestedBy, idUser);
     }
 
     create(user: model.UserModel): Promise<model.UserModel> {
@@ -178,7 +180,7 @@ class UserRepository implements irepo.IUserRepository {
         });
     }
 
-    update(user: model.UserModel): Promise<model.UserModel> {
+    update(user: model.UserModel,requestedBy:number): Promise<model.UserModel> {
         return new Promise<model.UserModel>(function (resolve, reject) {
             let user: model.UserModel;
             DB.get().getConnection(function (err, connection) {
@@ -208,7 +210,7 @@ class UserRepository implements irepo.IUserRepository {
         });
     }
 
-    remove(id: number): Promise<number> {
+    remove(id: number, requestedBy: number): Promise<number> {
         return new Promise<number>(function (resolve, reject) {
         });
     }
@@ -221,12 +223,15 @@ class UserRepository implements irepo.IUserRepository {
             if (location == null || location == '') {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, "location missing."));
             }
+            if (resetURL == null || resetURL == '') {
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, "resetURL missing."));
+            }
 
             let dateObj = new Date();
             let daysToLinkExpiry: number = process.env.FORGET_PWD_DAYS_TO_LINK_EXP || config.get("forget-pwd.daysToLinkExp");
             let linkExpiryDate = new Date(new Date().getTime() + (daysToLinkExpiry * 24 * 60 * 60 * 1000));
 
-            getUser(0, 1, null, email)
+            getUser(0, 1, CLConstants.SYSTEM_USER, null, email)
                 .then(function (result: RepoResponse) {
                     let idUser: number = result.data[0].id;                   
                     let token = jwt.encode({
@@ -261,7 +266,7 @@ class UserRepository implements irepo.IUserRepository {
         });
     }
 
-    updatetPassword(idUser: number, location: string, newPwd: string): Promise<boolean> {
+    updatePassword(idUser: number, location: string, newPwd: string, requestedBy?: number, fpToken?: string): Promise<boolean> {
         return new Promise<boolean>(function (resolve, reject) {
             let affectedRow:number;
             if (idUser == null) {
@@ -273,6 +278,30 @@ class UserRepository implements irepo.IUserRepository {
             if (newPwd == null || newPwd == '') {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, " Password missing."));
             }
+
+            if ((requestedBy == null || requestedBy <= 0) && (fpToken == null || fpToken=='')) {
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, " Missing required parameters."));
+            }
+
+            //check for valid reset token.
+            if (fpToken != null) {
+               try {
+                    let decoded = jwt.decode(fpToken, String(process.env.TOKEN_KEY || config.get("token.key")));
+                    if (decoded.id != idUser) {
+                        return reject(new CLError.BadRequest(CLError.ErrorCode.INVALID_PARAM_VALUE, "token not associated with the User."));
+                    }
+                    else {
+                        requestedBy = decoded.id; 
+                    }
+                    if (new Date(decoded.exp).getTime() <= (new Date()).getTime()) {
+                        return reject(new CLError.BadRequest(CLError.ErrorCode.INVALID_PARAM_VALUE, "token expires."));
+                    }                        
+                }
+                catch (ex) {                 
+                    return reject(new CLError.BadRequest(CLError.ErrorCode.INVALID_PARAM_VALUE));
+                }
+            }
+
             //'sp_update_user_password' need to create this sp
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
@@ -281,7 +310,7 @@ class UserRepository implements irepo.IUserRepository {
                     return reject(clError);
                 }
                 let encounteredError: boolean = false;
-                let query = connection.query('CAll sp_update_user_password(?,?,?);', [idUser, getHashedPwd(newPwd), location]);
+                let query = connection.query('CAll sp_update_user_password(?,?,?,?);', [idUser, getHashedPwd(newPwd), location, requestedBy]);
                 query.on('error', function (err) {
                     encounteredError = true;
                     return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while resetting pwd. ' + err.message));
@@ -308,13 +337,16 @@ class UserRepository implements irepo.IUserRepository {
 
 };
 
-function getUser(offset: number, limit: number, idUser?: number,email?:string): Promise<RepoResponse> {
+function getUser(offset: number, limit: number,requestBy:number, idUser?: number,email?:string): Promise<RepoResponse> {
     return new Promise(function (resolve, reject) {
         let users: Array<model.UserModel> = new Array<model.UserModel>();
         if (offset==null || offset < 0 || limit==null || limit==0) {
             return reject(new CLError.BadRequest(CLError.ErrorCode.INVALID_PARAM_VALUE, "Invalid value supplied for offset\limit params."));
         }
 
+        if (requestBy == null) {
+            return reject(new CLError.BadRequest(CLError.ErrorCode.INVALID_PARAM_VALUE, "Specify requestor."));
+        }
         DB.get().getConnection(function (err, connection) {
             if (err != null) {
                 let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
@@ -324,7 +356,7 @@ function getUser(offset: number, limit: number, idUser?: number,email?:string): 
 
             let encounteredError: boolean = false;
             let recCount: number = 0;
-            let query = connection.query('SET @rCount=0; CAll sp_select_user(@rCount,?,?,?,?); select @rCount rcount;', [offset, limit, idUser,email]);
+            let query = connection.query('SET @rCount=0; CAll sp_select_user(@rCount,?,?,?,?,?); select @rCount rcount;', [offset, limit, idUser, email, requestBy]);
             query.on('error', function (err) {
                 encounteredError = true;
                 return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while getting user. ' + err.message));

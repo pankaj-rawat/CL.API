@@ -21,6 +21,7 @@ export class RequestValidator {
 
         let reqURL: string = req.url.toLowerCase();
         if ((reqURL.indexOf('auth/connect') >= 0)) return next(); // public route
+        if ((reqURL.indexOf('/password/reset') >= 0)) return next(); // public route
 
         let clientToken = req.headers['clapi-client-token'] || (req.query && req.query.client_token);
         let clientKey = req.headers['clapi-client-key'] || (req.query && req.query.client_key);
