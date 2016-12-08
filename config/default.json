@@ -22,7 +22,7 @@
   },
   "mail": {
     "email": "citylocal.test@gmail.com",
-    "password": "citylocal123",
+    "password": "Citylocal@123",
     "smtp": "smtp.gmail.com"
   },
   "forget-pwd": {

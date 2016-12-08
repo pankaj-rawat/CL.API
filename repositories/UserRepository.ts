@@ -26,7 +26,7 @@ class UserRepository implements irepo.IUserRepository {
                     let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
                     clError.stack = err.stack;
                     return reject(clError);
-                }
+                } 
                 let encounteredError: boolean = false;
                 let userId: number;
                 let query = connection.query('Call sp_insert_user_online(?,?)', [email, userLocation]);
@@ -43,7 +43,7 @@ class UserRepository implements irepo.IUserRepository {
                     connection.release();
                     if (!encounteredError) {
                         if (userId != null) {
-                            getUser(0, 1, userId,CLConstants.SYSTEM_USER)
+                            getUser(0, 1, CLConstants.SYSTEM_USER,userId)
                                 .then(function (result: RepoResponse) {
                                     resolve(result.data[0]);
                                 })
@@ -115,8 +115,8 @@ class UserRepository implements irepo.IUserRepository {
         });
     }
 
-    getAll(offset: number, limit: number,requestedBy:number, idUser?: number): Promise<RepoResponse> {
-        return getUser(offset, limit,requestedBy, idUser);
+    getAll(offset: number, limit: number,requestedBy:number): Promise<RepoResponse> {
+        return getUser(offset, limit,requestedBy);
     }
 
     create(user: model.UserModel): Promise<model.UserModel> {
@@ -294,7 +294,7 @@ class UserRepository implements irepo.IUserRepository {
                         requestedBy = decoded.id; 
                     }
                     if (new Date(decoded.exp).getTime() <= (new Date()).getTime()) {
-                        return reject(new CLError.BadRequest(CLError.ErrorCode.INVALID_PARAM_VALUE, "token expires."));
+                        return reject(new CLError.BadRequest(CLError.ErrorCode.PASSWORD_RESET_LINK_EXPIRED));
                     }                        
                 }
                 catch (ex) {                 

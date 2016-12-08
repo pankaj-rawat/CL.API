@@ -67,7 +67,7 @@ export class AuthRepository implements irepo.IAuthRepository {
                             resolve(auth);
                         }
                         else {
-                            return reject(new CLError.Unauthorized(CLError.ErrorCode.USER_NOT_AUTHENTICATED));
+                            return reject(new CLError.Unauthorized(CLError.ErrorCode.USER_AUTHENTICATION_FAILED));
                         }
                     }
                 });

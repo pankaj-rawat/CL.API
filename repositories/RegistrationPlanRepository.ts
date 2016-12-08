@@ -76,7 +76,7 @@ export class RegistrationPlanRepository implements IRegistrationPlanRepository {
                 let query = connection.query('SELECT * FROM registration_plan');
                 query.on('error', function (err) {
                     encounteredError = true;
-                    return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while saving user. ' + err.message));
+                    return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while getting plans. ' + err.message));
                 });
                 query.on('result', function (row, index) {
                     try {

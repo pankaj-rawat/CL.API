@@ -7,7 +7,7 @@ export interface IUserRepository {
     create(user:model.UserModel): Promise<model.UserModel>;
     update(user: model.UserModel, requestedBy: number):Promise<model.UserModel>;
     remove(id: number, requestedBy: number): Promise<number>;
-    getAll(offset: number, limit: number, requestedBy: number, idUser: number): Promise<RepoResponse>; 
+    getAll(offset: number, limit: number, requestedBy: number): Promise<RepoResponse>; 
     forgetPassword(email: string, location: string, resetURL: string): Promise<boolean>;
     updatePassword(idUser: number, location: string, newPwd: string, requestedBy?: number,fpToken?:string): Promise<boolean>;
 }
