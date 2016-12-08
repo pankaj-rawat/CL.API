@@ -8,7 +8,7 @@ import express = require('express');
 import {Logger}  from "../Logger";
 import config = require('config');
 import {Util} from "../Util";
-import {CLConstants} from "../clconstants";
+import {CLConstants} from "../CLConstants";
 var userController = express.Router();
 
 userController.get('/:id', function (req: express.Request, res: express.Response, next: Function) {
