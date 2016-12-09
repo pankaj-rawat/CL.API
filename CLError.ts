@@ -21,7 +21,8 @@ export enum ErrorCode {
     INVALID_PARAM_VALUE = 10018,
     DB_DUPLICATE_ENTRY = 10019,  
     CLIENT_AUTO_AUTH_FAILED = 10020,
-    PASSWORD_RESET_LINK_EXPIRED=10021
+    PASSWORD_RESET_LINK_EXPIRED = 10021,
+    MAILER_FAILED=10022
 }
 
 function errorCodeMessage(errorCode: number,messageDetail:string): string {
@@ -89,7 +90,10 @@ function errorCodeMessage(errorCode: number,messageDetail:string): string {
             break;    
         case ErrorCode.PASSWORD_RESET_LINK_EXPIRED:
             msg = "Password reset link expired.";
-            break;       
+            break;  
+        case ErrorCode.MAILER_FAILED:
+            msg = "Not able to send mail.";
+            break;          
         default:
             msg = errorCode.toString();
             break;
