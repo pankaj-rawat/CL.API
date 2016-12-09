@@ -78,10 +78,10 @@ businessController.get('/', function (req: express.Request, res: express.Respons
     let maxLimit: number = Number(process.env.PAGING_LIMIT || config.get("paging.limit"));
     let offset: number = Number(req.query.offset || 0);
     let limit: number = Number(req.query.limit || 0);
-    let idCity: number = Number(req.query.idcity || req.body.idCity || 0);
-    let searchText: string = req.query.searchText || req.body.searchText || '';
-    let latitude: number = req.query.lat || req.body.lat;
-    let longitude: number = req.query.long || req.body.long;
+    let idCity: number = Number(req.query.idcity || 0);
+    let searchText: string = req.query.searchtext || '';
+    let latitude: number = req.query.lat;
+    let longitude: number = req.query.long;
 
     if (limit <= 0 || limit > maxLimit) {
         limit = maxLimit;
