@@ -10,7 +10,7 @@
     "port": 1337
   },
   "token": {
-    "minutesToExpire-user":30,
+    "minutesToExpire-user": 30,
     "minutesToExpire-client": 30,
     "key": "sss.sss.sss.ssh"
   },
@@ -21,11 +21,12 @@
     "limit": 5
   },
   "mail": {
-    "email": "citylocal.test@gmail.com",
-    "password": "Citylocal@123",
-    "smtp": "smtp.gmail.com"
+    "email": "admin@citylocal.info",
+    "password": "",// not in use
+    "smtp": "" //not in use
   },
   "forget-pwd": {
     "daysToLinkExp": 1
-  }
+  },
+  "postmark_key": ""
 }
