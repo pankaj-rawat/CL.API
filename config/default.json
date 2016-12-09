@@ -22,11 +22,12 @@
   },
   "mail": {
     "email": "admin@citylocal.info",
-    "password": "",// not in use
-    "smtp": "" //not in use
+    "password": "", // not in use
+    "smtp": "", //not in use
+    "sendgrid_password": "",
+    "sendgrid_username": ""
   },
   "forget-pwd": {
     "daysToLinkExp": 1
-  },
-  "postmark_key": ""
+  }
 }

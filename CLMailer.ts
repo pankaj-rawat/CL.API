@@ -4,29 +4,29 @@ import * as CLError from "./CLError";
 
 export class CLMailer {
 
+    //Using nodemailer-sendgrid-transport
     sendMail(to: string, subject: string, text?: string, html?: string): Promise<string> {
         return new Promise<string>(function (resolve, reject) {
-            let postmark_api_key: string = process.env.POSTMARK_API_KEY || config.get("postmark_api_key");;
             let systemEmail = process.env.EMAIL || config.get("mail.email");
+            let transporter: nodemailer.Transporter = getMailerTransporter('sendgrid');
             var mailOptions = {
-                From: systemEmail.toString(),
-                To: to,
-                Subject: subject,
-                TextBody: text,
-                HtmlBody: html
+                from: systemEmail.toString(),
+                to: to,
+                subject: subject,
+                text: text,
+                html: html
             };
             try {
-                var postmark = require("postmark")(postmark_api_key);
-                postmark.send(mailOptions, function (err, to) {
-                    if (err) {
-                        console.log(err);
+                transporter.sendMail(mailOptions)
+                    .then(function (info: nodemailer.SentMessageInfo) {
+                        resolve(JSON.stringify(info));
+                    })
+                    .catch(function (err) {
                         reject(err);
-                    }
-                    resolve("mail sent to : " + to);
-                });
+                    });
             }
             catch (ex) {
-                reject(new CLError.InternalServerError(CLError.ErrorCode.MAILER_FAILED, ex.message + "---" + ex.stach + "---" + mailOptions.From + "-" + mailOptions.Subject + "-" + mailOptions.TextBody + "-" + mailOptions.To));
+                reject(new CLError.InternalServerError(CLError.ErrorCode.MAILER_FAILED, ex.message + "---" + ex.stach + "---" + mailOptions.from + "-" + mailOptions.html + "-" + mailOptions.subject + "-" + mailOptions.text + "-" + mailOptions.to));
             }
         });
     }
@@ -60,4 +60,22 @@ export class CLMailer {
     //        }          
     //    });        
     //}
+}
+
+//change this code if mail transport service change
+function getMailerTransporter(mailerService: string): nodemailer.Transporter {
+    let api_username = process.env.SENDGRID_USERNAME || config.get("mail.sendgrid_username");
+    let api_password = process.env.SENDGRID_PASSWORD || config.get("mail.sendgrid_password");    
+    let transporter: nodemailer.Transporter;
+    if (mailerService == 'sendgrid') {
+        var sgTransport = require('nodemailer-sendgrid-transport');
+        var options = {
+            auth: {
+                api_user: api_username,
+                api_key: api_password
+            }
+        }
+        transporter = nodemailer.createTransport(sgTransport(options));
+    }  
+    return transporter;
 }
