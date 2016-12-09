@@ -6,7 +6,7 @@ export class CLMailer {
 
     sendMail(to: string, subject: string, text?: string, html?: string): Promise<string> {
         return new Promise<string>(function (resolve, reject) {
-            let postmark_key: string = process.env.POSTMARK_KEY || config.get("postmark_key");;
+            let postmark_api_key: string = process.env.POSTMARK_API_KEY || config.get("postmark_api_key");;
             let systemEmail = process.env.EMAIL || config.get("mail.email");
             var mailOptions = {
                 From: systemEmail.toString(),
@@ -16,7 +16,7 @@ export class CLMailer {
                 HtmlBody: html
             };
             try {
-                var postmark = require("postmark")(postmark_key);
+                var postmark = require("postmark")(postmark_api_key);
                 postmark.send(mailOptions, function (err, to) {
                     if (err) {
                         console.log(err);
