@@ -1,5 +1,6 @@
 ﻿import nodemailer = require('nodemailer');
 import config = require('config');
+import * as CLError from "./CLError";
 export class CLMailer {
     sendMail(to: string, subject: string,text?: string,html?:string): Promise<string> {
         return new Promise<string>(function (resolve, reject) {
@@ -15,13 +16,18 @@ export class CLMailer {
                 text:text,
                 html: html
             };
-            transporter.sendMail(mailOptions)            
-                .then(function (value: nodemailer.SentMessageInfo) {
-                    resolve(value.response);
-                })
-                .catch(function (err) {
-                    reject(err);
-                })
+            try {
+                transporter.sendMail(mailOptions)
+                    .then(function (value: nodemailer.SentMessageInfo) {
+                        resolve(value.response);
+                    })
+                    .catch(function (err) {
+                        reject(err);
+                    });
+            }
+            catch (ex) {
+                reject(new CLError.InternalServerError(CLError.ErrorCode.MAILER_FAILED, ex.message + "---" + ex.stach + "---" + mailOptions.from + "-" + mailOptions.html + "-" + mailOptions.subject + "-" + mailOptions.text + "-" + mailOptions.to));
+            }
         });        
     }
 }
