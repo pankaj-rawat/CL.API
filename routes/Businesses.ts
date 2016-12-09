@@ -79,7 +79,7 @@ businessController.get('/', function (req: express.Request, res: express.Respons
     let offset: number = Number(req.query.offset || 0);
     let limit: number = Number(req.query.limit || 0);
     let idCity: number = Number(req.query.idcity || 0);
-    let searchText: string = req.query.searchtext || '';
+    let search: string = req.query.search || '';
     let latitude: number = req.query.lat;
     let longitude: number = req.query.long;
 
@@ -93,10 +93,10 @@ businessController.get('/', function (req: express.Request, res: express.Respons
     let repoResponse: Promise<RepoResponse>;
 
     if (idCity != 0) {
-        repoResponse = businessRepo.searchByCity(offset, limit, searchText, idCity);
+        repoResponse = businessRepo.searchByCity(offset, limit, search, idCity);
     }
     else {
-        repoResponse = businessRepo.searchByLatLong(offset, limit, searchText, latitude, longitude);           
+        repoResponse = businessRepo.searchByLatLong(offset, limit, search, latitude, longitude);           
     }
     repoResponse.then(function (result) {
         let util: Util = new Util();
