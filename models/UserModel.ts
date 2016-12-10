@@ -8,7 +8,7 @@
     idStatus?: number;
     idCity: number;
     createdOn?: Date;
-    lastupdatedOn?: Date;
+    updatedOn?: Date;
     subscriptionOptIn: boolean;
     subscriptionOptInDate?: Date;
     subscriptionOptOutDate?: Date;

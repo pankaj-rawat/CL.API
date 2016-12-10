@@ -26,7 +26,7 @@ class UserRepository implements irepo.IUserRepository {
                     let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
                     clError.stack = err.stack;
                     return reject(clError);
-                } 
+                }
                 let encounteredError: boolean = false;
                 let userId: number;
                 let query = connection.query('Call sp_insert_user_online(?,?)', [email, userLocation]);
@@ -43,7 +43,7 @@ class UserRepository implements irepo.IUserRepository {
                     connection.release();
                     if (!encounteredError) {
                         if (userId != null) {
-                            getUser(0, 1, CLConstants.SYSTEM_USER,userId)
+                            getUser(0, 1, CLConstants.SYSTEM_USER, userId)
                                 .then(function (result: RepoResponse) {
                                     resolve(result.data[0]);
                                 })
@@ -100,7 +100,7 @@ class UserRepository implements irepo.IUserRepository {
         });
     }
 
-    get(id: number,requestedBy:number): Promise<model.UserModel> {
+    get(id: number, requestedBy: number): Promise<model.UserModel> {
         return new Promise<model.UserModel>(function (resolve, reject) {
             if (id == null) {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'User id not supplied.'));
@@ -115,20 +115,27 @@ class UserRepository implements irepo.IUserRepository {
         });
     }
 
-    getAll(offset: number, limit: number,requestedBy:number): Promise<RepoResponse> {
-        return getUser(offset, limit,requestedBy);
+    getAll(offset: number, limit: number, requestedBy: number): Promise<RepoResponse> {
+        return getUser(offset, limit, requestedBy);
     }
 
-    create(user: model.UserModel): Promise<model.UserModel> {
+    save(user: model.UserModel, requestedBy?: number): Promise<model.UserModel> {
         let repoName: string = "UserRepository";
         return new Promise<model.UserModel>(function (resolve, reject) {
             //check for required parameters
-            if (user.password == null || user.password=='') {
+            let isUpdateRequest: boolean=false;
+
+            if (user.id != null || user.id >= 0) {
+                isUpdateRequest = true;
+                user.password = null;
+            }
+
+            if ((user.password == null || user.password == '') && isUpdateRequest == false) {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, "Password missing."));
             }
             if (user.email == null || user.email == '') {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, "email missing."));
-            }          
+            }
             if (user.idCity == null) {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, "User city missing."));
             }
@@ -145,8 +152,8 @@ class UserRepository implements irepo.IUserRepository {
                 }
 
                 let encounteredError: boolean = false;
-                let query = connection.query('CALL sp_insert_user(?,?,?,?,?,?,?)',
-                    [user.email, getHashedPwd(user.password), user.phoneLandLine, user.extension, user.phoneCell, user.idCity, user.subscriptionOptIn]);
+                let query = connection.query('CALL sp_upsert_user(?,?,?,?,?,?,?,?)',
+                    [user.id, user.email, getHashedPwd(user.password), user.phoneLandLine, user.extension, user.phoneCell, user.idCity, user.subscriptionOptIn]);
 
                 query.on('error', function (err) {
                     encounteredError = true;
@@ -170,42 +177,12 @@ class UserRepository implements irepo.IUserRepository {
                     connection.release();
                     if (!encounteredError) {
                         if (user.id == null) {
-                            reject(new CLError.CustomError("No data saved",'500',CLError.ErrorCode.RESOURCE_NOT_FOUND, 'Error occured while saving user.'));
+                            reject(new CLError.CustomError("No data saved", '500', CLError.ErrorCode.RESOURCE_NOT_FOUND, 'Error occured while saving user.'));
                         } else {
                             resolve(user);
                         }
                     }
                 });
-            });
-        });
-    }
-
-    update(user: model.UserModel,requestedBy:number): Promise<model.UserModel> {
-        return new Promise<model.UserModel>(function (resolve, reject) {
-            let user: model.UserModel;
-            DB.get().getConnection(function (err, connection) {
-                //if (err != null) {
-                //    Logger.log.info('Error occured in CityRepository - find - id:' + + '  Error:' + err);
-                //    reject(err);
-                //}
-                //else {
-                //    let query = connection.query('SELECT * FROM user WHERE id = ?');
-
-                //    query.on('error', function (err) {
-                //        Logger.log.info('Error occured in CityRepository - find - id:' + + '  Error:' + err);
-                //        reject(err);
-                //    });
-
-                //    query.on('fields', function (fields) {
-                //        Logger.log.info('Error occured in CityRepository - find - id:' + + '  Error:' + err);
-                //    });
-
-                //    query.on('result', function (row, result) {
-                //    });
-
-                //    query.on('end', function (result) {
-                //    });
-                //}
             });
         });
     }
@@ -233,7 +210,7 @@ class UserRepository implements irepo.IUserRepository {
 
             getUser(0, 1, CLConstants.SYSTEM_USER, null, email)
                 .then(function (result: RepoResponse) {
-                    let idUser: number = result.data[0].id;                   
+                    let idUser: number = result.data[0].id;
                     let token = jwt.encode({
                         exp: linkExpiryDate
                         , id: idUser
@@ -268,7 +245,7 @@ class UserRepository implements irepo.IUserRepository {
 
     updatePassword(idUser: number, location: string, newPwd: string, requestedBy?: number, fpToken?: string): Promise<boolean> {
         return new Promise<boolean>(function (resolve, reject) {
-            let affectedRow:number;
+            let affectedRow: number;
             if (idUser == null) {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, " User id missing."));
             }
@@ -279,25 +256,25 @@ class UserRepository implements irepo.IUserRepository {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, " Password missing."));
             }
 
-            if ((requestedBy == null || requestedBy <= 0) && (fpToken == null || fpToken=='')) {
+            if ((requestedBy == null || requestedBy <= 0) && (fpToken == null || fpToken == '')) {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, " Missing required parameters."));
             }
 
             //check for valid reset token.
             if (fpToken != null) {
-               try {
+                try {
                     let decoded = jwt.decode(fpToken, String(process.env.TOKEN_KEY || config.get("token.key")));
                     if (decoded.id != idUser) {
                         return reject(new CLError.BadRequest(CLError.ErrorCode.INVALID_PARAM_VALUE, "token not associated with the User."));
                     }
                     else {
-                        requestedBy = decoded.id; 
+                        requestedBy = decoded.id;
                     }
                     if (new Date(decoded.exp).getTime() <= (new Date()).getTime()) {
                         return reject(new CLError.BadRequest(CLError.ErrorCode.PASSWORD_RESET_LINK_EXPIRED));
-                    }                        
+                    }
                 }
-                catch (ex) {                 
+                catch (ex) {
                     return reject(new CLError.BadRequest(CLError.ErrorCode.INVALID_PARAM_VALUE));
                 }
             }
@@ -323,7 +300,7 @@ class UserRepository implements irepo.IUserRepository {
                 query.on('end', function () {
                     connection.release();
                     if (!encounteredError) {
-                        if (affectedRow>0) {
+                        if (affectedRow > 0) {
                             return resolve(true);
                         }
                         else {
@@ -337,10 +314,10 @@ class UserRepository implements irepo.IUserRepository {
 
 };
 
-function getUser(offset: number, limit: number,requestBy:number, idUser?: number,email?:string): Promise<RepoResponse> {
+function getUser(offset: number, limit: number, requestBy: number, idUser?: number, email?: string): Promise<RepoResponse> {
     return new Promise(function (resolve, reject) {
         let users: Array<model.UserModel> = new Array<model.UserModel>();
-        if (offset==null || offset < 0 || limit==null || limit==0) {
+        if (offset == null || offset < 0 || limit == null || limit == 0) {
             return reject(new CLError.BadRequest(CLError.ErrorCode.INVALID_PARAM_VALUE, "Invalid value supplied for offset\limit params."));
         }
 
@@ -377,7 +354,7 @@ function getUser(offset: number, limit: number,requestBy:number, idUser?: number
                             idStatus: row.idStatus,
                             idCity: row.idCity,
                             createdOn: row.createdOn,
-                            lastupdatedOn: row.lastupdatedOn,
+                            updatedOn: row.updatedOn,
                             subscriptionOptIn: row.subscriptionOptIn,
                             subscriptionOptInDate: row.subscriptionOptInDate,
                             subscriptionOptOutDate: row.subscriptionOptOutDate
@@ -413,8 +390,12 @@ function getUser(offset: number, limit: number,requestBy:number, idUser?: number
     });
 }
 
-function getHashedPwd(pwd: string):string {
-    let salt = bcrypt.genSaltSync(10);
-    return bcrypt.hashSync(pwd, salt);
+function getHashedPwd(pwd: string): string {
+    let res: string;
+    if (pwd != null) {
+        let salt: string = bcrypt.genSaltSync(10);
+        res = bcrypt.hashSync(pwd, salt);
+    }
+    return res;
 }
 export {UserRepository};

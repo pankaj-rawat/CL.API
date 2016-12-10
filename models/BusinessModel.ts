@@ -19,7 +19,7 @@ export interface BusinessModel {
     longitude?: number,
     geo?: string,
     createdOn?: Date,
-    lastUpdateOn?: Date,
+    updatedOn?: Date,
     description?: string,
     commenceDate?: Date,
     idRegistrationPlan: number,
@@ -87,7 +87,7 @@ export interface BusinessOfferModel {
     detail: string,
     idBusiness: number,
     createdOn: Date,
-    lastUpdatedOn: Date,
+    updatedOn: Date,
     expiryDate: Date,
     termsCondition?: string
 }

@@ -26,7 +26,7 @@ export class RegistrationPlanRepository implements IRegistrationPlanRepository {
                                 active: row.active,
                                 detail: row.detail,
                                 createdOn: row.createdOn,
-                                lastUpdatedOn: row.lastUpdatedOn,
+                                updatedOn: row.updatedOn,
                                 name: row.name,
                                 price: row.price
                             };
@@ -46,7 +46,7 @@ export class RegistrationPlanRepository implements IRegistrationPlanRepository {
                                                 feature: results[i].feature,
                                                 id: results[i].id,
                                                 idRegistrationPlan: results[i].idRegistrationPlan,
-                                                lastUpdatedOn: results[i].lastUpdatedOn
+                                                updatedOn: results[i].updatedOn
                                             };
                                             registrationPlanModel.features.push(feature);
                                         }
@@ -95,7 +95,7 @@ function getRegistrationPlan(offset: number, limit: number, id?: number, include
                             name: row.name,
                             createdOn: row.createdOn,
                             price: row.price,
-                            lastUpdatedOn: row.lastUpdatedOn,
+                            updatedOn: row.updatedOn,
                             active: row.active
                         };                          
                         registrationPlans.push(plan);

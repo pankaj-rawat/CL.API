@@ -5,7 +5,7 @@
     detail: string,
     price: number,
     createdOn: Date,
-    lastUpdatedOn: Date,
+    updatedOn: Date,
     features?: Array<RegistrationPlanFeatureModel>
 }
 
@@ -15,6 +15,6 @@ export interface RegistrationPlanFeatureModel {
     feature:string,
     active:boolean,
     createdOn:Date,
-    lastUpdatedOn:Date
+    updatedOn:Date
 }
 

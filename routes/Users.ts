@@ -9,6 +9,7 @@ import {Logger}  from "../Logger";
 import config = require('config');
 import {Util} from "../Util";
 import {CLConstants} from "../CLConstants";
+
 var userController = express.Router();
 
 userController.get('/:id', function (req: express.Request, res: express.Response, next: Function) {
@@ -74,7 +75,7 @@ userController.post('/', function (req: express.Request, res: express.Response, 
         phoneCell: req.body.phoneCell,
         subscriptionOptIn: req.body.subscriptionOptIn
     }
-    userP = usrepo.create(user);
+    userP = usrepo.save(user);
     userP.then(function (user: model.UserModel) {
         user.password = undefined;// clear pwd before sending back the result
         clres = {
@@ -91,6 +92,40 @@ userController.post('/', function (req: express.Request, res: express.Response, 
         next(err);
     });
 });
+
+userController.put('/:id', function (req: express.Request, res: express.Response, next: Function) {
+    let usrepo = new UserRepository();
+    let userP: Promise<model.UserModel>;
+    let user: model.UserModel;
+    let clres: APIResponse;
+    let requestedBy: number = Number(req.headers['clapi-user-key']) || CLConstants.GUEST_USER;
+    user = {
+        id:req.params.id,
+        email: req.body.email,
+        idCity: req.body.idCity,        
+        phoneLandLine: req.body.phoneLandline,
+        extension: req.body.extension,
+        phoneCell: req.body.phoneCell,
+        subscriptionOptIn: req.body.subscriptionOptIn
+    }
+    userP = usrepo.save(user, requestedBy);
+    userP.then(function (user: model.UserModel) {
+        user.password = undefined;// clear pwd before sending back the result
+        clres = {
+            data: user,
+            isValid: true
+        };
+        let util: Util = new Util();
+        if (user.id != null) {
+            res.setHeader('clapi-resource-location', util.getPostedResourceLocation(req, user.id.toString()));
+        }
+        res.status(200).send(clres);
+    });
+    userP.catch(function (err) {
+        next(err);
+    });
+});
+
 
 userController.post('/login', function (req: express.Request, res: express.Response, next: Function) {
     Logger.log.info('login is in process.');

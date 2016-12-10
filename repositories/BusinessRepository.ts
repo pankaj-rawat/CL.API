@@ -205,7 +205,7 @@ function getBusiness(id: number): Promise<model.BusinessModel> {
                             longitude: row.longitude,
                             geo: row.geo,
                             createdOn: row.createdOn,
-                            lastUpdateOn: row.lastUpdatedOn,
+                            updatedOn: row.updatedOn,
                             description: row.description,
                             commenceDate: row.commenceDate,
                             idUser: row.idUser,
