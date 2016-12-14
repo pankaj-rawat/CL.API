@@ -7,8 +7,13 @@ import {Logger as logger} from "../Logger";
 import * as CLError from '../CLError';
 
 export class BusinessRepository implements irepo.IBusinessRepository {
-    register(business: model.BusinessModel): Promise<model.BusinessModel> {
+    save(business: model.BusinessModel): Promise<model.BusinessModel> {
         return new Promise<model.BusinessModel>(function (resolve, reject) {
+            let images: Array<model.BusinessImageModel> = new Array<model.BusinessImageModel>();
+            let phones: Array<model.BusinessPhoneModel> = new Array<model.BusinessPhoneModel>();
+            let operationHours: Array<model.BusinessOperationHourModel> = new Array<model.BusinessOperationHourModel>();
+            let offers: Array<model.BusinessOfferModel> = new Array<model.BusinessOfferModel>();
+
             if (business.contactNumbers == null || business.images == null || business.operationHours == null || business.tags == null) {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, "Input data missing."));
             }
@@ -21,37 +26,111 @@ export class BusinessRepository implements irepo.IBusinessRepository {
                 else {
                     let encounteredError: boolean = false;
                     let businessId: number;
-                    let images: string = getImagesString(business.images);
-                    let phones: string = getPhonesString(business.contactNumbers);
-                    let tags: string = getTagsString(business.tags);
-                    let operationhours: string = getOperationHourString(business.operationHours);
-                    let query = connection.query('Call sp_insert_business(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
-                        , [business.name, business.contactName, business.contactTitle, business.idStatus, business.streetAddress,
+                    let imageString: string = getImagesString(business.images);
+                    let phoneString: string = getPhonesString(business.contactNumbers);
+                    let tagString: string = getTagsString(business.tags);
+                    let operationhoursString: string = getOperationHourString(business.operationHours);
+                    let query = connection.query('Call sp_upsert_business(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+                        , [business.id, business.name, business.contactName, business.contactTitle, business.streetAddress,
                             business.postalCode, business.idCity, business.idState, business.idCountry, business.webURL, business.latitude,
-                            business.longitude, business.description, business.commenceDate, images, phones, tags, operationhours,
-                            business.idRegistrationPlan, business.idUser, business.createdBy,business.idCategory]);
+                            business.longitude, business.description, business.commenceDate, imageString, phoneString, tagString, operationhoursString,
+                            business.idRegistrationPlan, business.idUser, business.createdBy, business.idCategory]);
                     query.on('error', function (err) {
                         encounteredError = true;
-                        let clError: CLError.DBError; 
+                        let clError: CLError.DBError;
                         clError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while saving business. " + err.message);
                         clError.stack = err.stack;
                         return reject(clError);
                     });
                     query.on('result', function (row, index) {
-                        if (index == 0) {
-                            businessId = row.id;
+                        switch (index) {
+                            case 0: //business
+                                business = {
+                                    id: row.id,
+                                    name: row.name,
+                                    contactName: row.contactName,
+                                    contactTitle: row.contactTitle,
+                                    idStatus: row.idStatus,
+                                    streetAddress: row.streetAddress,
+                                    postalCode: row.postalCode,
+                                    idCity: row.idCity,
+                                    idState: row.idState,
+                                    idCountry: row.idCountry,
+                                    webURL: row.webURL,
+                                    latitude: row.latitude,
+                                    longitude: row.longitude,
+                                    geo: row.geo,
+                                    description: row.description,
+                                    commenceDate: row.commenceDate,
+                                    idUser: row.idUser,
+                                    city: row.city,
+                                    state: row.state,
+                                    country: row.country,
+                                    idRegistrationPlan: row.idRegistrationPlan,
+                                    registrationPlanExpireDate: row.registrationPlanExpireDate,
+                                    registrationPlanOptDate: row.registrationPlanOptDate,
+                                    registrationPlanName: row.rpName,
+                                    createdBy: row.createdBy,
+                                    createDate: row.createDate,
+                                    updatedBy: row.updatedBy,
+                                    updateDate: row.updateDate,
+                                    idCategory: row.idCategory
+                                };
+                                break;
+                            case 1://opeartionhours
+                                let operationHour: model.BusinessOperationHourModel = {
+                                    day: row.day
+                                    , idBusiness: row.idBusiness
+                                    , timeOpen: row.timeOpen
+                                    , timeClose: row.timeClose
+                                }
+                                operationHours.push(operationHour);
+                                break;
+                            case 2: //phones
+                                phones.push({
+                                    idBusiness: row.idBusiness
+                                    , phone: row.phone
+                                    , extension: row.extension
+                                    , type: row.type
+                                });
+                                break;
+                            case 3: //images
+                                images.push({
+                                    id: row.id
+                                    , idBusinessId: row.idBusiness
+                                    , imageURL: row.imageURL
+                                    , isProfileImage: row.isProfileIamge
+                                    , uploadDate: row.uploadDate
+                                });
+                                break;
+                            case 4: //offers
+                                offers.push({
+                                    id: row.id
+                                    , offer: row.id
+                                    , detail: row.detail
+                                    , createDate: row.createDate
+                                    , expiryDate: row.expiryDate
+                                    , updateDate: row.updateDate
+                                    , idBusiness: row.idBusiness
+                                    , idStatus: row.idStatus
+                                    , termsCondition: row.termsCondition
+                                });
+                                break;
                         }
                     });
                     query.on('end', function () {
                         connection.release();
                         if (!encounteredError) {
-                            getBusiness(businessId)
-                                .then(function (result) {
-                                    resolve(result);
-                                })
-                                .catch(function (err) {
-                                    reject(err);
-                                });
+                            if (business) {
+                                business.images = images;
+                                business.operationHours = operationHours;
+                                business.contactNumbers = phones;
+                                business.offers = offers;
+                                resolve(business);
+                            }
+                            else {
+                                return reject(new CLError.NotFound(CLError.ErrorCode.RESOURCE_NOT_FOUND, "error occured while reading recently saved business for Id " + business.id +"."));
+                            }
                         }
                     });
                 }
@@ -59,29 +138,26 @@ export class BusinessRepository implements irepo.IBusinessRepository {
         });
     };
     unRegister(id: number): Promise<number> {
-        return new Promise<number> (function (resolve, reject) {
+        return new Promise<number>(function (resolve, reject) {
         });
     };
-    find(id: number): Promise<model.BusinessModel> {
+    get(id: number): Promise<model.BusinessModel> {
         return new Promise<model.BusinessModel>(function (resolve, reject) {
             getBusiness(id)
                 .then(function (result) {
                     resolve(result);
                 })
                 .catch(function (err) {
-                   reject(err);
+                    reject(err);
                 });
         });
     };
-
     searchByLatLong(offset: number, limit: number, searchText: string, latitude: Number, longitude: Number): Promise<RepoResponse> {
-        return searchBusiness(offset, limit, searchText,latitude,longitude, 0);
-    }; 
-
-    searchByCity(offset: number, limit: number, searchText: string,idCity:number): Promise<RepoResponse> {
-        return searchBusiness(offset, limit, searchText, 0,0,idCity);
-    }; 
-
+        return searchBusiness(offset, limit, searchText, latitude, longitude, 0);
+    };
+    searchByCity(offset: number, limit: number, searchText: string, idCity: number): Promise<RepoResponse> {
+        return searchBusiness(offset, limit, searchText, 0, 0, idCity);
+    };
     update(business: model.BusinessModel): Promise<model.BusinessModel> {
         return new Promise<model.BusinessModel>(function (resolve, reject) {
         });
@@ -112,7 +188,7 @@ function searchBusiness(offset: number, limit: number, searchText: string, latit
             let businesses: Array<model.BusinessSearchResultModel> = new Array<model.BusinessSearchResultModel>();
             let encounteredError: boolean = false;
             let recCount: number = 0;
-            let query = connection.query('SET @rCount=0; CAll sp_search_business(@rCount,?,?,?,?,?,?); select @rCount rcount;', [offset, limit, idCity,latitude,longitude,searchText]);
+            let query = connection.query('SET @rCount=0; CAll sp_search_business(@rCount,?,?,?,?,?,?); select @rCount rcount;', [offset, limit, idCity, latitude, longitude, searchText]);
             query.on('error', function (err) {
                 encounteredError = true;
                 return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while searching businesses." + err.message));
@@ -141,7 +217,7 @@ function searchBusiness(offset: number, limit: number, searchText: string, latit
                             , rating: row.rating
                             , idCategory: row.idCategory
                             , category: row.category
-                            ,idUser:row.idUser                            
+                            , idUser: row.idUser
                         };
                     businesses.push(business);
                 }
@@ -164,14 +240,18 @@ function searchBusiness(offset: number, limit: number, searchText: string, latit
                     }
                 }
             });
-        });      
+        });
     });
 }
-
 
 function getBusiness(id: number): Promise<model.BusinessModel> {
     return new Promise<model.BusinessModel>(function (resolve, reject) {
         let business: model.BusinessModel;
+        let images: Array<model.BusinessImageModel> = new Array<model.BusinessImageModel>();
+        let phones: Array<model.BusinessPhoneModel> = new Array<model.BusinessPhoneModel>();
+        let operationHours: Array<model.BusinessOperationHourModel> = new Array<model.BusinessOperationHourModel>();
+        let offers: Array<model.BusinessOfferModel> = new Array<model.BusinessOfferModel>();
+
         DB.get().getConnection(function (err, connection) {
             if (err) {
                 let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
@@ -188,47 +268,93 @@ function getBusiness(id: number): Promise<model.BusinessModel> {
                     return reject(clError);
                 });
                 query.on('result', function (row, index) {
-                    if (index == 0) {
-                        business = {
-                            id: row.id,
-                            name: row.name,
-                            contactName: row.contactName,
-                            contactTitle: row.contactTitle,
-                            idStatus: row.idStatus,
-                            streetAddress: row.streetAddress,
-                            postalCode: row.postalCode,
-                            idCity: row.idCity,
-                            idState: row.idState,
-                            idCountry: row.idCountry,
-                            webURL: row.webURL,
-                            latitude: row.latitude,
-                            longitude: row.longitude,
-                            geo: row.geo,
-                            createdOn: row.createdOn,
-                            updatedOn: row.updatedOn,
-                            description: row.description,
-                            commenceDate: row.commenceDate,
-                            idUser: row.idUser,
-                            city: row.city,
-                            state: row.state,
-                            country: row.country,
-                            idRegistrationPlan: row.idRegistrationPlan,
-                            registrationPlanExpiry: row.registrationPlanExpiry,
-                            registrationPlanOptDate: row.registrationPlanOptDate,
-                            registrationPlanName: row.rpName,
-                            createdBy: row.createdBy,
-                            idCategory:row.idCategory
-                        };
+                    switch (index) {
+                        case 0: //business
+                            business = {
+                                id: row.id,
+                                name: row.name,
+                                contactName: row.contactName,
+                                contactTitle: row.contactTitle,
+                                idStatus: row.idStatus,
+                                streetAddress: row.streetAddress,
+                                postalCode: row.postalCode,
+                                idCity: row.idCity,
+                                idState: row.idState,
+                                idCountry: row.idCountry,
+                                webURL: row.webURL,
+                                latitude: row.latitude,
+                                longitude: row.longitude,
+                                geo: row.geo,
+                                description: row.description,
+                                commenceDate: row.commenceDate,
+                                idUser: row.idUser,
+                                city: row.city,
+                                state: row.state,
+                                country: row.country,
+                                idRegistrationPlan: row.idRegistrationPlan,
+                                registrationPlanExpireDate: row.registrationPlanExpireDate,
+                                registrationPlanOptDate: row.registrationPlanOptDate,
+                                registrationPlanName: row.rpName,
+                                createdBy: row.createdBy,
+                                createDate: row.createDate,
+                                updatedBy: row.updatedBy,
+                                updateDate: row.updateDate,
+                                idCategory: row.idCategory
+                            };
+                            break;
+                        case 1://opeartionhours
+                            let operationHour: model.BusinessOperationHourModel = {
+                                day: row.day
+                                , idBusiness: row.idBusiness
+                                , timeOpen: row.timeOpen
+                                , timeClose: row.timeClose
+                            }
+                            operationHours.push(operationHour);                            
+                            break;
+                        case 2: //phones
+                            phones.push({
+                                idBusiness: row.idBusiness
+                                , phone: row.phone
+                                , extension: row.extension
+                                , type: row.type
+                            });
+                            break;
+                        case 3: //images
+                            images.push({
+                                id: row.id
+                                , idBusinessId: row.idBusiness
+                                , imageURL: row.imageURL
+                                , isProfileImage: row.isProfileIamge
+                                , uploadDate: row.uploadDate
+                            });
+                            break;
+                        case 4: //offers
+                            offers.push({
+                                id: row.id
+                                , offer: row.id
+                                , detail: row.detail
+                                , createDate: row.createDate
+                                , expiryDate: row.expiryDate
+                                , updateDate: row.updateDate
+                                , idBusiness: row.idBusiness
+                                , idStatus: row.idStatus
+                                ,termsCondition:row.termsCondition
+                            });
+                            break;
                     }
                 });
                 query.on('end', function () {
                     connection.release();
                     if (!encounteredError) {
                         if (business) {
+                            business.images = images;
+                            business.operationHours=operationHours;
+                            business.contactNumbers=phones;
+                            business.offers = offers;
                             resolve(business);
                         }
                         else {
-                            return reject(new CLError.NotFound(CLError.ErrorCode.RESOURCE_NOT_FOUND,"Business for Id " + id + " not found."));
+                            return reject(new CLError.NotFound(CLError.ErrorCode.RESOURCE_NOT_FOUND, "Business for Id " + id + " not found."));
                         }
                     }
                 });
@@ -266,11 +392,12 @@ function getImagesString(images: Array<model.BusinessImageModel>): string {
     if (images != null) {
         for (let image of images) {
             if (image) {
+                let imgString: string = image.id == null ? "0" : image.id + ";" + image.isProfileImage + ";" + image.imageURL;
                 if (result == null) {
-                    result = image.isProfileImage + ";" + image.imgURL;
+                    result = imgString;
                 }
                 else {
-                    result = result + "," + image.isProfileImage + ";" + image.imgURL;
+                    result = result + "," + imgString;
                 }
 
             }

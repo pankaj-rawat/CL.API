@@ -7,68 +7,18 @@ import {BusinessRepository} from "../repositories/BusinessRepository";
 import config = require('config');
 import {Util} from "../Util";
 import {RepoResponse} from "../RepoResponse";
+import {CLConstants} from "../CLConstants";
 
 let businessController = express.Router();
 
 businessController.post('/', function (req: express.Request, res: express.Response, next: Function) {
-    let contactNumbers: Array<model.BusinessPhoneModel> = new Array<model.BusinessPhoneModel>();
-    let businessImages: Array<model.BusinessImageModel> = new Array<model.BusinessImageModel>();
-    let businessOperationHours: Array<model.BusinessOperationHourModel> = new Array<model.BusinessOperationHourModel>();
-    let tags: Array<CategoryTagModel.TagModel> = new Array<CategoryTagModel.TagModel>();
-    let createdBy: number = req.headers['clapi-user-key'] || (req.query && req.query.user_key)
-    if (createdBy == null) {
-        //request by guest
-        createdBy = 0;
-    }
     Logger.log.info("business registration requested from " + req.hostname);
-    let businessRepo: BusinessRepository = new BusinessRepository();
-    let apiResponse: APIResponse;
-    let business: model.BusinessModel;
-    try {
-        business = {
-            idCity: req.body.idCity
-            , commenceDate: req.body.commenceDate
-            , contactName: req.body.contactName
-            , contactTitle: req.body.contactTitle
-            , idStatus: req.body.idStatus
-            , description: req.body.description
-            , idCountry: req.body.idCountry
-            , idState: req.body.idState
-            , idUser: req.body.idUser
-            , latitude: req.body.latitude
-            , longitude: req.body.longitude
-            , name: req.body.name
-            , postalCode: req.body.postalCode
-            , idRegistrationPlan: req.body.idRegistrationPlan
-            , streetAddress: req.body.streetAddress
-            , webURL: req.body.webURL
-            , contactNumbers: getContactNumberList(JSON.parse(req.body.contactNumbers))
-            , images: getImageList(JSON.parse(req.body.images))
-            , operationHours: getOperationHourList(JSON.parse(req.body.operationHours))
-            , tags: getTagList(req.body.tags)
-            , createdBy: createdBy
-            , idCategory: req.body.idCategory
-        }
+    save(req, res, next);
+});
 
-            if (business != null) {
-                businessRepo.register(business)
-                    .then(function (result) {
-                        apiResponse = {
-                            data: result,
-                            isValid: true
-                        };
-                        let util: Util = new Util();
-                        res.setHeader('clapi-resource-location', util.getPostedResourceLocation(req, result.id.toString()));
-                        res.status(201).send(apiResponse);
-                    })
-                    .catch(function (err) {
-                        next(err);
-                    });
-            }
-    }
-    catch (err) {
-        next(err);
-    }
+businessController.put('/:id', function (req: express.Request, res: express.Response, next: Function) {
+    Logger.log.info("business update requested from " + req.hostname);
+    save(req, res, next);
 });
 
 businessController.get('/', function (req: express.Request, res: express.Response, next: Function) {
@@ -96,7 +46,7 @@ businessController.get('/', function (req: express.Request, res: express.Respons
         repoResponse = businessRepo.searchByCity(offset, limit, search, idCity);
     }
     else {
-        repoResponse = businessRepo.searchByLatLong(offset, limit, search, latitude, longitude);           
+        repoResponse = businessRepo.searchByLatLong(offset, limit, search, latitude, longitude);
     }
     repoResponse.then(function (result) {
         let util: Util = new Util();
@@ -106,15 +56,15 @@ businessController.get('/', function (req: express.Request, res: express.Respons
         res.setHeader('content-range', util.getHeaderContentRange(offset, limit, result.recordCount));
         res.send(clRes);
     })
-        repoResponse.catch(function (err) {
-            next(err);
-        })
+    repoResponse.catch(function (err) {
+        next(err);
+    })
 });
 
 businessController.get('/:id', function (req: express.Request, res: express.Response, next: Function) {
     let businessRepo: BusinessRepository = new BusinessRepository();
     let apiResponse: APIResponse;
-    businessRepo.find(req.params.id)
+    businessRepo.get(req.params.id)
         .then(function (result) {
             apiResponse = {
                 data: result
@@ -157,5 +107,60 @@ function getTagList(tagstring: string): Array<CategoryTagModel.TagModel> {
     }
 
     return tags;
+}
+
+function save(req: express.Request, res: express.Response, next: Function) {
+    let businessRepo: BusinessRepository = new BusinessRepository();
+    let apiResponse: APIResponse;
+    let business: model.BusinessModel;
+    let requestBy: number = req.headers['clapi-user-key'] || (req.query && req.query.user_key) || CLConstants.GUEST_USER;
+    let id: number = req.params.id;
+
+    try {
+        business = {
+            id: id
+            , idCity: req.body.idCity
+            , commenceDate: req.body.commenceDate
+            , contactName: req.body.contactName
+            , contactTitle: req.body.contactTitle
+            , idStatus: req.body.idStatus
+            , description: req.body.description
+            , idCountry: req.body.idCountry
+            , idState: req.body.idState
+            , idUser: req.body.idUser
+            , latitude: req.body.latitude
+            , longitude: req.body.longitude
+            , name: req.body.name
+            , postalCode: req.body.postalCode
+            , idRegistrationPlan: req.body.idRegistrationPlan
+            , streetAddress: req.body.streetAddress
+            , webURL: req.body.webURL
+            , contactNumbers: getContactNumberList(JSON.parse(req.body.contactNumbers))
+            , images: getImageList(JSON.parse(req.body.images))
+            , operationHours: getOperationHourList(JSON.parse(req.body.operationHours))
+            , tags: getTagList(req.body.tags)
+            , createdBy: id == null ? requestBy : null
+            , updatedBy: id != null ? requestBy : null
+            , idCategory: req.body.idCategory
+        };
+        if (business != null) {
+            businessRepo.save(business)
+                .then(function (result) {
+                    apiResponse = {
+                        data: result,
+                        isValid: true
+                    };
+                    let util: Util = new Util();
+                    res.setHeader('clapi-resource-location', util.getPostedResourceLocation(req, result.id.toString()));
+                    res.status(201).send(apiResponse);
+                })
+                .catch(function (err) {
+                    next(err);
+                });
+        }
+    }
+    catch (err) {
+        next(err);
+    }
 }
 module.exports = businessController;

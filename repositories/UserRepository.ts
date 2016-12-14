@@ -162,7 +162,7 @@ class UserRepository implements irepo.IUserRepository {
                 query.on('result', function (row, index) {
                     try {
                         if (index == 0) {
-                            user.createdOn = row.createdOn;
+                            user.createDate = row.createDate;
                             user.id = row.id;
                             user.idStatus = row.idStatus;
                         }
@@ -353,8 +353,8 @@ function getUser(offset: number, limit: number, requestBy: number, idUser?: numb
                             phoneCell: row.phoneCell,
                             idStatus: row.idStatus,
                             idCity: row.idCity,
-                            createdOn: row.createdOn,
-                            updatedOn: row.updatedOn,
+                            createDate: row.createDate,
+                            updateDate: row.updateDate,
                             subscriptionOptIn: row.subscriptionOptIn,
                             subscriptionOptInDate: row.subscriptionOptInDate,
                             subscriptionOptOutDate: row.subscriptionOptOutDate

@@ -17,21 +17,23 @@ export interface BusinessModel {
     webURL?: string,
     latitude?: number,
     longitude?: number,
-    geo?: string,
-    createdOn?: Date,
-    updatedOn?: Date,
+    geo?: string,    
     description?: string,
     commenceDate?: Date,
     idRegistrationPlan: number,
     registrationPlanOptDate?: Date,
-    registrationPlanExpiry?: Date,
+    registrationPlanExpireDate?: Date,
     registrationPlanName?:string,
     images?: Array<BusinessImageModel>,
     operationHours?: Array<BusinessOperationHourModel>,
     idCategory:number,
     tags?: Array<model.TagModel>,
     contactNumbers?: Array<BusinessPhoneModel>,
-    createdBy:number
+    offers?:Array<BusinessOfferModel>,
+    createdBy?: number,
+    createDate?: Date,    
+    updatedBy?: number,
+    updateDate?: Date
 }
 
 export interface BusinessSearchResultModel {
@@ -67,14 +69,13 @@ export interface BusinessPhoneModel {
 
 export interface BusinessImageModel {
     id?: number,
-    imgURL: string,
-    uploadedOn?: Date,
     idBusinessId?: number,
-    isProfileImage: boolean
+    imageURL: string,
+    isProfileImage: boolean,
+    uploadDate?: Date,
 }
 
 export interface BusinessOperationHourModel {
-    id?: number,
     idBusiness: number,
     day: number,
     timeOpen: string,
@@ -84,10 +85,11 @@ export interface BusinessOperationHourModel {
 export interface BusinessOfferModel {
     id?: number,
     offer: string,
+    idStatus:number,
     detail: string,
     idBusiness: number,
-    createdOn: Date,
-    updatedOn: Date,
+    createDate: Date,
+    updateDate: Date,
     expiryDate: Date,
     termsCondition?: string
 }

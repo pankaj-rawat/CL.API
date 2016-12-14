@@ -25,8 +25,8 @@ export class RegistrationPlanRepository implements IRegistrationPlanRepository {
                                 id: row.id,
                                 active: row.active,
                                 detail: row.detail,
-                                createdOn: row.createdOn,
-                                updatedOn: row.updatedOn,
+                                createDate: row.createDate,
+                                updateDate: row.updateDate,
                                 name: row.name,
                                 price: row.price
                             };
@@ -42,11 +42,11 @@ export class RegistrationPlanRepository implements IRegistrationPlanRepository {
                                         for (var i = 0; i < results.length; i++) {
                                             let feature: model.RegistrationPlanFeatureModel = {
                                                 active: results[i].active,
-                                                createdOn: results[i].createdOn,
+                                                createDate: results[i].createDate,
                                                 feature: results[i].feature,
                                                 id: results[i].id,
                                                 idRegistrationPlan: results[i].idRegistrationPlan,
-                                                updatedOn: results[i].updatedOn
+                                                updateDate: results[i].updateDate
                                             };
                                             registrationPlanModel.features.push(feature);
                                         }
@@ -93,9 +93,9 @@ function getRegistrationPlan(offset: number, limit: number, id?: number, include
                             id: row.id,
                             detail: row.detail,
                             name: row.name,
-                            createdOn: row.createdOn,
+                            createDate: row.createDate,
                             price: row.price,
-                            updatedOn: row.updatedOn,
+                            updateDate: row.updateDate,
                             active: row.active
                         };                          
                         registrationPlans.push(plan);
