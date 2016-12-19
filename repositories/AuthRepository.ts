@@ -59,7 +59,7 @@ export class AuthRepository implements irepo.IAuthRepository {
                             return reject(new CLError.Unauthorized(CLError.ErrorCode.USER_NOT_FOUND));
                         }
                         if (bcrypt.compareSync(password, pwd)) { //this is taking time
-                            let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_USER || config.get("token.minutesToExpire-user")));
+                            let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_USER || config.get("token.minutesToExpire_user")));
                             let auth: model.AuthModel = {
                                 expires: expiryDate,
                                 token: genToken(userId, expiryDate)
@@ -149,7 +149,7 @@ export class AuthRepository implements irepo.IAuthRepository {
                             }
                         }
 
-                        let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_CLIENT || config.get("token.minutesToExpire-client")));
+                        let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_CLIENT || config.get("token.minutesToExpire_client")));
                         authModel = {
                             expires: expiryDate
                             , token: genClientToken(id, clientKey, expiryDate)
@@ -227,7 +227,7 @@ export class AuthRepository implements irepo.IAuthRepository {
     }
 
     refreshAccessToken(userId: number): model.AuthModel {
-        let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_USER || config.get("token.minutesToExpire-user")));
+        let expiryDate: Date = expiresIn(Number(process.env.MINUTESTOEXPIRE_USER || config.get("token.minutesToExpire_user")));
         let auth: model.AuthModel = {
             token: genToken(userId, expiryDate)
             ,expires:expiryDate

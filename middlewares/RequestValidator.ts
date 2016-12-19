@@ -145,7 +145,7 @@ function getAction(roleActionMask, reqAction): boolean {
         case 'PUT'://modify          
             return ((roleActionMask & def.Action.Put_Any) == def.Action.Put_Any || (roleActionMask & def.Action.Put_Owned) == def.Action.Put_Owned);
         case 'POST'://add/create
-            return ((roleActionMask & def.Action.Post_Any) == def.Action.Post_Any || (roleActionMask & def.Action.Post_Owned) == def.Action.Post_Owned);
+            return ((roleActionMask & def.Action.Post) == def.Action.Post);
         case 'DELETE':
             return ((roleActionMask & def.Action.Delete_Any) == def.Action.Delete_Any || (roleActionMask & def.Action.Delete_Owned) == def.Action.Delete_Owned);
     }

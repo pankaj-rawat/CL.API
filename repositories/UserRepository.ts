@@ -245,7 +245,7 @@ class UserRepository implements irepo.IUserRepository {
 
     updatePassword(idUser: number, location: string, newPwd: string, requestedBy?: number, fpToken?: string): Promise<boolean> {
         return new Promise<boolean>(function (resolve, reject) {
-            let affectedRow: number;
+            let resultCode: number;
             if (idUser == null) {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, " User id missing."));
             }
@@ -279,7 +279,6 @@ class UserRepository implements irepo.IUserRepository {
                 }
             }
 
-            //'sp_update_user_password' need to create this sp
             DB.get().getConnection(function (err, connection) {
                 if (err != null) {
                     let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
@@ -294,13 +293,13 @@ class UserRepository implements irepo.IUserRepository {
                 });
                 query.on('result', function (row, index) {
                     if (index == 0) {
-                        affectedRow = row.row_affected;
+                        resultCode = row.resultCode;
                     }
                 });
                 query.on('end', function () {
                     connection.release();
                     if (!encounteredError) {
-                        if (affectedRow > 0) {
+                        if (resultCode == 1) {
                             return resolve(true);
                         }
                         else {

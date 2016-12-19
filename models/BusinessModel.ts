@@ -15,6 +15,7 @@ export interface BusinessModel {
     idCountry: number,
     country?: string,
     webURL?: string,
+    email?:string,
     latitude?: number,
     longitude?: number,
     geo?: string,    
@@ -51,7 +52,7 @@ export interface BusinessSearchResultModel {
     latitude?: number,
     longitude?: number,
     geo?: string,    
-    profileImgURL?: string,
+    profileImageURL?: string,
     idOffer?: number,
     offer?: string,
     rating: Number,
@@ -85,11 +86,12 @@ export interface BusinessOperationHourModel {
 export interface BusinessOfferModel {
     id?: number,
     offer: string,
-    idStatus:number,
-    detail: string,
+    idStatus?: number,
     idBusiness: number,
-    createDate: Date,
-    updateDate: Date,
-    expiryDate: Date,
-    termsCondition?: string
+    detail: string,    
+    effectiveDate: Date,
+    expireDate: Date,
+    termsCondition?: string,
+    createDate?: Date,
+    updateDate?: Date
 }
