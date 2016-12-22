@@ -80,6 +80,7 @@
     <TypeScriptCompile Include="interfaces\ICategoryTagRepository.ts" />
     <TypeScriptCompile Include="interfaces\ICityStateCountryRepository.ts" />
     <TypeScriptCompile Include="interfaces\IRegistrationPlanRepository.ts" />
+    <TypeScriptCompile Include="interfaces\IReviewRepository.ts" />
     <TypeScriptCompile Include="interfaces\IUserRepository.ts" />
     <TypeScriptCompile Include="Logger.ts" />
     <TypeScriptCompile Include="APIResponse.ts" />
@@ -90,6 +91,7 @@
     <TypeScriptCompile Include="models\CategoryTagModel.ts" />
     <TypeScriptCompile Include="models\CityStateCountryModel.ts" />
     <TypeScriptCompile Include="models\RegistrationPlanModel.ts" />
+    <TypeScriptCompile Include="models\ReviewModel.ts" />
     <TypeScriptCompile Include="models\UserModel.ts" />
     <TypeScriptCompile Include="RepoResponse.ts" />
     <TypeScriptCompile Include="repositories\AuthRepository.ts" />
@@ -97,6 +99,7 @@
     <TypeScriptCompile Include="repositories\CategoryTagRepository.ts" />
     <TypeScriptCompile Include="repositories\CityStateCountryRepository.ts" />
     <TypeScriptCompile Include="repositories\RegistrationPlanRepository.ts" />
+    <TypeScriptCompile Include="repositories\ReviewRepository.ts" />
     <TypeScriptCompile Include="repositories\UserRepository.ts" />
     <TypeScriptCompile Include="RouteBuilder.ts" />
     <TypeScriptCompile Include="routes\Auth.ts" />
@@ -104,6 +107,7 @@
     <TypeScriptCompile Include="routes\Categories.ts" />
     <TypeScriptCompile Include="routes\Cities.ts" />
     <TypeScriptCompile Include="routes\Countries.ts" />
+    <TypeScriptCompile Include="routes\Reviews.ts" />
     <TypeScriptCompile Include="routes\States.ts" />
     <TypeScriptCompile Include="routes\Tags.ts" />
     <TypeScriptCompile Include="routes\RegistrationPlans.ts" />

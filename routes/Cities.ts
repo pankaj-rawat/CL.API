@@ -3,7 +3,7 @@ import APIResponse = require('../APIResponse');
 import {RepoResponse} from "../RepoResponse";
 import express = require('express');
 import config = require('config');
-import {Util} from "../Util";
+import * as Util from "../Util";
 
 var cityController = express.Router();
 
@@ -26,30 +26,20 @@ cityController.get('/:id', function (req: express.Request, res: express.Response
 cityController.get('/', function (req: express.Request, res: express.Response, next) {
     let clRes: APIResponse.APIResponse;
     let cscrepo = new CityRepository();
-    let maxLimit: number = Number(process.env.PAGING_LIMIT || config.get("paging.limit"));
-    let offset: number = Number(req.query.offset || 0);
-    let limit: number = Number(req.query.limit || 0);
+    let util: Util.Util = new Util.Util();
+    let pagingInfo: Util.PagingInfo = util.getPagingInfo(req);     
     let idState: number = Number(req.query.idstate || 0);
-
-    if (limit <= 0 || limit > maxLimit) {
-        limit = maxLimit;
-    }
-    if (offset < 0) {
-        offset = 0;
-    }
+    
     let repoResponse: Promise<RepoResponse>;
     if (idState) {
-        repoResponse = cscrepo.getAll(offset, limit, idState);
+        repoResponse = cscrepo.getAll(pagingInfo.offset, pagingInfo.limit, idState);
     }
     else {
-        repoResponse = cscrepo.getAll(offset, limit);
+        repoResponse = cscrepo.getAll(pagingInfo.offset, pagingInfo.limit);
     }
-    repoResponse.then(function (result) {
-        let util: Util = new Util();
-        clRes = { data: result.data, isValid: true };
-        var pageLink = util.getPageLinks(util.getURLstring(req), offset, limit, result.recordCount);
-        res.links(pageLink);
-        res.setHeader('content-range', util.getHeaderContentRange(offset, limit, result.recordCount));
+    repoResponse.then(function (result) {      
+        clRes = { data: result.data, isValid: true };        
+        res = util.setResponseHeaderPageLinks(result.recordCount, req, res, pagingInfo);  
         res.send(clRes);
     });
     repoResponse.catch(function (err) {

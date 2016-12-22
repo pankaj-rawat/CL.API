@@ -5,20 +5,21 @@ import *  as model from "../models/BusinessModel";
 import * as CategoryTagModel from "../models/CategoryTagModel";
 import {BusinessRepository} from "../repositories/BusinessRepository";
 import config = require('config');
-import {Util} from "../Util";
+import * as Util from "../Util";
 import {RepoResponse} from "../RepoResponse";
 import {CLConstants} from "../CLConstants";
 import * as def from "../Definitions";
 
 let businessController = express.Router();
 
+//business
 businessController.post('/', function (req: express.Request, res: express.Response, next: Function) {
     Logger.log.info("business registration requested from " + req.hostname);
     save(req, res, next);
 });
 
-businessController.post('/:id/mybusiness', function (req: express.Request, res: express.Response, next: Function) {
-    Logger.log.info("business claim requested from " + req.hostname);    
+businessController.post('/:id([0-9]+)/mybusiness', function (req: express.Request, res: express.Response, next: Function) {
+    Logger.log.info("business claim requested from " + req.hostname);
     let idUser = req.headers['clapi-user-key'] || (req.query && req.query.user_key);
     let location = req.headers['clapi-user-location'];
     let businessRepo: BusinessRepository = new BusinessRepository();
@@ -36,13 +37,13 @@ businessController.post('/:id/mybusiness', function (req: express.Request, res: 
         });
 });
 
-businessController.put('/:id/mybusiness', function (req: express.Request, res: express.Response, next: Function) {
+businessController.put('/:id([0-9]+)/mybusiness', function (req: express.Request, res: express.Response, next: Function) {
     Logger.log.info("business claim requested from " + req.hostname);
     let idUser = req.headers['clapi-user-key'] || (req.query && req.query.user_key);
     let location = req.headers['clapi-user-location'];
     let businessRepo: BusinessRepository = new BusinessRepository();
     let apiResponse: APIResponse;
-    businessRepo.assignUser(req.params.id, idUser,req.body.code, location)
+    businessRepo.assignUser(req.params.id, idUser, req.body.code, location)
         .then(function (result) {
             apiResponse = {
                 data: result
@@ -55,68 +56,57 @@ businessController.put('/:id/mybusiness', function (req: express.Request, res: e
         });
 });
 
-businessController.put('/:id', function (req: express.Request, res: express.Response, next: Function) {
+businessController.put('/:id([0-9]+)', function (req: express.Request, res: express.Response, next: Function) {
     Logger.log.info("business update requested from " + req.hostname);
     save(req, res, next);
 });
 
-businessController.get('/', function (req: express.Request, res: express.Response, next: Function) {
-    let businessRepo: BusinessRepository = new BusinessRepository();
+businessController.get('/:id([0-9]+)?', function (req: express.Request, res: express.Response, next: Function) {
+    let businessRepo: BusinessRepository = new BusinessRepository();  
     let clRes: APIResponse;
-
-    let maxLimit: number = Number(process.env.PAGING_LIMIT || config.get("paging.limit"));
-    let offset: number = Number(req.query.offset || 0);
-    let limit: number = Number(req.query.limit || 0);
-    let idCity: number = Number(req.query.idcity || 0);
-    let search: string = req.query.search || '';
-    let latitude: number = req.query.lat;
-    let longitude: number = req.query.long;
-
-    if (limit <= 0 || limit > maxLimit) {
-        limit = maxLimit;
+    if (req.params.id != null) {
+        businessRepo.get(req.params.id)
+            .then(function (result) {
+                clRes = {
+                    data: result
+                    , isValid: true
+                };
+                res.send(clRes);
+            })
+            .catch(function (err) {
+                next(err);
+            })
     }
-    if (offset < 0) {
-        offset = 0;
-    }
+    else {        
+        let util: Util.Util = new Util.Util(); 
+        let pagingInfo: Util.PagingInfo = util.getPagingInfo(req); 
+        let idCity: number = Number(req.query.idcity || 0);
+        let search: string = req.query.search || '';
+        let latitude: number = req.query.lat;
+        let longitude: number = req.query.long;        
 
-    let repoResponse: Promise<RepoResponse>;
+        let repoResponse: Promise<RepoResponse>;
 
-    if (idCity != 0) {
-        repoResponse = businessRepo.searchByCity(offset, limit, search, idCity);
-    }
-    else {
-        repoResponse = businessRepo.searchByLatLong(offset, limit, search, latitude, longitude);
-    }
-    repoResponse.then(function (result) {
-        let util: Util = new Util();
-        clRes = { data: result.data, isValid: true };
-        var pageLink = util.getPageLinks(util.getURLstring(req), offset, limit, result.recordCount);
-        res.links(pageLink);
-        res.setHeader('content-range', util.getHeaderContentRange(offset, limit, result.recordCount));
-        res.send(clRes);
-    })
-    repoResponse.catch(function (err) {
-        next(err);
-    })
-});
-
-businessController.get('/:id', function (req: express.Request, res: express.Response, next: Function) {
-    let businessRepo: BusinessRepository = new BusinessRepository();
-    let apiResponse: APIResponse;
-    businessRepo.get(req.params.id)
-        .then(function (result) {
-            apiResponse = {
-                data: result
-                , isValid: true
-            };
-            res.send(apiResponse);
+        if (idCity != 0) {
+            repoResponse = businessRepo.searchByCity(pagingInfo.offset, pagingInfo.limit, search, idCity);
+        }
+        else {
+            repoResponse = businessRepo.searchByLatLong(pagingInfo.offset, pagingInfo.limit, search, latitude, longitude);
+        }
+        repoResponse.then(function (result) {
+            clRes = { data: result.data, isValid: true };           
+            res = util.setResponseHeaderPageLinks(result.recordCount, req, res, pagingInfo);
+            res.send(clRes);
         })
-        .catch(function (err) {
+        repoResponse.catch(function (err) {
             next(err);
         })
+    }
+
 });
 
-businessController.post('/:idBusiness/offers', function (req: express.Request, res: express.Response, next: Function) {
+//offer
+businessController.post('/:idBusiness([0-9]+)/offers', function (req: express.Request, res: express.Response, next: Function) {
     let businessRepo: BusinessRepository = new BusinessRepository();
     let apiResponse: APIResponse;
     let offer: model.BusinessOfferModel;
@@ -142,14 +132,14 @@ businessController.post('/:idBusiness/offers', function (req: express.Request, r
         })
 });
 
-businessController.put('/:idBusiness/offers/:id', function (req: express.Request, res: express.Response, next: Function) {
+businessController.put('/:idBusiness([0-9]+)/offers/:id([0-9]+)', function (req: express.Request, res: express.Response, next: Function) {
     let businessRepo: BusinessRepository = new BusinessRepository();
     let apiResponse: APIResponse;
     let offer: model.BusinessOfferModel;
     let requestBy: number = req.headers['clapi-user-key'] || (req.query && req.query.user_key) || CLConstants.GUEST_USER;
     offer = {
-        id:req.params.id
-        ,offer: req.body.offer
+        id: req.params.id
+        , offer: req.body.offer
         , detail: req.body.detail
         , effectiveDate: req.body.effectiveDate
         , expireDate: req.body.expireDate
@@ -169,7 +159,7 @@ businessController.put('/:idBusiness/offers/:id', function (req: express.Request
         })
 });
 
-businessController.delete('/:idBusiness/offers/:id', function (req: express.Request, res: express.Response, next: Function) {
+businessController.delete('/:idBusiness([0-9]+)/offers/:id([0-9]+)', function (req: express.Request, res: express.Response, next: Function) {
     let businessRepo: BusinessRepository = new BusinessRepository();
     let apiResponse: APIResponse;
     let offer: model.BusinessOfferModel;
@@ -177,12 +167,12 @@ businessController.delete('/:idBusiness/offers/:id', function (req: express.Requ
     offer = {
         id: req.params.id
         , idBusiness: req.params.idBusiness
-        , idStatus:def.Status.InActive
+        , idStatus: def.Status.InActive
         , offer: undefined
         , detail: undefined
         , effectiveDate: undefined
-        , expireDate: undefined        
-        , termsCondition: undefined        
+        , expireDate: undefined
+        , termsCondition: undefined
     };
     businessRepo.saveOffer(offer, requestBy)
         .then(function (result) {
@@ -197,9 +187,9 @@ businessController.delete('/:idBusiness/offers/:id', function (req: express.Requ
         });
 });
 
-businessController.get('/:idBusiness/offers', function (req: express.Request, res: express.Response, next: Function) {
+businessController.get('/:idBusiness([0-9]+)/offers', function (req: express.Request, res: express.Response, next: Function) {
     let businessRepo: BusinessRepository = new BusinessRepository();
-    let apiResponse: APIResponse;    
+    let apiResponse: APIResponse;
     let maxLimit: number = Number(process.env.PAGING_LIMIT || config.get("paging.limit"));
     let offset: number = Number(req.query.offset || 0);
     let limit: number = Number(req.query.limit || 0);
@@ -208,7 +198,7 @@ businessController.get('/:idBusiness/offers', function (req: express.Request, re
         limit = maxLimit;
     }
 
-    businessRepo.getAllOffer(offset,limit,req.params.idBusiness)
+    businessRepo.getAllOffer(offset, limit, req.params.idBusiness)
         .then(function (result) {
             apiResponse = {
                 data: result
@@ -221,7 +211,7 @@ businessController.get('/:idBusiness/offers', function (req: express.Request, re
         })
 });
 
-businessController.get('/:idBusiness/offers/:id', function (req: express.Request, res: express.Response, next: Function) {
+businessController.get('/:idBusiness([0-9]+)/offers/:id([0-9]+)', function (req: express.Request, res: express.Response, next: Function) {
     let businessRepo: BusinessRepository = new BusinessRepository();
     let apiResponse: APIResponse;
     businessRepo.getOffer(req.params.id, req.params.idBusiness)
@@ -236,7 +226,6 @@ businessController.get('/:idBusiness/offers/:id', function (req: express.Request
             next(err);
         })
 });
-
 
 function getContactNumberList(phones: Array<model.BusinessPhoneModel>): Array<model.BusinessPhoneModel> {
     let contactNumbers: Array<model.BusinessPhoneModel> = new Array<model.BusinessPhoneModel>();
@@ -293,7 +282,7 @@ function save(req: express.Request, res: express.Response, next: Function) {
             , idRegistrationPlan: req.body.idRegistrationPlan
             , streetAddress: req.body.streetAddress
             , webURL: req.body.webURL
-            , email:req.body.email
+            , email: req.body.email
             , contactNumbers: getContactNumberList(JSON.parse(req.body.contactNumbers))
             , images: getImageList(JSON.parse(req.body.images))
             , operationHours: getOperationHourList(JSON.parse(req.body.operationHours))
@@ -307,7 +296,7 @@ function save(req: express.Request, res: express.Response, next: Function) {
                         data: result,
                         isValid: true
                     };
-                    let util: Util = new Util();
+                    let util: Util.Util = new Util.Util();
                     res.setHeader('clapi-resource-location', util.getPostedResourceLocation(req, result.id.toString()));
                     res.status(201).send(apiResponse);
                 })

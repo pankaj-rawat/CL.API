@@ -7,7 +7,7 @@ import * as amodel from "../models/AuthModel";
 import express = require('express');
 import {Logger}  from "../Logger";
 import config = require('config');
-import {Util} from "../Util";
+import * as Util from "../Util";
 import {CLConstants} from "../CLConstants";
 
 var userController = express.Router();
@@ -34,26 +34,16 @@ userController.get('/:id', function (req: express.Request, res: express.Response
 userController.get('/', function (req: express.Request, res: express.Response, next: Function) {
     let userRepo = new UserRepository();
     let clRes: APIResponse;
+    let util: Util.Util = new Util.Util();
+    let pagingInfo: Util.PagingInfo = util.getPagingInfo(req); 
 
-
-    let maxLimit: number = Number(process.env.PAGING_LIMIT || config.get("paging.limit"));
-    let offset: number = Number(req.query.offset || 0);
-    let limit: number = Number(req.query.limit || 0);
     let requestedBy: number = Number(req.headers['clapi-user-key']) || CLConstants.GUEST_USER;
-    if (limit <= 0 || limit > maxLimit) {
-        limit = maxLimit;
-    }
-    if (offset < 0) {
-        offset = 0;
-    }
+  
 
-    userRepo.getAll(offset, limit, requestedBy)
-        .then(function (result) {
-            let util: Util = new Util();
+    userRepo.getAll(pagingInfo.offset, pagingInfo.limit, requestedBy)
+        .then(function (result) {            
             clRes = { data: result.data, isValid: true };
-            var pageLink = util.getPageLinks(util.getURLstring(req), offset, limit, result.recordCount);
-            res.links(pageLink);
-            res.setHeader('content-range', util.getHeaderContentRange(offset, limit, result.recordCount));
+            res = util.setResponseHeaderPageLinks(result.recordCount, req, res, pagingInfo);  
             res.send(clRes);
         })
         .catch(function (err) {
@@ -82,7 +72,7 @@ userController.post('/', function (req: express.Request, res: express.Response, 
             data: user,
             isValid: true
         };
-        let util: Util = new Util();
+        let util: Util.Util = new Util.Util();
         if (user.id != null) {
             res.setHeader('clapi-resource-location', util.getPostedResourceLocation(req, user.id.toString()));
         }
@@ -115,7 +105,7 @@ userController.put('/:id', function (req: express.Request, res: express.Response
             data: user,
             isValid: true
         };
-        let util: Util = new Util();
+        let util: Util.Util = new Util.Util();
         if (user.id != null) {
             res.setHeader('clapi-resource-location', util.getPostedResourceLocation(req, user.id.toString()));
         }

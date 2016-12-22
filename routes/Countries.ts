@@ -3,7 +3,7 @@ import {APIResponse} from "../APIResponse";
 import {RepoResponse} from "../RepoResponse";
 import express = require("express");
 import config = require('config');
-import {Util} from "../Util";
+import * as Util from "../Util";
 
 var countryController = express.Router();
 
@@ -24,24 +24,12 @@ countryController.get('/:id', function (req:express.Request, res:express.Respons
 countryController.get('', function (req, res,next) {
     let cscrepo = new CountryRepository();
     let clRes: APIResponse;
-    let maxLimit: number = Number(process.env.PAGING_LIMIT || config.get("paging.limit"));
-    let offset: number = Number(req.query.offset || 0);
-    let limit: number = Number(req.query.limit || 0);
-
-    if (limit <= 0 || limit > maxLimit) {
-        limit = maxLimit;
-    }
-    if (offset < 0) {
-        offset = 0;
-    }
-
-    cscrepo.getAll(offset,limit)
-        .then(function (result: RepoResponse) {
-            let util: Util = new Util();
+    let util: Util.Util = new Util.Util();
+    let pagingInfo: Util.PagingInfo = util.getPagingInfo(req); 
+    cscrepo.getAll(pagingInfo.offset,pagingInfo.limit)
+        .then(function (result: RepoResponse) {           
             clRes = { data: result.data, isValid: true };
-            var pageLink = util.getPageLinks(util.getURLstring(req), offset, limit, result.recordCount);
-            res.links(pageLink);
-            res.setHeader('content-range', util.getHeaderContentRange(offset, limit, result.recordCount));
+            res = util.setResponseHeaderPageLinks(result.recordCount, req, res, pagingInfo);  
             res.send(clRes);
         })
         .catch(function (err) {

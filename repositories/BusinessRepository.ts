@@ -9,7 +9,7 @@ import config = require('config');
 import {CLMailer} from "../CLMailer";
 
 export class BusinessRepository implements irepo.IBusinessRepository {
-    save(business: model.BusinessModel,requestedBy:number): Promise<model.BusinessModel> {
+    save(business: model.BusinessModel, requestedBy: number): Promise<model.BusinessModel> {
         return new Promise<model.BusinessModel>(function (resolve, reject) {
             let images: Array<model.BusinessImageModel> = new Array<model.BusinessImageModel>();
             let phones: Array<model.BusinessPhoneModel> = new Array<model.BusinessPhoneModel>();
@@ -37,10 +37,10 @@ export class BusinessRepository implements irepo.IBusinessRepository {
                             business.postalCode, business.idCity, business.idState, business.idCountry, business.webURL, business.email, business.latitude,
                             business.longitude, business.description, business.commenceDate, imageString, phoneString, tagString, operationhoursString,
                             business.idRegistrationPlan, business.idUser, requestedBy, business.idCategory]);
-                     query.on('error', function (err) {
+                    query.on('error', function (err) {
                         encounteredError = true;
                         let clError: CLError.DBError;
-                        clError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while saving business. " +"(" +err.errno + ")"+err.message);
+                        clError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while saving business. " + "(" + err.errno + ")" + err.message);
                         clError.stack = err.stack;
                         return reject(clError);
                     });
@@ -147,15 +147,126 @@ export class BusinessRepository implements irepo.IBusinessRepository {
     };
     get(id: number): Promise<model.BusinessModel> {
         return new Promise<model.BusinessModel>(function (resolve, reject) {
-            getBusiness(id)
-                .then(function (result) {
-                    resolve(result);
-                })
-                .catch(function (err) {
-                    reject(err);
-                });
+            let business: model.BusinessModel;
+            let images: Array<model.BusinessImageModel> = new Array<model.BusinessImageModel>();
+            let phones: Array<model.BusinessPhoneModel> = new Array<model.BusinessPhoneModel>();
+            let operationHours: Array<model.BusinessOperationHourModel> = new Array<model.BusinessOperationHourModel>();
+            let offers: Array<model.BusinessOfferModel> = new Array<model.BusinessOfferModel>();
+
+            DB.get().getConnection(function (err, connection) {
+                if (err) {
+                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
+                    clError.stack = err.stack;
+                    return reject(clError);
+                }
+                else {
+                    let encounteredError: boolean = false;
+                    let query = connection.query('Call sp_select_business(?)', id);
+                    query.on('error', function (err) {
+                        encounteredError = true;
+                        let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while reading business. ' + err.message);
+                        clError.stack = err.stack;
+                        return reject(clError);
+                    });
+                    query.on('result', function (row, index) {
+                        switch (index) {
+                            case 0: //business
+                                business = {
+                                    id: row.id,
+                                    name: row.name,
+                                    contactName: row.contactName,
+                                    contactTitle: row.contactTitle,
+                                    idStatus: row.idStatus,
+                                    streetAddress: row.streetAddress,
+                                    postalCode: row.postalCode,
+                                    idCity: row.idCity,
+                                    idState: row.idState,
+                                    idCountry: row.idCountry,
+                                    webURL: row.webURL,
+                                    email: row.email,
+                                    latitude: row.latitude,
+                                    longitude: row.longitude,
+                                    geo: row.geo,
+                                    description: row.description,
+                                    commenceDate: row.commenceDate,
+                                    idUser: row.idUser,
+                                    city: row.city,
+                                    state: row.state,
+                                    country: row.country,
+                                    idRegistrationPlan: row.idRegistrationPlan,
+                                    registrationPlanExpireDate: row.registrationPlanExpireDate,
+                                    registrationPlanOptDate: row.registrationPlanOptDate,
+                                    registrationPlanName: row.rpName,
+                                    createdBy: row.createdBy,
+                                    createDate: row.createDate,
+                                    updatedBy: row.updatedBy,
+                                    updateDate: row.updateDate,
+                                    idCategory: row.idCategory,
+                                    rating: row.rating
+                                };
+                                break;
+                            case 1://opeartionhours
+                                let operationHour: model.BusinessOperationHourModel = {
+                                    day: row.day
+                                    , idBusiness: row.idBusiness
+                                    , timeOpen: row.timeOpen
+                                    , timeClose: row.timeClose
+                                }
+                                operationHours.push(operationHour);
+                                break;
+                            case 2: //phones
+                                phones.push({
+                                    idBusiness: row.idBusiness
+                                    , phone: row.phone
+                                    , extension: row.extension
+                                    , type: row.type
+                                });
+                                break;
+                            case 3: //images
+                                images.push({
+                                    id: row.id
+                                    , idBusinessId: row.idBusiness
+                                    , imageURL: row.imageURL
+                                    , isProfileImage: row.isProfileIamge
+                                    , uploadDate: row.uploadDate
+                                });
+                                break;
+                            case 4: //offers
+                                offers.push({
+                                    id: row.id
+                                    , offer: row.id
+                                    , detail: row.detail
+                                    , createDate: row.createDate
+                                    , expireDate: row.expireDate
+                                    , effectiveDate: row.effectiveDate
+                                    , updateDate: row.updateDate
+                                    , idBusiness: row.idBusiness
+                                    , idStatus: row.idStatus
+                                    , termsCondition: row.termsCondition
+                                });
+                                break;
+                        }
+                    });
+                    query.on('end', function () {
+                        connection.release();
+                        if (!encounteredError) {
+                            if (business) {
+                                business.images = images;
+                                business.operationHours = operationHours;
+                                business.contactNumbers = phones;
+                                business.offers = offers;
+                                resolve(business);
+                            }
+                            else {
+                                return reject(new CLError.NotFound(CLError.ErrorCode.RESOURCE_NOT_FOUND, "Business for Id " + id + " not found."));
+                            }
+                        }
+                    });
+                }
+            });
         });
     };
+
     searchByLatLong(offset: number, limit: number, searchText: string, latitude: Number, longitude: Number): Promise<RepoResponse> {
         return searchBusiness(offset, limit, searchText, latitude, longitude, 0);
     };
@@ -221,7 +332,7 @@ export class BusinessRepository implements irepo.IBusinessRepository {
         return new Promise<number>(function (resolve, reject) {
             if (location == null || location == '') {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, "location missing."));
-            }            
+            }
             DB.get().getConnection(function (err, connection) {
                 if (err) {
                     return reject(new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL));
@@ -243,7 +354,7 @@ export class BusinessRepository implements irepo.IBusinessRepository {
                 query.on('end', function () {
                     connection.release();
                     if (!encounteredError) {
-                        if (resultCode != null && resultCode == 1) {       
+                        if (resultCode != null && resultCode == 1) {
                             resolve(resultCode);
                         }
                         else {
@@ -255,7 +366,7 @@ export class BusinessRepository implements irepo.IBusinessRepository {
         });
     }
 
-    saveOffer(offer: model.BusinessOfferModel, requestedBy:number): Promise<model.BusinessOfferModel> {
+    saveOffer(offer: model.BusinessOfferModel, requestedBy: number): Promise<model.BusinessOfferModel> {
         return new Promise<model.BusinessOfferModel>(function (resolve, reject) {
             DB.get().getConnection(function (err, connection) {
                 if (err) {
@@ -295,107 +406,20 @@ export class BusinessRepository implements irepo.IBusinessRepository {
             });
         });
     };
-    getOffer(id: number, idBusiness: number): Promise<model.BusinessOfferModel> {
+    getOffer(id: number, idBusness: number): Promise<model.BusinessOfferModel> {
         return new Promise<model.BusinessOfferModel>(function (resolve, reject) {
-            let offers: Array<model.BusinessOfferModel> = new Array<model.BusinessOfferModel>();
-            DB.get().getConnection(function (err, connection) {
-                if (err) {
-                    return reject(new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL));
-                }
 
-                let encounteredError: boolean = false;
-                let recCount: number = 0;
-                let query = connection.query('SET @rCount=0; CAll sp_select_business_offer(@rCount,?,?,?,?); select @rCount rcount;',
-                    [0, 1, id, idBusiness]);
-                query.on('error', function (err) {
-                    encounteredError = true;
-                    return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while reading offers." + err.message));
+            getOffer(0, 1, id, idBusness)
+                .then(function (result) {
+                    resolve(result.data[0]);
+                })
+                .catch(function (err) {
+                    reject(err);
                 });
-                query.on('result', function (row, index) {
-                    if (index == 1) {
-                        offers.push({
-                            id: row.id
-                            , offer: row.offer
-                            , detail: row.detail
-                            , effectiveDate: row.effectiveDate
-                            , expireDate: row.expireDate
-                            , createDate: row.createDate
-                            , updateDate: row.updateDate
-                            , idStatus: row.idStatus
-                            , idBusiness: row.idBusiness
-                            , termsCondition: row.termsCondition
-                        });
-                    }
-                });
-                query.on('end', function () {
-                    connection.release();
-                    if (!encounteredError) {
-                        if (offers.length > 0) {
-                            resolve(offers[0]);
-                        }
-                        else {
-                            reject(new CLError.NotFound(CLError.ErrorCode.RESOURCE_NOT_FOUND, "No record found."));
-                        }
-                    }
-                });
-            });
         });
     };
     getAllOffer(offset: number, limit: number, idBusiness?: number): Promise<RepoResponse> {
-        return new Promise<RepoResponse>(function (resolve, reject) {
-            if (offset < 0) {
-                return reject(new CLError.BadRequest(CLError.ErrorCode.INVALID_PARAM_VALUE, "Invalid value supplied for offset\limit params."));
-            }
-            let offers: Array<model.BusinessOfferModel> = new Array<model.BusinessOfferModel>();
-            DB.get().getConnection(function (err, connection) {
-                if (err) {
-                    return reject(new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL));
-                }
-
-                let encounteredError: boolean = false;
-                let recCount: number = 0;
-                let query = connection.query('SET @rCount=0; CAll sp_select_business_offer(@rCount,?,?,?,?); select @rCount rcount;',
-                    [offset, limit, null, idBusiness]);
-                query.on('error', function (err) {
-                    encounteredError = true;
-                    return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while reading offers." + err.message));
-                });
-                query.on('result', function (row, index) {
-                    if (index == 1) {
-                        offers.push({
-                            id: row.id
-                            , offer: row.offer
-                            , detail: row.detail
-                            , effectiveDate: row.effectiveDate
-                            , expireDate: row.expireDate
-                            , createDate: row.createDate
-                            , updateDate: row.updateDate
-                            , idStatus: row.idStatus
-                            , idBusiness: row.idBusiness
-                            , termsCondition: row.termsCondition
-                        });
-                    }
-                    else if (index == 3) {
-                        recCount = row.rcount;
-                    }
-                });
-                query.on('end', function () {
-                    connection.release();
-                    if (!encounteredError) {
-                        if (offers.length > 0) {
-                            let res: RepoResponse = {
-                                data: offers
-                                , recordCount: recCount
-                            };
-                            resolve(res);
-                        }
-                        else {
-                            reject(new CLError.NotFound(CLError.ErrorCode.RESOURCE_NOT_FOUND, "No record found."));
-                        }
-                    }
-                });
-            });
-        });
+        return getOffer(offset, limit, null, idBusiness);
     };
 }
 
@@ -466,127 +490,6 @@ function searchBusiness(offset: number, limit: number, searchText: string, latit
         });
     });
 }
-
-function getBusiness(id: number): Promise<model.BusinessModel> {
-    return new Promise<model.BusinessModel>(function (resolve, reject) {
-        let business: model.BusinessModel;
-        let images: Array<model.BusinessImageModel> = new Array<model.BusinessImageModel>();
-        let phones: Array<model.BusinessPhoneModel> = new Array<model.BusinessPhoneModel>();
-        let operationHours: Array<model.BusinessOperationHourModel> = new Array<model.BusinessOperationHourModel>();
-        let offers: Array<model.BusinessOfferModel> = new Array<model.BusinessOfferModel>();
-
-        DB.get().getConnection(function (err, connection) {
-            if (err) {
-                let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL);
-                clError.stack = err.stack;
-                return reject(clError);
-            }
-            else {
-                let encounteredError: boolean = false;
-                let query = connection.query('Call sp_select_business(?)', id);
-                query.on('error', function (err) {
-                    encounteredError = true;
-                    let clError: CLError.DBError = new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, 'Error occured while reading business. ' + err.message);
-                    clError.stack = err.stack;
-                    return reject(clError);
-                });
-                query.on('result', function (row, index) {
-                    switch (index) {
-                        case 0: //business
-                            business = {
-                                id: row.id,
-                                name: row.name,
-                                contactName: row.contactName,
-                                contactTitle: row.contactTitle,
-                                idStatus: row.idStatus,
-                                streetAddress: row.streetAddress,
-                                postalCode: row.postalCode,
-                                idCity: row.idCity,
-                                idState: row.idState,
-                                idCountry: row.idCountry,
-                                webURL: row.webURL,
-                                email: row.email,
-                                latitude: row.latitude,
-                                longitude: row.longitude,
-                                geo: row.geo,
-                                description: row.description,
-                                commenceDate: row.commenceDate,
-                                idUser: row.idUser,
-                                city: row.city,
-                                state: row.state,
-                                country: row.country,
-                                idRegistrationPlan: row.idRegistrationPlan,
-                                registrationPlanExpireDate: row.registrationPlanExpireDate,
-                                registrationPlanOptDate: row.registrationPlanOptDate,
-                                registrationPlanName: row.rpName,
-                                createdBy: row.createdBy,
-                                createDate: row.createDate,
-                                updatedBy: row.updatedBy,
-                                updateDate: row.updateDate,
-                                idCategory: row.idCategory
-                            };
-                            break;
-                        case 1://opeartionhours
-                            let operationHour: model.BusinessOperationHourModel = {
-                                day: row.day
-                                , idBusiness: row.idBusiness
-                                , timeOpen: row.timeOpen
-                                , timeClose: row.timeClose
-                            }
-                            operationHours.push(operationHour);
-                            break;
-                        case 2: //phones
-                            phones.push({
-                                idBusiness: row.idBusiness
-                                , phone: row.phone
-                                , extension: row.extension
-                                , type: row.type
-                            });
-                            break;
-                        case 3: //images
-                            images.push({
-                                id: row.id
-                                , idBusinessId: row.idBusiness
-                                , imageURL: row.imageURL
-                                , isProfileImage: row.isProfileIamge
-                                , uploadDate: row.uploadDate
-                            });
-                            break;
-                        case 4: //offers
-                            offers.push({
-                                id: row.id
-                                , offer: row.id
-                                , detail: row.detail
-                                , createDate: row.createDate
-                                , expireDate: row.expireDate
-                                , effectiveDate: row.effectiveDate
-                                , updateDate: row.updateDate
-                                , idBusiness: row.idBusiness
-                                , idStatus: row.idStatus
-                                , termsCondition: row.termsCondition
-                            });
-                            break;
-                    }
-                });
-                query.on('end', function () {
-                    connection.release();
-                    if (!encounteredError) {
-                        if (business) {
-                            business.images = images;
-                            business.operationHours = operationHours;
-                            business.contactNumbers = phones;
-                            business.offers = offers;
-                            resolve(business);
-                        }
-                        else {
-                            return reject(new CLError.NotFound(CLError.ErrorCode.RESOURCE_NOT_FOUND, "Business for Id " + id + " not found."));
-                        }
-                    }
-                });
-            }
-        });
-    });
-};
 
 function getPhonesString(phones: Array<model.BusinessPhoneModel>): string {
     //expected string ->  phone;extension;type,phone1;extension1;type1
@@ -668,3 +571,57 @@ function getTagsString(tags: Array<CategoryTagModel.TagModel>): string {
     }
     return result;
 }
+
+function getOffer(offset: number, limit: number, id?: number, idBusiness?: number): Promise<RepoResponse> {
+    return new Promise<RepoResponse>(function (resolve, reject) {
+        let offers: Array<model.BusinessOfferModel> = new Array<model.BusinessOfferModel>();
+        DB.get().getConnection(function (err, connection) {
+            if (err) {
+                return reject(new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL));
+            }
+
+            let encounteredError: boolean = false;
+            let recCount: number = 0;
+            let query = connection.query('SET @rCount=0; CAll sp_select_business_offer(@rCount,?,?,?,?); select @rCount rcount;',
+                [offset, limit, id, idBusiness]);
+            query.on('error', function (err) {
+                encounteredError = true;
+                return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while reading offers." + err.message));
+            });
+            query.on('result', function (row, index) {
+                if (index == 1) {
+                    offers.push({
+                        id: row.id
+                        , offer: row.offer
+                        , detail: row.detail
+                        , effectiveDate: row.effectiveDate
+                        , expireDate: row.expireDate
+                        , createDate: row.createDate
+                        , updateDate: row.updateDate
+                        , idStatus: row.idStatus
+                        , idBusiness: row.idBusiness
+                        , termsCondition: row.termsCondition
+                    });
+                }
+                else if (index == 3) {
+                    recCount = row.rcount;
+                }
+            });
+            query.on('end', function () {
+                connection.release();
+                if (!encounteredError) {
+                    if (offers.length > 0) {
+                        let res: RepoResponse = {
+                            data: offers
+                            , recordCount: recCount
+                        };
+                        resolve(res);
+                    }
+                    else {
+                        reject(new CLError.NotFound(CLError.ErrorCode.RESOURCE_NOT_FOUND, "No record found."));
+                    }
+                }
+            });
+        });
+    });
+};

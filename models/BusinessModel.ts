@@ -34,7 +34,8 @@ export interface BusinessModel {
     createdBy?: number,
     createDate?: Date,    
     updatedBy?: number,
-    updateDate?: Date
+    updateDate?: Date,
+    rating?:number
 }
 
 export interface BusinessSearchResultModel {
