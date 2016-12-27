@@ -17,6 +17,7 @@ export class ReviewRepository implements irepo.IReviewRepository {
                     return reject(clError);
                 }
                 let encounteredError: boolean = false;
+                let isSaved: boolean = false;
                 let query = connection.query('Call sp_upsert_business_review(?,?,?,?,?,?,?)',
                     [review.id, review.rating, review.idBusiness, review.idReviewParent, review.comment, review.idStatus, requestBy]);
                 query.on('error', function (err) {
@@ -27,6 +28,7 @@ export class ReviewRepository implements irepo.IReviewRepository {
                 });
                 query.on('result', function (row, index) {
                     if (index == 0) {
+                        isSaved = true;
                         review.id = row.id;
                         review.createDate = row.createDate;
                         review.updateDate = row.updateDate;
@@ -37,11 +39,11 @@ export class ReviewRepository implements irepo.IReviewRepository {
                 query.on('end', function () {
                     connection.release();
                     if (!encounteredError) {
-                        if (review.id != null) {
+                        if (isSaved) {
                             resolve(review);
                         }
                         else {
-                            return reject(new CLError.NotFound(CLError.ErrorCode.RESOURCE_NOT_FOUND, "Business for Id " + review.id + " not found."));
+                            resolve(null);
                         }
                     }
                 });
@@ -84,26 +86,29 @@ export class ReviewRepository implements irepo.IReviewRepository {
                 });
             });
         });
-    }   
+    }
     get(id: number, requestBy: number): Promise<model.ReviewModel> {
         return new Promise<model.ReviewModel>(function (resolve, reject) {
-            getReview(0, 1, requestBy, id, null, null, null)
+            getReview(0, 1, requestBy, id, null, null, null, null)
                 .then(function (result) {
-                    return result.data[0];
+                    resolve(result.data[0]);
                 })
                 .catch(function (err) {
                     reject(err);
                 });
         });
     }
-    getAll(offset: number, limit: number, requestBy: number, idUser?: number, idBusiness?: number, idStatus?: number): Promise<RepoResponse> {
-        return getReview(offset, limit, requestBy, null, idUser, idBusiness, idStatus);
+    getAll(offset: number, limit: number, requestBy: number, id?: number, idUser?: number, idBusiness?: number, idStatus?: number, idReviewParent?: number): Promise<RepoResponse> {
+        return getReview(offset, limit, requestBy, null, idUser, idBusiness, idStatus, idReviewParent);
     }
 }
 
-function getReview(offset: number, limit: number, requestBy: number, id?: number, idUser?: number, idBusiness?: number, idStatus?: number): Promise<RepoResponse> {
+function getReview(offset: number, limit: number, requestBy: number, id: number, idUser: number, idBusiness: number, idStatus: number, idReviewParent: number): Promise<RepoResponse> {
     return new Promise<RepoResponse>(function (resolve, reject) {
         let reviews: Array<model.ReviewModel> = new Array<model.ReviewModel>();
+
+         offset
+
         DB.get().getConnection(function (err, connection) {
             if (err) {
                 return reject(new CLError.DBError(CLError.ErrorCode.DB_CONNECTION_FAIL));
@@ -111,8 +116,8 @@ function getReview(offset: number, limit: number, requestBy: number, id?: number
 
             let encounteredError: boolean = false;
             let recCount: number = 0;
-            let query = connection.query('SET @rCount=0; CAll sp_select_business_review(@rCount,?,?,?,?,?,?,?); select @rCount rcount;',
-                [offset, limit, id, idUser, idBusiness, requestBy, idStatus]);
+            let query = connection.query('SET @rCount=0; CAll sp_select_business_review(@rCount,?,?,?,?,?,?,?,?); select @rCount rcount;',
+                [offset, limit, id, idUser, idBusiness, requestBy, idStatus, idReviewParent]);
             query.on('error', function (err) {
                 encounteredError = true;
                 return reject(new CLError.DBError(CLError.ErrorCode.DB_QUERY_EXECUTION_ERROR, "Error occured while reading reviews." + err.message));

@@ -13,7 +13,7 @@ import {CLConstants} from "../CLConstants";
 
 class UserRepository implements irepo.IUserRepository {
 
-    login(email: string, userLocation: string): Promise<model.UserModel> {
+    recordLogin(email: string, userLocation: string): Promise<model.UserModel> {
         return new Promise<model.UserModel>(function (resolve, reject) {
             if (userLocation == null) {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'Missing user location.'));

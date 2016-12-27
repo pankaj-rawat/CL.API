@@ -12,7 +12,7 @@ import {CLConstants} from "../CLConstants";
 
 var userController = express.Router();
 
-userController.get('/:id', function (req: express.Request, res: express.Response, next: Function) {
+userController.get('/:id([0-9]+)', function (req: express.Request, res: express.Response, next: Function) {
     let userP: Promise<model.UserModel>;
     let userRepo = new UserRepository();
     let clres: APIResponse;
@@ -83,7 +83,7 @@ userController.post('/', function (req: express.Request, res: express.Response, 
     });
 });
 
-userController.put('/:id', function (req: express.Request, res: express.Response, next: Function) {
+userController.put('/:id([0-9]+)', function (req: express.Request, res: express.Response, next: Function) {
     let usrepo = new UserRepository();
     let userP: Promise<model.UserModel>;
     let user: model.UserModel;
@@ -124,10 +124,10 @@ userController.post('/login', function (req: express.Request, res: express.Respo
     let email = req.body.email;
     let password = req.body.password;
     let userLocation = req.headers['clapi-user-location'] || req.query.user_location;
-    authrepo.authenticateUser(email, password)
+    authrepo.authenticateUser(email, password, userLocation)
         .then(function (auth: amodel.AuthModel) {
             let userRepo = new UserRepository();
-            userRepo.login(email, userLocation)
+            userRepo.recordLogin(email, userLocation)
                 .then(function (user: model.UserModel) {
                     clRes = { data: user, isValid: true };
                     res.setHeader('clapi-user-access-token', auth.token);
@@ -179,7 +179,7 @@ userController.post('/forget-password', function (req: express.Request, res: exp
         });
 });
 
-userController.put('/:id/password/reset', function (req: express.Request, res: express.Response, next: Function) {
+userController.put('/:id([0-9]+)/password/reset', function (req: express.Request, res: express.Response, next: Function) {
     let idUser = req.params.id;
     let location = req.headers['clapi-user-location'] || req.query.user_location;
     let newPwd: string = req.body.newPassword;
@@ -202,7 +202,7 @@ userController.put('/:id/password/reset', function (req: express.Request, res: e
         });
 });
 
-userController.put('/:id/password/change', function (req: express.Request, res: express.Response, next: Function) {
+userController.put('/:id([0-9]+)/password/change', function (req: express.Request, res: express.Response, next: Function) {
     let idUser = req.params.id;
     let location = req.headers['clapi-user-location'] || req.query.user_location;
     let newPwd: string = req.body.newPassword;

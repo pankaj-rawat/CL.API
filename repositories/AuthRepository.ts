@@ -10,8 +10,13 @@ import * as CLError from "../CLError";
 
 export class AuthRepository implements irepo.IAuthRepository {
 
-    authenticateUser(email: string, password: string): Promise<model.AuthModel> {
+    authenticateUser(email: string, password: string, userLocation:string): Promise<model.AuthModel> {
         return new Promise<model.AuthModel>(function (resolve, reject) {
+            if (userLocation == null || userLocation.trim() == '') {
+                //will be used later for auditing
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'Location not supplied'));
+            }
+
             if (password == null || password.trim() == '') {
                 return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'Password not supplied'));
             }

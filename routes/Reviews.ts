@@ -3,7 +3,7 @@ import {APIResponse} from "../APIResponse";
 import *  as model from "../models/ReviewModel";
 import {ReviewRepository} from "../repositories/ReviewRepository";
 import config = require('config');
-import {Util} from "../Util";
+import * as Util from "../Util";
 import {CLConstants} from "../CLConstants";
 import * as def from "../Definitions";
 
@@ -22,9 +22,14 @@ reviewController.post('/', function (req: express.Request, res: express.Response
     };
     reviewRepo.save(review, requestBy)
         .then(function (result) {
+            let msg: string;
+            if (result == null) {
+                msg = "No data Saved.";
+            }
             apiResponse = {
                 data: result
                 , isValid: true
+                , message: msg
             };
             res.send(apiResponse);
         })
@@ -33,7 +38,7 @@ reviewController.post('/', function (req: express.Request, res: express.Response
         })
 });
 
-reviewController.put('/:id', function (req: express.Request, res: express.Response, next: Function) {
+reviewController.put('/:id([0-9]+)', function (req: express.Request, res: express.Response, next: Function) {
     let reviewRepo: ReviewRepository = new ReviewRepository();
     let apiResponse: APIResponse;
     let review: model.ReviewModel;
@@ -46,9 +51,14 @@ reviewController.put('/:id', function (req: express.Request, res: express.Respon
     };
     reviewRepo.save(review, requestBy)
         .then(function (result) {
+            let msg: string;
+            if (result == null) {
+                msg = "No data Saved.";
+            }
             apiResponse = {
                 data: result
                 , isValid: true
+                , message: msg
             };
             res.send(apiResponse);
         })
@@ -57,7 +67,7 @@ reviewController.put('/:id', function (req: express.Request, res: express.Respon
         })
 });
 
-reviewController.put('/:id/updatestatus', function (req: express.Request, res: express.Response, next: Function) {
+reviewController.put('/:id([0-9]+)/updatestatus', function (req: express.Request, res: express.Response, next: Function) {
     let reviewRepo: ReviewRepository = new ReviewRepository();
     let apiResponse: APIResponse;
     let requestBy: number = req.headers['clapi-user-key'] || (req.query && req.query.user_key) || CLConstants.GUEST_USER;
@@ -74,7 +84,7 @@ reviewController.put('/:id/updatestatus', function (req: express.Request, res: e
         })
 });
 
-reviewController.delete('/:id', function (req: express.Request, res: express.Response, next: Function) {
+reviewController.delete('/:id([0-9]+)', function (req: express.Request, res: express.Response, next: Function) {
     let reviewRepo: ReviewRepository = new ReviewRepository();
     let apiResponse: APIResponse;
     let requestBy: number = req.headers['clapi-user-key'] || (req.query && req.query.user_key) || CLConstants.GUEST_USER;
@@ -91,45 +101,40 @@ reviewController.delete('/:id', function (req: express.Request, res: express.Res
         })
 });
 
-reviewController.get('/:id', function (req: express.Request, res: express.Response, next: Function) {
+reviewController.get('/:id([0-9]+)?', function (req: express.Request, res: express.Response, next: Function) {
     let reviewRepo: ReviewRepository = new ReviewRepository();
-    let apiResponse: APIResponse;
+    let apiResponse: APIResponse;    
     let requestBy: number = req.headers['clapi-user-key'] || (req.query && req.query.user_key) || CLConstants.GUEST_USER;
-    reviewRepo.get(req.params.id, requestBy)
-        .then(function (result) {
-            apiResponse = {
-                data: result
-                , isValid: true
-            };
-            res.send(apiResponse);
-        })
-        .catch(function (err) {
-            next(err);
-        })
-});
-
-reviewController.get('/', function (req: express.Request, res: express.Response, next: Function) {
-    let reviewRepo: ReviewRepository = new ReviewRepository();
-    let apiResponse: APIResponse;
-
-    let requestBy: number = req.headers['clapi-user-key'] || (req.query && req.query.user_key) || CLConstants.GUEST_USER;
-    let maxLimit: number = Number(process.env.PAGING_LIMIT || config.get("paging.limit"));
-    let offset: number = Number(req.query.offset || 0);
-    let limit: number = Number(req.query.limit || 0);
-
-    if (limit <= 0 || limit > maxLimit) {
-        limit = maxLimit;
+    let id: number = req.params.id || req.query.id;
+    if (id != null) {
+        reviewRepo.get(id, requestBy)
+            .then(function (result) {
+                apiResponse = {
+                    data: result
+                    , isValid: true
+                };
+                res.send(apiResponse);
+            })
+            .catch(function (err) {
+                next(err);
+            })
     }
-    reviewRepo.getAll(offset, limit, requestBy, req.query.iduser, req.query.idbusiness,req.query.idstatus)
-        .then(function (result) {
-            apiResponse = {
-                data: result
-                , isValid: true
-            };
-            res.send(apiResponse);
-        })
-        .catch(function (err) {
-            next(err);
-        })
+    else {
+        let util: Util.Util = new Util.Util();
+        let pagingInfo: Util.PagingInfo = util.getPagingInfo(req);
+        reviewRepo.getAll(pagingInfo.offset, pagingInfo.limit, requestBy, req.query.iduser, req.query.idbusiness, req.query.idstatus,req.query.idreviewparent)
+            .then(function (result) {
+                apiResponse = {
+                    data: result
+                    , isValid: true
+                };
+                res = util.setResponseHeaderPageLinks(result.recordCount, req, res, pagingInfo);
+                res.send(apiResponse);
+            })
+            .catch(function (err) {
+                next(err);
+            })
+    }
 });
+
 module.exports = reviewController;
