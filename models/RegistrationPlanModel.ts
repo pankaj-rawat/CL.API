@@ -4,8 +4,8 @@
     active: boolean,
     detail: string,
     price: number,
-    createdOn: Date,
-    lastUpdatedOn: Date,
+    createDate: Date,
+    updateDate: Date,
     features?: Array<RegistrationPlanFeatureModel>
 }
 
@@ -14,7 +14,7 @@ export interface RegistrationPlanFeatureModel {
     idRegistrationPlan:number,
     feature:string,
     active:boolean,
-    createdOn:Date,
-    lastUpdatedOn:Date
+    createDate:Date,
+    updateDate:Date
 }
 

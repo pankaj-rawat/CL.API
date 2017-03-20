@@ -15,23 +15,27 @@ export interface BusinessModel {
     idCountry: number,
     country?: string,
     webURL?: string,
+    email?:string,
     latitude?: number,
     longitude?: number,
-    geo?: string,
-    createdOn?: Date,
-    lastUpdateOn?: Date,
+    geo?: string,    
     description?: string,
     commenceDate?: Date,
     idRegistrationPlan: number,
     registrationPlanOptDate?: Date,
-    registrationPlanExpiry?: Date,
+    registrationPlanExpireDate?: Date,
     registrationPlanName?:string,
     images?: Array<BusinessImageModel>,
     operationHours?: Array<BusinessOperationHourModel>,
     idCategory:number,
     tags?: Array<model.TagModel>,
     contactNumbers?: Array<BusinessPhoneModel>,
-    createdBy:number
+    offers?:Array<BusinessOfferModel>,
+    createdBy?: number,
+    createDate?: Date,    
+    updatedBy?: number,
+    updateDate?: Date,
+    rating?:number
 }
 
 export interface BusinessSearchResultModel {
@@ -49,7 +53,7 @@ export interface BusinessSearchResultModel {
     latitude?: number,
     longitude?: number,
     geo?: string,    
-    profileImgURL?: string,
+    profileImageURL?: string,
     idOffer?: number,
     offer?: string,
     rating: Number,
@@ -67,14 +71,13 @@ export interface BusinessPhoneModel {
 
 export interface BusinessImageModel {
     id?: number,
-    imgURL: string,
-    uploadedOn?: Date,
     idBusinessId?: number,
-    isProfileImage: boolean
+    imageURL: string,
+    isProfileImage: boolean,
+    uploadDate?: Date,
 }
 
 export interface BusinessOperationHourModel {
-    id?: number,
     idBusiness: number,
     day: number,
     timeOpen: string,
@@ -84,10 +87,12 @@ export interface BusinessOperationHourModel {
 export interface BusinessOfferModel {
     id?: number,
     offer: string,
-    detail: string,
+    idStatus?: number,
     idBusiness: number,
-    createdOn: Date,
-    lastUpdatedOn: Date,
-    expiryDate: Date,
-    termsCondition?: string
+    detail: string,    
+    effectiveDate: Date,
+    expireDate: Date,
+    termsCondition?: string,
+    createDate?: Date,
+    updateDate?: Date
 }

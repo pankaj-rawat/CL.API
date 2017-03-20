@@ -7,8 +7,8 @@
     phoneCell?: number;   
     idStatus?: number;
     idCity: number;
-    createdOn?: Date;
-    lastupdatedOn?: Date;
+    createDate?: Date;
+    updateDate?: Date;
     subscriptionOptIn: boolean;
     subscriptionOptInDate?: Date;
     subscriptionOptOutDate?: Date;

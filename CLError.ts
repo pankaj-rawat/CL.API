@@ -1,36 +1,36 @@
 ﻿import express = require('express');
 
 export enum ErrorCode {
-    REQUIRED_PARAM_MISSING = 10001,
-    DB_CONNECTION_FAIL = 10002,
-    DB_QUERY_EXECUTION_ERROR = 10003,
-    DB_DATA_PARSE_ERROR = 10004,
-    USER_NOT_FOUND = 10005,
-    USER_AUTHENTICATION_FAILED = 10006,
-    USER_NOT_AUTHORIZED = 10007,
-    USER_IDENTIFICATION_MISSING = 10008,
-    USER_TOKEN_EXPIRED = 10009,
-    CLIENT_NOT_FOUND = 10010,
-    INVALID_CLIENT_KEY = 10011,
-    CLIENT_BLOCKED = 10012,
-    CLIENT_AUTO_AUTH_DISABLED = 10013,
-    CLIENT_IDENTIFICATION_MISSING = 10014,
-    CLIENT_TOKEN_EXPIRED = 10015,
-    INVALID_USER_TOKEN = 10016,
-    RESOURCE_NOT_FOUND = 10017,
-    INVALID_PARAM_VALUE = 10018,
-    DB_DUPLICATE_ENTRY = 10019,  
-    CLIENT_AUTO_AUTH_FAILED = 10020,
-    PASSWORD_RESET_LINK_EXPIRED = 10021,
-    MAILER_FAILED=10022
+    REQUIRED_PARAM_MISSING = 10001
+    , DB_CONNECTION_FAIL = 10002
+    , DB_QUERY_EXECUTION_ERROR = 10003
+    , DB_DATA_PARSE_ERROR = 10004
+    , USER_NOT_FOUND = 10005
+    , USER_AUTHENTICATION_FAILED = 10006
+    , USER_NOT_AUTHORIZED = 10007
+    , USER_IDENTIFICATION_MISSING = 10008
+    , USER_TOKEN_EXPIRED = 10009
+    , CLIENT_NOT_FOUND = 10010
+    , INVALID_CLIENT_KEY = 10011
+    , CLIENT_BLOCKED = 10012
+    , CLIENT_AUTO_AUTH_DISABLED = 10013
+    , CLIENT_IDENTIFICATION_MISSING = 10014
+    , CLIENT_TOKEN_EXPIRED = 10015
+    , INVALID_USER_TOKEN = 10016
+    , RESOURCE_NOT_FOUND = 10017
+    , INVALID_PARAM_VALUE = 10018
+    , DB_DUPLICATE_ENTRY = 10019
+    , CLIENT_AUTO_AUTH_FAILED = 10020
+    , PASSWORD_RESET_LINK_EXPIRED = 10021
+    , MAILER_FAILED = 10022
 }
 
-function errorCodeMessage(errorCode: number,messageDetail:string): string {
+function errorCodeMessage(errorCode: number, messageDetail: string): string {
     let msg: string = undefined;
     switch (errorCode) {
         case ErrorCode.REQUIRED_PARAM_MISSING:
             msg = "Required parameter missing.";
-            break;    
+            break;
         case ErrorCode.DB_CONNECTION_FAIL:
             msg = "Database connection failed.";
             break;
@@ -39,10 +39,10 @@ function errorCodeMessage(errorCode: number,messageDetail:string): string {
             break;
         case ErrorCode.DB_DATA_PARSE_ERROR:
             msg = "Error while parsing data.";
-            break;  
+            break;
         case ErrorCode.USER_NOT_FOUND:
             msg = "User not found.";
-            break; 
+            break;
         case ErrorCode.USER_AUTHENTICATION_FAILED:
             msg = "Incorrect credentials. Authentication failed.";
             break;
@@ -84,16 +84,16 @@ function errorCodeMessage(errorCode: number,messageDetail:string): string {
             break;
         case ErrorCode.DB_DUPLICATE_ENTRY:
             msg = "Duplicate entry.";
-            break; 
+            break;
         case ErrorCode.CLIENT_AUTO_AUTH_FAILED:
             msg = "Client auto authorization failed.";
-            break;    
+            break;
         case ErrorCode.PASSWORD_RESET_LINK_EXPIRED:
             msg = "Password reset link expired.";
-            break;  
+            break;
         case ErrorCode.MAILER_FAILED:
             msg = "Not able to send mail.";
-            break;          
+            break;      
         default:
             msg = errorCode.toString();
             break;
@@ -107,7 +107,7 @@ export class CustomError extends Error {
     constructor(name, statusCode, errorCode, message: string) {
         super(message);
         Error.captureStackTrace(this, this.constructor);
-        this.name = name || 'CustomError';       
+        this.name = name || 'CustomError';
         this.statusCode = statusCode || 400;
         this.errorCode = errorCode || 400;
         this.message = errorCodeMessage(errorCode, message);
@@ -160,7 +160,7 @@ export class Unauthorized extends Error {
     errorCode: number;
     constructor(errorCode?: number, message?: string) {
         super(message);
-       Error.captureStackTrace(this, this.constructor);
+        Error.captureStackTrace(this, this.constructor);
         this.name = this.constructor.name;
         this.statusCode = 401;
         this.errorCode = errorCode || 401;

@@ -10,8 +10,8 @@
     "port": 1337
   },
   "token": {
-    "minutesToExpire-user": 30,
-    "minutesToExpire-client": 30,
+    "minutesToExpire_user": 1000,
+    "minutesToExpire_client": 30,
     "key": "sss.sss.sss.ssh"
   },
   "log": {
@@ -29,5 +29,6 @@
   },
   "forget-pwd": {
     "daysToLinkExp": 1
-  }
+  },
+  "mybusiness_request_code_days_to_exp": 1
 }

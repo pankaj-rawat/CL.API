@@ -1,13 +1,39 @@
 ﻿import url = require('url');
 import express = require("express");
+import config = require('config');
 
-export class Util {
+export class Util{
+
+    getPagingInfo(req:express.Request): PagingInfo {
+        let maxLimit: number = Number(process.env.PAGING_LIMIT || config.get("paging.limit"));
+        let offset: number = Number(req.query.offset || 0);
+        let limit: number = Number(req.query.limit || 0);
+        if (limit <= 0 || limit > maxLimit) {
+            limit = maxLimit;
+        }
+        if (offset < 0) {
+            offset = 0;
+        }
+        let pagingData: PagingInfo;
+        pagingData = {
+            limit: limit    
+            ,offset:offset
+        }
+        return pagingData; 
+    }
+
+    setResponseHeaderPageLinks(recordCount: number, req: express.Request, res: express.Response, pagingInfo:PagingInfo): express.Response {
+        var pageLink = this.getPageLinks(this.getURLstring(req), pagingInfo.offset, pagingInfo.limit, recordCount);
+        res.links(pageLink);
+        res.setHeader('content-range', getHeaderContentRange(pagingInfo.offset, pagingInfo.limit, recordCount));
+        return res;
+    };
 
     getPageLinks(uri: string, offset: number, limit: number, totalCount: number): Links {
-        let links: Links = {
-            self: uri
-        };
         let current: number = offset;
+        let links: Links = {
+            self: this.updateUrlParameter(uri, "offset", current.toString()) //uri
+        };
         var totalPossiblePage = Math.ceil(totalCount / limit);
         if (current > 0) {
             links.first = this.updateUrlParameter(links.self, "offset", "0");
@@ -22,10 +48,10 @@ export class Util {
         return links;
     };
 
-    getURLstring(req): string {
+    getURLstring(req: express.Request): string {
         var urlobj = url.parse(req.originalUrl, true);
         urlobj.protocol = req.protocol;
-        urlobj.host = req.headers.host;
+        urlobj.host = req.get('host');
         return url.format(urlobj);
 
     };
@@ -55,22 +81,27 @@ export class Util {
         return uri + hash;
     }
 
-    getHeaderContentRange(offset: number, limit: number, recordCount: number): string {
-        let rangeFrom: number = offset+1;
-        let rangeTo: number = offset + limit;
-        let rangeOf: number = recordCount;
-        if (rangeTo > rangeOf) {
-            rangeTo = rangeOf;
-        }
-        return rangeFrom.toString() + "-" + rangeTo.toString() + "/" + rangeOf; //subtracting with 0 just to convert into number again.;
-    }
-
-    getPostedResourceLocation(req:express.Request,resourceId:string):string {
+    getPostedResourceLocation(req: express.Request, resourceId: string): string {
         let locationLink: string;
-        locationLink = this.getURLstring(req) + "/" +resourceId;
+        locationLink = this.getURLstring(req) + "/" + resourceId;
         return locationLink;
     }
 };
+
+export interface PagingInfo {
+    limit: number;
+    offset: number;
+}
+
+function getHeaderContentRange(offset: number, limit: number, recordCount: number): string {
+    let rangeFrom: number = offset + 1;
+    let rangeTo: number = offset + limit;
+    let rangeOf: number = recordCount;
+    if (rangeTo > rangeOf) {
+        rangeTo = rangeOf;
+    }
+    return rangeFrom.toString() + "-" + rangeTo.toString() + "/" + rangeOf; //subtracting with 0 just to convert into number again.;
+}
 
 interface Links {
     next?: string;
@@ -79,3 +110,4 @@ interface Links {
     first?: string;
     last?: string;
 }
+

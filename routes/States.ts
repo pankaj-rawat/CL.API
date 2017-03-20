@@ -1,5 +1,5 @@
 ﻿import {APIResponse} from "../APIResponse";
-import {Util} from "../Util";
+import * as Util from "../Util";
 import {StateRepository} from  "../repositories/CityStateCountryRepository";
 import express = require('express');
 import config = require('config');
@@ -23,25 +23,14 @@ stateController.get('/:id', function (req: express.Request, res: express.Respons
 stateController.get('', function (req: express.Request, res: express.Response, next): void {
     let stateRepo = new StateRepository();
     let clRes: APIResponse;
-    let maxLimit: number = Number(process.env.PAGING_LIMIT || config.get("paging.limit")); 
-    let offset: number = Number(req.query.offset || 0);  
-    let limit: number = Number(req.query.limit || 0);
-    let idCountry: number = Number(req.query.idcountry || 0);
-
-    if (limit <= 0 || limit > maxLimit) {
-        limit = maxLimit;
-    }
-    if (offset < 0) {
-        offset = 0;
-    }
+    let util: Util.Util = new Util.Util();
+    let pagingInfo: Util.PagingInfo = util.getPagingInfo(req); 
+    let idCountry: number = Number(req.query.idcountry || 0); 
         
-    stateRepo.getAll(offset, limit, idCountry)
-        .then(function (result) {
-            let util: Util = new Util();
+    stateRepo.getAll(pagingInfo.offset, pagingInfo.limit, idCountry)
+        .then(function (result) {          
             clRes = { data: result.data, isValid: true };
-            var pageLink = util.getPageLinks(util.getURLstring(req), offset, limit, result.recordCount);
-            res.links(pageLink);            
-            res.setHeader('content-range', util.getHeaderContentRange(offset,limit,result.recordCount));
+            res = util.setResponseHeaderPageLinks(result.recordCount, req, res, pagingInfo);  
             res.send(clRes);
         })
         .catch(function (err) {

@@ -17,10 +17,9 @@ export enum Action {
     Get_Owned = 2,
     Put_Any = 4,
     Put_Owned = 8,
-    Post_Any = 16,
-    Post_Owned = 32,
-    Delete_Any = 64,
-    Delete_Owned= 128
+    Post=16,
+    Delete_Any = 32,
+    Delete_Owned= 64
 }
 
 export enum WeekDay {
