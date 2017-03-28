@@ -27,6 +27,9 @@ app.use(function (req: express.Request, res: express.Response, next) {
     next();
 });
 
+// Serving static files from "public" folder
+app.use(express.static("public"));
+
 // configure app to use bodyParser()
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());

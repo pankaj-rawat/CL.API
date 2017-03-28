@@ -11,7 +11,44 @@ import * as Util from "../Util";
 import {CLConstants} from "../CLConstants";
 
 var userController = express.Router();
+/**
+ * @apiDefine UserNotFoundError
+ * @apiError UserNotFound The ,code>id<code> of the User was not found.
+ *
+ * @apiErrorExample Error-Response:
+ *     HTTP/1.1 404 Not Found
+ *     {
+ *       "error": "UserNotFound"
+ *     }
+ */
 
+/**
+ * @apiDefine admin User access only
+ * This optional description belong to to the group admin.
+ */
+
+
+/**
+ * @api {get} /users/:id Request user information.
+ * @apiPermission admin
+ * @apiName GetUser
+ * @apiGroup User
+ * @apiParam {Number} id Users unique ID.
+ * @apiSuccess {UserModel} User detail
+ * @apiSuccessExample {json} Success-Response:
+ *    HTTP/1.1 200 OK
+ *    [{
+ *      "id": 1,
+ *      "title": "Study",
+ *      "done": false
+ *      "updated_at": "2016-02-10T15:46:51.778Z",
+ *      "created_at": "2016-02-10T15:46:51.778Z"
+ *    }]
+ * @apiUse UserNotFoundError
+ * @apiErrorExample {json} List error
+ *    HTTP/1.1 500 Internal Server Error
+ *    HTTP/1.1 400 Bad request, Invalid parameters
+ */
 userController.get('/:id([0-9]+)', function (req: express.Request, res: express.Response, next: Function) {
     let userP: Promise<model.UserModel>;
     let userRepo = new UserRepository();
@@ -116,7 +153,22 @@ userController.put('/:id([0-9]+)', function (req: express.Request, res: express.
     });
 });
 
-
+/**
+ * @api {post} /login
+ * @apiGroup User
+ * @apiSuccess {AuthModel} User Authorization detail
+ * @apiSuccessExample {json} Success
+ *    HTTP/1.1 200 OK
+ *    [{
+ *      "id": 1,
+ *      "title": "Study",
+ *      "done": false
+ *      "updated_at": "2016-02-10T15:46:51.778Z",
+ *      "created_at": "2016-02-10T15:46:51.778Z"
+ *    }]
+ * @apiErrorExample {json} List error
+ *    HTTP/1.1 500 Internal Server Error
+ */
 userController.post('/login', function (req: express.Request, res: express.Response, next: Function) {
     Logger.log.info('login is in process.');
     let clRes: APIResponse;
