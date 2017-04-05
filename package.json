@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "apidoc": "^0.17.5",
-    "async": "^2.1.5",
+    "async": "^2.3.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.17.1",
     "config": "^1.25.1",
@@ -39,7 +39,7 @@
     "version": "1.0.0",
     "description": "API task list manager",
     "template": {
-    "forceLanguage": "en"
+      "forceLanguage": "en"
     }
   }
 }
