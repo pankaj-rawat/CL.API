@@ -22,7 +22,7 @@
     <OutputPath>.</OutputPath>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <ProjectTypeGuids>{3AF33F2E-1136-4D97-BBB7-1795711AC8B8};{349c5851-65df-11da-9384-00065b846f21};{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}</ProjectTypeGuids>
-    <ProjectView>ProjectFiles</ProjectView>
+    <ProjectView>ShowAllFiles</ProjectView>
     <NodejsPort>1337</NodejsPort>
     <TypeScriptSourceMap>true</TypeScriptSourceMap>
     <TypeScriptModuleKind>CommonJS</TypeScriptModuleKind>
@@ -59,13 +59,14 @@
     <TypeScriptSourceRoot />
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="scripts\typings.json" />
+    <Content Include="scripts\typings\modules\lodash\typings.json" />
     <Content Include="web.config" />
     <None Include="CL.API.pubxml" />
     <Content Include="config\default.json" />
     <Content Include="config\production.json" />
     <Content Include="Metadata\deploymentTemplates\apiappconfig.azureresource.json" />
     <None Include="nodePub.pubxml" />
-    <Content Include="Scripts\tsd.json" />
     <Content Include="ssl_cert\cert.pem" />
     <Content Include="ssl_cert\key.pem" />
     <Content Include="test\mocha.opts" />
@@ -119,9 +120,11 @@
     <TypeScriptCompile Include="Scripts\typings\config\config.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\express-serve-static-core\express-serve-static-core.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\express\express.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\index.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\jwt-simple\jwt-simple.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\mime\mime.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\mocha\mocha.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\modules\lodash\index.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\mysql\mysql.d.ts" />
     <TypeScriptCompile Include="scripts\typings\nodemailer-direct-transport\nodemailer-direct-transport.d.ts" />
     <TypeScriptCompile Include="scripts\typings\nodemailer-smtp-transport\nodemailer-smtp-transport.d.ts" />
@@ -131,7 +134,6 @@
     <TypeScriptCompile Include="Scripts\typings\should\should.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\superagent\superagent.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\supertest\supertest.d.ts" />
-    <TypeScriptCompile Include="Scripts\typings\tsd.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\winston\winston.d.ts" />
     <TypeScriptCompile Include="Server.ts" />
     <Content Include="package.json" />
@@ -152,6 +154,8 @@
     <Folder Include="middlewares\" />
     <Folder Include="models\" />
     <Folder Include="scripts\typings\bluebird\" />
+    <Folder Include="scripts\typings\modules\" />
+    <Folder Include="scripts\typings\modules\lodash\" />
     <Folder Include="scripts\typings\nodemailer-direct-transport\" />
     <Folder Include="scripts\typings\nodemailer-smtp-transport\" />
     <Folder Include="scripts\typings\nodemailer\" />
