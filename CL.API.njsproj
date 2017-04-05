@@ -120,7 +120,6 @@
     <TypeScriptCompile Include="Scripts\typings\express-serve-static-core\express-serve-static-core.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\express\express.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\jwt-simple\jwt-simple.d.ts" />
-    <TypeScriptCompile Include="Scripts\typings\lodash\lodash.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\mime\mime.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\mocha\mocha.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\mysql\mysql.d.ts" />
@@ -168,7 +167,6 @@
     <Folder Include="Scripts\typings\express-serve-static-core\" />
     <Folder Include="Scripts\typings\express\" />
     <Folder Include="Scripts\typings\jwt-simple\" />
-    <Folder Include="Scripts\typings\lodash\" />
     <Folder Include="Scripts\typings\mime\" />
     <Folder Include="Scripts\typings\mocha\" />
     <Folder Include="Scripts\typings\mysql\" />
