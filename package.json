@@ -35,9 +35,12 @@
     "start": "tsc  && node Index.js"
   },
   "apidoc": {
-    "name": "Task API documentation",
-    "version": "1.0.0",
-    "description": "API task list manager",
+    "name": "CL API documentation",
+    "version": "0.0.0",
+    "description": "CL service",
+    "title": "CL API",
+    "url": "https://cl-api.herokuapp.com/api",
+    "sampleurl": "https://cl-api.herokuapp.com/api",
     "template": {
       "forceLanguage": "en"
     }

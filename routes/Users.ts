@@ -24,7 +24,7 @@ var userController = express.Router();
 
 /**
  * @apiDefine admin User access only
- * This optional description belong to to the group admin.
+ * This optional description belong to the group admin.
  */
 
 
