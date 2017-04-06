@@ -137,7 +137,7 @@ export class AuthRepository implements irepo.IAuthRepository {
                             if (clientId > 0) {
                                 return reject(new CLError.Unauthorized(CLError.ErrorCode.CLIENT_AUTO_AUTH_FAILED));
                             }
-                            return reject(new CLError.Unauthorized(CLError.ErrorCode.CLIENT_NOT_FOUND));
+                            return reject(new CLError.NotFound(CLError.ErrorCode.CLIENT_NOT_FOUND));
                         }
                         //TODO: need to save apiKey in encrypted form as we are doing in user password.
                         if (ck != clientKey) {                            
