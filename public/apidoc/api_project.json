@@ -1,7 +1,10 @@
 {
-  "name": "Task API documentation",
-  "version": "1.0.0",
-  "description": "API task list manager",
+  "name": "CL API documentation",
+  "version": "0.0.0",
+  "description": "CL service",
+  "title": "CL API",
+  "url": "https://cl-api.herokuapp.com/api",
+  "sampleurl": "https://cl-api.herokuapp.com/api",
   "template": {
     "forceLanguage": "en"
   },
@@ -10,7 +13,7 @@
   "apidoc": "0.3.0",
   "generator": {
     "name": "apidoc",
-    "time": "2017-04-05T21:16:56.489Z",
+    "time": "2017-04-06T23:39:06.492Z",
     "url": "http://apidocjs.com",
     "version": "0.17.5"
   }
