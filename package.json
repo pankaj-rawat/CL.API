@@ -37,10 +37,9 @@
   "apidoc": {
     "name": "CL API documentation",
     "version": "0.0.0",
-    "description": "CL service",
+    "description": "CityLocal service",
     "title": "CL API",
     "url": "https://cl-api.herokuapp.com/api",
-    "sampleurl": "https://cl-api.herokuapp.com/api",
     "template": {
       "forceLanguage": "en"
     }

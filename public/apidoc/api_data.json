@@ -2,38 +2,21 @@
   {
     "type": "post",
     "url": "/auth/connect",
-    "title": "Return client's token.",
-    "header": {
-      "fields": {
-        "Header": [
-          {
-            "group": "Header",
-            "type": "String",
-            "optional": false,
-            "field": "content-type",
-            "defaultValue": "application/x-www-form-urlencoded",
-            "description": "<p>application/x-www-form-urlencoded</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Header-Example:",
-          "content": "{\n  \"Content-Type\":\"application/x-www-form-urlencoded\"\n}",
-          "type": "json"
-        }
-      ]
-    },
+    "title": "Connect",
+    "name": "Connect",
+    "group": "Authorization",
     "examples": [
       {
         "title": "Example usage:",
-        "content": "endpoint: https://cl-api-s.herokuapp.com/api/auth/connect\n\nbody:\n{\n  \"clientName\":\"webApp1\",\n  \"clientKey\":\"123456789\"\n}",
+        "content": "header:\n{\n      \"content-type\":\"application/x-www-form-urlencoded\"\n}\nbody:\n{\n  \"clientName\":\"webApp\",\n  \"clientKey\":\"123456789\"\n}",
         "type": "json"
       }
     ],
-    "sampleRequest": [
+    "permission": [
       {
-        "url": "https://cl-api-s.herokuapp.com/api/auth/connect"
+        "name": "none",
+        "title": "public access",
+        "description": "<p>Publically available to connect with api.</p>"
       }
     ],
     "parameter": {
@@ -44,121 +27,83 @@
             "type": "String",
             "optional": false,
             "field": "clientName",
-            "defaultValue": "webapp",
-            "description": ""
+            "description": "<p>Name of the client.</p>"
           },
           {
             "group": "Parameter",
             "type": "String",
             "optional": false,
             "field": "clientKey",
-            "defaultValue": "123456789",
-            "description": ""
+            "description": "<p>Public key shared with client.</p>"
           }
         ]
       }
     },
-    "group": "Authorization",
+    "description": "<p>Used to acquire token which is required for further communication with CL API. Note: header content-type should be set to &quot;application/x-www-form-urlencoded&quot;</p>",
     "version": "0.0.0",
     "filename": "./routes/Auth.js",
     "groupTitle": "Authorization",
-    "name": "PostAuthConnect",
-    "error": {
-      "fields": {
-        "Error 4xx": [
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "CLIENT_NOT_FOUND",
-            "description": "<p>The client was not found.</p>"
-          },
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "DB_CONNECTION_FAIL",
-            "description": "<p>Database connection failed.</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "CLIENT_NOT_FOUND-Response:",
-          "content": "HTTP/1.1 200 OK\n {\n        \"error\": {\n        \"errorCode\": 10010,\n        \"statusCode\": 401,\n        \"message\": \"Client not found.\"\n },\n \"isValid\": false\n }",
-          "type": "JSON"
-        },
-        {
-          "title": "DB_CONNECTION_FAIL-response",
-          "content": "HTTP/1.1 200 OK\n {\n        \"error\": {\n        \"errorCode\": 10002,\n        \"statusCode\": 500,\n        \"message\": \"Db connection failed.\"\n },\n \"isValid\": false\n }",
-          "type": "JSON"
-        },
-        {
-          "title": "DB_CONNECTION_FAIL-response",
-          "content": "HTTP/1.1 200 OK\n {\n        \"error\": {\n        \"errorCode\": 10002,\n        \"statusCode\": 500,\n        \"message\": \"Db connection failed.\"\n },\n \"isValid\": false\n }",
-          "type": "JSON"
-        }
-      ]
-    },
     "success": {
       "fields": {
-        "response": [
+        "Response": [
           {
-            "group": "response",
+            "group": "Response",
             "type": "Object",
             "optional": true,
             "field": "data",
-            "description": "<p>API response.</p>"
+            "description": "<p>data returned by the specific method calls. It may not be avaiable only in case of an error.</p>"
           },
           {
-            "group": "response",
+            "group": "Response",
             "type": "String",
             "optional": false,
             "field": "data.expires",
             "description": "<p>token expiring datetime.</p>"
           },
           {
-            "group": "response",
+            "group": "Response",
             "type": "String",
             "optional": false,
             "field": "data.token",
             "description": "<p>token to use in further communications.</p>"
           },
           {
-            "group": "response",
+            "group": "Response",
             "type": "Bool",
             "optional": false,
             "field": "isValid",
             "description": "<p>result status.</p>"
           },
           {
-            "group": "response",
+            "group": "Response",
             "type": "String",
             "optional": true,
             "field": "message",
             "description": "<p>Message if any.</p>"
           },
           {
-            "group": "response",
+            "group": "Response",
             "type": "Object",
             "optional": true,
             "field": "error",
             "description": "<p>Error.</p>"
           },
           {
-            "group": "response",
+            "group": "Response",
             "type": "Number",
             "optional": true,
             "field": "error.errorCode",
             "description": "<p>API error code.</p>"
           },
           {
-            "group": "response",
+            "group": "Response",
             "type": "Number",
             "optional": true,
             "field": "error.statusCode",
             "description": "<p>representing equivalent Http status code.</p>"
           },
           {
-            "group": "response",
+            "group": "Response",
             "type": "String",
             "optional": true,
             "field": "error.message",
@@ -171,6 +116,30 @@
           "title": "Success-Response:",
           "content": "{\n    \"data\": {\n     \"expires\": \"2017-04-06T19:59:47.254Z\",\n     \"token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjbGllbnQiX0.LVDGN2KLC7sg1BPdac9TEQnTznNVdLImhSrf8qbDfNI\"\n     },\n    \"isValid\": true\n}",
           "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "examples": [
+        {
+          "title": "Client not found",
+          "content": "HTTP/1.1 200 OK\n {\n        \"error\": {\n        \"errorCode\": 10010,\n        \"statusCode\": 401,\n        \"message\": \"Client not found.\"\n        },\n        \"isValid\": false\n }",
+          "type": "JSON"
+        },
+        {
+          "title": "Database connection failed",
+          "content": "HTTP/1.1 200 OK\n {\n        \"error\": {\n        \"errorCode\": 10002,\n        \"statusCode\": 500,\n        \"message\": \"Db connection failed.\"\n         },\n         \"isValid\": false\n }",
+          "type": "JSON"
+        },
+        {
+          "title": "Parameter missing",
+          "content": "HTTP/1.1 200 OK\n  {\n    \"error\": {\n      \"errorCode\": 10001,\n      \"statusCode\": 400,\n      \"message\": \"Required parameter missing.Missing  client key.\"\n    },\n    \"isValid\": false\n  }",
+          "type": "JSON"
+        },
+        {
+          "title": "Invalid client key",
+          "content": "HTTP/1.1 200 OK\n   {\n      \"error\": {\n      \"errorCode\": 10011,\n      \"statusCode\": 401,\n      \"message\": \"Client key not valid.\"\n      },\n      \"isValid\": false\n  }",
+          "type": "JSON"
         }
       ]
     }
@@ -178,38 +147,21 @@
   {
     "type": "post",
     "url": "/auth/connect",
-    "title": "Return client's token.",
-    "header": {
-      "fields": {
-        "Header": [
-          {
-            "group": "Header",
-            "type": "String",
-            "optional": false,
-            "field": "content-type",
-            "defaultValue": "application/x-www-form-urlencoded",
-            "description": "<p>application/x-www-form-urlencoded</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Header-Example:",
-          "content": "{\n  \"Content-Type\":\"application/x-www-form-urlencoded\"\n}",
-          "type": "json"
-        }
-      ]
-    },
+    "title": "Connect",
+    "name": "Connect",
+    "group": "Authorization",
     "examples": [
       {
         "title": "Example usage:",
-        "content": "endpoint: https://cl-api-s.herokuapp.com/api/auth/connect\n\nbody:\n{\n  \"clientName\":\"webApp1\",\n  \"clientKey\":\"123456789\"\n}",
+        "content": "header:\n{\n      \"content-type\":\"application/x-www-form-urlencoded\"\n}\nbody:\n{\n  \"clientName\":\"webApp\",\n  \"clientKey\":\"123456789\"\n}",
         "type": "json"
       }
     ],
-    "sampleRequest": [
+    "permission": [
       {
-        "url": "https://cl-api-s.herokuapp.com/api/auth/connect"
+        "name": "none",
+        "title": "public access",
+        "description": "<p>Publically available to connect with api.</p>"
       }
     ],
     "parameter": {
@@ -220,121 +172,83 @@
             "type": "String",
             "optional": false,
             "field": "clientName",
-            "defaultValue": "webapp",
-            "description": ""
+            "description": "<p>Name of the client.</p>"
           },
           {
             "group": "Parameter",
             "type": "String",
             "optional": false,
             "field": "clientKey",
-            "defaultValue": "123456789",
-            "description": ""
+            "description": "<p>Public key shared with client.</p>"
           }
         ]
       }
     },
-    "group": "Authorization",
+    "description": "<p>Used to acquire token which is required for further communication with CL API. Note: header content-type should be set to &quot;application/x-www-form-urlencoded&quot;</p>",
     "version": "0.0.0",
     "filename": "./routes/Auth.ts",
     "groupTitle": "Authorization",
-    "name": "PostAuthConnect",
-    "error": {
-      "fields": {
-        "Error 4xx": [
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "CLIENT_NOT_FOUND",
-            "description": "<p>The client was not found.</p>"
-          },
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "DB_CONNECTION_FAIL",
-            "description": "<p>Database connection failed.</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "CLIENT_NOT_FOUND-Response:",
-          "content": "HTTP/1.1 200 OK\n {\n        \"error\": {\n        \"errorCode\": 10010,\n        \"statusCode\": 401,\n        \"message\": \"Client not found.\"\n },\n \"isValid\": false\n }",
-          "type": "JSON"
-        },
-        {
-          "title": "DB_CONNECTION_FAIL-response",
-          "content": "HTTP/1.1 200 OK\n {\n        \"error\": {\n        \"errorCode\": 10002,\n        \"statusCode\": 500,\n        \"message\": \"Db connection failed.\"\n },\n \"isValid\": false\n }",
-          "type": "JSON"
-        },
-        {
-          "title": "DB_CONNECTION_FAIL-response",
-          "content": "HTTP/1.1 200 OK\n {\n        \"error\": {\n        \"errorCode\": 10002,\n        \"statusCode\": 500,\n        \"message\": \"Db connection failed.\"\n },\n \"isValid\": false\n }",
-          "type": "JSON"
-        }
-      ]
-    },
     "success": {
       "fields": {
-        "response": [
+        "Response": [
           {
-            "group": "response",
+            "group": "Response",
             "type": "Object",
             "optional": true,
             "field": "data",
-            "description": "<p>API response.</p>"
+            "description": "<p>data returned by the specific method calls. It may not be avaiable only in case of an error.</p>"
           },
           {
-            "group": "response",
+            "group": "Response",
             "type": "String",
             "optional": false,
             "field": "data.expires",
             "description": "<p>token expiring datetime.</p>"
           },
           {
-            "group": "response",
+            "group": "Response",
             "type": "String",
             "optional": false,
             "field": "data.token",
             "description": "<p>token to use in further communications.</p>"
           },
           {
-            "group": "response",
+            "group": "Response",
             "type": "Bool",
             "optional": false,
             "field": "isValid",
             "description": "<p>result status.</p>"
           },
           {
-            "group": "response",
+            "group": "Response",
             "type": "String",
             "optional": true,
             "field": "message",
             "description": "<p>Message if any.</p>"
           },
           {
-            "group": "response",
+            "group": "Response",
             "type": "Object",
             "optional": true,
             "field": "error",
             "description": "<p>Error.</p>"
           },
           {
-            "group": "response",
+            "group": "Response",
             "type": "Number",
             "optional": true,
             "field": "error.errorCode",
             "description": "<p>API error code.</p>"
           },
           {
-            "group": "response",
+            "group": "Response",
             "type": "Number",
             "optional": true,
             "field": "error.statusCode",
             "description": "<p>representing equivalent Http status code.</p>"
           },
           {
-            "group": "response",
+            "group": "Response",
             "type": "String",
             "optional": true,
             "field": "error.message",
@@ -349,232 +263,30 @@
           "type": "json"
         }
       ]
+    },
+    "error": {
+      "examples": [
+        {
+          "title": "Client not found",
+          "content": "HTTP/1.1 200 OK\n {\n        \"error\": {\n        \"errorCode\": 10010,\n        \"statusCode\": 401,\n        \"message\": \"Client not found.\"\n        },\n        \"isValid\": false\n }",
+          "type": "JSON"
+        },
+        {
+          "title": "Database connection failed",
+          "content": "HTTP/1.1 200 OK\n {\n        \"error\": {\n        \"errorCode\": 10002,\n        \"statusCode\": 500,\n        \"message\": \"Db connection failed.\"\n         },\n         \"isValid\": false\n }",
+          "type": "JSON"
+        },
+        {
+          "title": "Parameter missing",
+          "content": "HTTP/1.1 200 OK\n  {\n    \"error\": {\n      \"errorCode\": 10001,\n      \"statusCode\": 400,\n      \"message\": \"Required parameter missing.Missing  client key.\"\n    },\n    \"isValid\": false\n  }",
+          "type": "JSON"
+        },
+        {
+          "title": "Invalid client key",
+          "content": "HTTP/1.1 200 OK\n   {\n      \"error\": {\n      \"errorCode\": 10011,\n      \"statusCode\": 401,\n      \"message\": \"Client key not valid.\"\n      },\n      \"isValid\": false\n  }",
+          "type": "JSON"
+        }
+      ]
     }
-  },
-  {
-    "type": "get",
-    "url": "/users/:id",
-    "title": "Request user information.",
-    "permission": [
-      {
-        "name": "admin",
-        "title": "User access only",
-        "description": "<p>This optional description belong to the group admin.</p>"
-      }
-    ],
-    "name": "GetUser",
-    "group": "User",
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "Number",
-            "optional": false,
-            "field": "id",
-            "description": "<p>Users unique ID.</p>"
-          }
-        ]
-      }
-    },
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "UserModel",
-            "optional": false,
-            "field": "User",
-            "description": "<p>detail</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n[{\n  \"id\": 1,\n  \"title\": \"Study\",\n  \"done\": false\n  \"updated_at\": \"2016-02-10T15:46:51.778Z\",\n  \"created_at\": \"2016-02-10T15:46:51.778Z\"\n}]",
-          "type": "json"
-        }
-      ]
-    },
-    "error": {
-      "examples": [
-        {
-          "title": "List error",
-          "content": "HTTP/1.1 500 Internal Server Error\nHTTP/1.1 400 Bad request, Invalid parameters",
-          "type": "json"
-        },
-        {
-          "title": "Error-Response:",
-          "content": "HTTP/1.1 404 Not Found\n{\n  \"error\": \"UserNotFound\"\n}",
-          "type": "json"
-        }
-      ],
-      "fields": {
-        "Error 4xx": [
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "UserNotFound",
-            "description": "<p>The ,code&gt;id<code> of the User was not found.</p>"
-          }
-        ]
-      }
-    },
-    "version": "0.0.0",
-    "filename": "./routes/Users.js",
-    "groupTitle": "User"
-  },
-  {
-    "type": "get",
-    "url": "/users/:id",
-    "title": "Request user information.",
-    "permission": [
-      {
-        "name": "admin",
-        "title": "User access only",
-        "description": "<p>This optional description belong to the group admin.</p>"
-      }
-    ],
-    "name": "GetUser",
-    "group": "User",
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "Number",
-            "optional": false,
-            "field": "id",
-            "description": "<p>Users unique ID.</p>"
-          }
-        ]
-      }
-    },
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "UserModel",
-            "optional": false,
-            "field": "User",
-            "description": "<p>detail</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n[{\n  \"id\": 1,\n  \"title\": \"Study\",\n  \"done\": false\n  \"updated_at\": \"2016-02-10T15:46:51.778Z\",\n  \"created_at\": \"2016-02-10T15:46:51.778Z\"\n}]",
-          "type": "json"
-        }
-      ]
-    },
-    "error": {
-      "examples": [
-        {
-          "title": "List error",
-          "content": "HTTP/1.1 500 Internal Server Error\nHTTP/1.1 400 Bad request, Invalid parameters",
-          "type": "json"
-        },
-        {
-          "title": "Error-Response:",
-          "content": "HTTP/1.1 404 Not Found\n{\n  \"error\": \"UserNotFound\"\n}",
-          "type": "json"
-        }
-      ],
-      "fields": {
-        "Error 4xx": [
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "UserNotFound",
-            "description": "<p>The ,code&gt;id<code> of the User was not found.</p>"
-          }
-        ]
-      }
-    },
-    "version": "0.0.0",
-    "filename": "./routes/Users.ts",
-    "groupTitle": "User"
-  },
-  {
-    "type": "post",
-    "url": "/login",
-    "title": "",
-    "group": "User",
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "AuthModel",
-            "optional": false,
-            "field": "User",
-            "description": "<p>Authorization detail</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Success",
-          "content": "HTTP/1.1 200 OK\n[{\n  \"id\": 1,\n  \"title\": \"Study\",\n  \"done\": false\n  \"updated_at\": \"2016-02-10T15:46:51.778Z\",\n  \"created_at\": \"2016-02-10T15:46:51.778Z\"\n}]",
-          "type": "json"
-        }
-      ]
-    },
-    "error": {
-      "examples": [
-        {
-          "title": "List error",
-          "content": "HTTP/1.1 500 Internal Server Error",
-          "type": "json"
-        }
-      ]
-    },
-    "version": "0.0.0",
-    "filename": "./routes/Users.js",
-    "groupTitle": "User",
-    "name": "PostLogin"
-  },
-  {
-    "type": "post",
-    "url": "/login",
-    "title": "",
-    "group": "User",
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "type": "AuthModel",
-            "optional": false,
-            "field": "User",
-            "description": "<p>Authorization detail</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Success",
-          "content": "HTTP/1.1 200 OK\n[{\n  \"id\": 1,\n  \"title\": \"Study\",\n  \"done\": false\n  \"updated_at\": \"2016-02-10T15:46:51.778Z\",\n  \"created_at\": \"2016-02-10T15:46:51.778Z\"\n}]",
-          "type": "json"
-        }
-      ]
-    },
-    "error": {
-      "examples": [
-        {
-          "title": "List error",
-          "content": "HTTP/1.1 500 Internal Server Error",
-          "type": "json"
-        }
-      ]
-    },
-    "version": "0.0.0",
-    "filename": "./routes/Users.ts",
-    "groupTitle": "User",
-    "name": "PostLogin"
   }
 ]

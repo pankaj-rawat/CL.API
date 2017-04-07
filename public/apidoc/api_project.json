@@ -4,7 +4,6 @@
   "description": "CL service",
   "title": "CL API",
   "url": "https://cl-api.herokuapp.com/api",
-  "sampleurl": "https://cl-api.herokuapp.com/api",
   "template": {
     "forceLanguage": "en"
   },
@@ -13,7 +12,7 @@
   "apidoc": "0.3.0",
   "generator": {
     "name": "apidoc",
-    "time": "2017-04-07T15:48:20.146Z",
+    "time": "2017-04-07T23:35:07.687Z",
     "url": "http://apidocjs.com",
     "version": "0.17.5"
   }

@@ -84,7 +84,7 @@ export class AuthRepository implements irepo.IAuthRepository {
         let auth: model.AuthModel;
         return new Promise<model.AuthModel>(function (resolve, reject) {
             if (clientKey == null || clientKey.trim() == '') {
-                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'Missing  client key.'));
+                return reject(new CLError.BadRequest(CLError.ErrorCode.REQUIRED_PARAM_MISSING, 'Missing client key.'));
             }
             //either clientKey or clientname must supplied
             if ((clientId == null || clientId <= 0) && (clientName == null || clientName.trim() == '')) //no need to go to DB
