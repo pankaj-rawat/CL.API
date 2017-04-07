@@ -59,7 +59,7 @@ let authController = express.Router();
 
 /**
 * @api {post} /auth/connect Return client's token.
-* @apiHeader {String} Content-Type application/x-www-form-urlencoded
+* @apiHeader {String} content-type="application/x-www-form-urlencoded" application/x-www-form-urlencoded
 * @apiHeaderExample {json} Header-Example:
 *     {
 *       "Content-Type":"application/x-www-form-urlencoded"
@@ -74,8 +74,8 @@ let authController = express.Router();
 *     }
 *
 * @apiSampleRequest https://cl-api-s.herokuapp.com/api/auth/connect
-* @apiParam (body) {String} clientName
-* @apiParam (body) {String} clientKey
+* @apiParam {String} clientName="webapp"
+* @apiParam {String} clientKey="123456789"
 * @apiUse ClientNotFoundError
 * @apiUse Response
 * @apiUse DBConnectionFail

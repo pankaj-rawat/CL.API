@@ -10,7 +10,8 @@
             "group": "Header",
             "type": "String",
             "optional": false,
-            "field": "Content-Type",
+            "field": "content-type",
+            "defaultValue": "application/x-www-form-urlencoded",
             "description": "<p>application/x-www-form-urlencoded</p>"
           }
         ]
@@ -37,19 +38,21 @@
     ],
     "parameter": {
       "fields": {
-        "body": [
+        "Parameter": [
           {
-            "group": "body",
+            "group": "Parameter",
             "type": "String",
             "optional": false,
             "field": "clientName",
+            "defaultValue": "webapp",
             "description": ""
           },
           {
-            "group": "body",
+            "group": "Parameter",
             "type": "String",
             "optional": false,
             "field": "clientKey",
+            "defaultValue": "123456789",
             "description": ""
           }
         ]
@@ -183,7 +186,8 @@
             "group": "Header",
             "type": "String",
             "optional": false,
-            "field": "Content-Type",
+            "field": "content-type",
+            "defaultValue": "application/x-www-form-urlencoded",
             "description": "<p>application/x-www-form-urlencoded</p>"
           }
         ]
@@ -210,19 +214,21 @@
     ],
     "parameter": {
       "fields": {
-        "body": [
+        "Parameter": [
           {
-            "group": "body",
+            "group": "Parameter",
             "type": "String",
             "optional": false,
             "field": "clientName",
+            "defaultValue": "webapp",
             "description": ""
           },
           {
-            "group": "body",
+            "group": "Parameter",
             "type": "String",
             "optional": false,
             "field": "clientKey",
+            "defaultValue": "123456789",
             "description": ""
           }
         ]
